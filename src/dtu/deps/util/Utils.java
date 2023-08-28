@@ -1,4 +1,4 @@
-package dependencies.java.dtu.deps.util;
+package dtu.deps.util;
 
 // Known Dependencies
 // -> java.lang.System

@@ -1,4 +1,4 @@
-package dependencies.java.dtu.deps.simple;
+package dtu.deps.simple;
 
 // Known Dependencies
 // -> dtu.deps.util.Utils

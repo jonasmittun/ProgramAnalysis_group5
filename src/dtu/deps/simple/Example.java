@@ -1,4 +1,4 @@
-package dependencies.java.dtu.deps.simple;
+package dtu.deps.simple;
 
 import dtu.deps.util.Utils;
 
