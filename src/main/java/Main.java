@@ -10,8 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,7 +40,7 @@ public class Main {
         }
 
         // Our files
-        Map<String, String> map = getFiles(new HashMap<>(), "src\\main\\java\\dtu");
+        Map<String, String> map = getFiles("src\\main\\java\\dtu");
 
         System.out.println(map.get("Tricky.java"));
 
@@ -60,27 +59,26 @@ public class Main {
     /** Returns a map with every file in any directory and subdirectory of path together with its content as a string
      * @return  A Map<String, String> where the key is the filename and the value is the content as a string
      */
-    public static Map<String, String> getFiles(Map<String, String> map, String path) {
-        File directory = new File(path);
+    public static Map<String, String> getFiles(String path) {
+        Map<String, String> map = new HashMap<>();
 
-        System.out.println(path);
+        Queue<File> files = new LinkedList<>();
+        files.add(new File(path));
 
-        File[] paths = directory.listFiles();
-        if(paths == null) return null;
+        while(!files.isEmpty()) {
+            File file = files.poll();
 
-        for(File file : paths) {
             if(file.isFile()) {
                 try {
                     map.put(file.getName(), Files.readString(Path.of(file.getAbsolutePath())));
                 } catch(IOException ignore) {}
             } else {
-                Map<String, String> submap = getFiles(map, file.getAbsolutePath());
-                if(submap != null) {
-                    map.putAll(submap);
+                File[] content = file.listFiles();
+                if(content != null) {
+                    Collections.addAll(files, content);
                 }
             }
         }
-
 
         return map;
     }
