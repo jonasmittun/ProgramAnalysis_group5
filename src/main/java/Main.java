@@ -41,7 +41,7 @@ public class Main {
         }
 
         // Our files
-        Map<String, String> map = getFiles(new HashMap<>(), new File("").getAbsolutePath() + "\\src\\main\\java\\dtu");
+        Map<String, String> map = getFiles(new HashMap<>(), "src\\main\\java\\dtu");
 
         System.out.println(map.get("Tricky.java"));
 
