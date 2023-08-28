@@ -1,4 +1,4 @@
-package dtu.deps.tricky;
+package dependencies.java.dtu.deps.tricky;
 // This class is a little more tricky.
 // It has many dependencies but none to Other :D.
 //
