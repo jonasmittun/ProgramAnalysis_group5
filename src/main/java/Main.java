@@ -41,6 +41,33 @@ public class Main {
 
         // Our files
         Map<String, String> map = getFiles("src\\main\\java\\dtu");
+        map.replaceAll((k, v) -> removeComments(v));
+
+        Map<String, List<String>> graph = new HashMap<>();
+
+        // Add nodes to graph object
+        for(String fileContent : map.values()) {
+            var name = getPackagePlusClassName(fileContent);
+
+            // Add edges to graph object
+            List<String> edges = new ArrayList<>();
+            edges.addAll(getExplicitImports(fileContent));
+            edges.addAll(getImplicitImports(fileContent));
+
+            graph.put(name, edges);
+        }
+
+        // Draw graph here
+        for(String nodes : graph.keySet()) {
+            g = addNode(g, nodes);
+        }
+
+        for(Map.Entry<String, List<String>> entry : graph.entrySet()) {
+            String from = entry.getKey();
+            for(String to : entry.getValue()) {
+                g = addEdges(g, from, to);
+            }
+        }
 
         System.out.println(map.keySet());
 
@@ -86,12 +113,71 @@ public class Main {
         return map;
     }
 
-    /** Extracts the package name from a file content
-     * @param FileContent File which package name's will be extracted
-     * @return Package Name inside the file
+    /** Extracts the package name from a file content and adds class name to the end
+     * @param FileContent File which package and class name's will be extracted
+     * @return Package + Class name inside the file
      */
-    private String getPackageName(String FileContent) {
-        var packageName = Pattern.compile("/(?<=package ).*\\w");
-        return packageName.toString();
+    private static String getPackagePlusClassName(String FileContent) {
+        Pattern packageName = Pattern.compile("(?<=package ).*\\w");
+        Pattern className = Pattern.compile("(?<=public class )\\w+");
+        Matcher matcher = packageName.matcher(FileContent);
+        Matcher matcher2 = className.matcher(FileContent);
+
+        String packageName_ = "";
+        if(matcher.find()) packageName_ = FileContent.substring(matcher.start(), matcher.end());
+
+        String className_ = "";
+        if(matcher2.find()) className_ = FileContent.substring(matcher2.start(), matcher2.end());
+
+        return packageName_ + '.' + className_;
+    }
+
+    private static List<String> getExplicitImports(String input) {
+        List<String> imports = new ArrayList<>();
+
+        Pattern pattern = Pattern.compile("(?<=import )(?>[a-zA-Z]\\w+\\.)+([a-zA-Z]\\w+|\\*)");
+        Matcher matcher = pattern.matcher(input);
+        while(matcher.find()) {
+            String match = input.substring(matcher.start(), matcher.end());
+            if(!match.startsWith("java")) imports.add(match);
+            if (match.endsWith("*")) {
+                imports.remove(match);
+                // Get path
+                var path = match.replace('.', '\\');
+                path = path.substring(0, path.length()-2);
+                // Get files with content
+                Map<String, String> fileWithContent = getFiles("src\\main\\java\\" + path);
+                // Add the results
+                for (String fileName : fileWithContent.values()) {
+                    imports.add(getPackagePlusClassName(fileName));
+                }
+            }
+        }
+
+        return imports;
+    }
+
+    private static List<String> getImplicitImports(String input) {
+        List<String> imports = new ArrayList<>();
+
+        Pattern pattern = Pattern.compile("^(?>\\s*)(\\w+\\.)+\\w+(?=\\.)", Pattern.MULTILINE);
+        Matcher matcher = pattern.matcher(input);
+
+        while(matcher.find()) {
+            String match = input.substring(matcher.start(), matcher.end()).trim();
+            if(!match.startsWith("System")) imports.add(match);
+        }
+
+        return imports;
+    }
+
+    private static MutableGraph addNode(MutableGraph graph, String nodeName) {
+        graph.add(mutNode(nodeName));
+        return graph;
+    }
+
+    private static MutableGraph addEdges (MutableGraph graph, String from, String to) {
+        graph.add(mutNode(from).addLink(mutNode(to)));
+        return graph;
     }
 }
