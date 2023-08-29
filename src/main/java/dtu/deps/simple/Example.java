@@ -15,13 +15,10 @@ import dtu.deps.util.Utils;
  * Known dependencies:
  */
 public class Example {
-    static Other other = new Other();
+    Other other = new Other();
 
     public static void main(String[] args) {
         Utils.printHello();
     }
 
-    public static Object other() {
-        return 0;
-    }
 }

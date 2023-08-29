@@ -8,6 +8,5 @@ public class Other {
 
     public static void main(String[] args) {
         dtu.deps.util.Utils.printHello();
-        Object temp = dtu.deps.simple.Example.other();
     }
 }
