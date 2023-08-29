@@ -42,18 +42,21 @@ public class Main {
         // Our files
         Map<String, String> map = getFiles("src\\main\\java\\dtu");
 
-        System.out.println(map.get("Tricky.java"));
+        System.out.println(map.keySet());
 
+        // Generate and output the graph as a .png
+        try {
+            //Graphviz.fromGraph(g).height(400).render(Format.PNG).toFile(new File("graphs/graph.png"));
+            Graphviz.fromGraph(g).render(Format.PNG).toFile(new File("graphs/graph.png"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-        //^import ((?>[a-zA-Z][0-9a-zA-Z]+\.)+([a-zA-Z][0-9a-zA-Z]+|\*));$
-        Pattern imports = Pattern.compile("import", Pattern.MULTILINE);
-
-        Matcher matcher = imports.matcher(map.get("Tricky.java"));
-        System.out.println(matcher.find());
-        System.out.println(matcher.matches());
-
-
-        //Pattern p1 = Pattern.compile("^(?>\s*)((?>[a-zA-Z][0-9a-zA-Z]+\.)+[a-zA-Z][0-9a-zA-Z]+)");
+    /** Returns a string where any single- or multiline comments have been removed */
+    public static String removeComments(String content) {
+        content = content.replaceAll("//.*", "");               // Remove single line comment
+        return content.replaceAll("/\\*[\\s\\S]*?\\*/", "");    // Remove multi line comment
     }
 
     /** Returns a map with every file in any directory and subdirectory of path together with its content as a string
