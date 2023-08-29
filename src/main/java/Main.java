@@ -61,7 +61,7 @@ public class Main {
         // Generate and output the graph as a .png
         try {
             //Graphviz.fromGraph(g).height(400).render(Format.PNG).toFile(new File("graphs/graph.png"));
-            Graphviz.fromGraph(g).render(Format.PNG).toFile(new File("graphs/graph.png"));
+            Graphviz.fromGraph(g).height(600).render(Format.PNG).toFile(new File("graphs/graph.png"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -147,11 +147,21 @@ public class Main {
     private static List<String> getImplicitImports(String input) {
         List<String> imports = new ArrayList<>();
 
-        Pattern pattern = Pattern.compile("^(?>\\s*)(\\w+\\.)+\\w+(?=\\.)", Pattern.MULTILINE);
-        Matcher matcher = pattern.matcher(input);
+        Pattern pattern_functions = Pattern.compile("^(?>\\s*)(\\w+\\.)+\\w+(?=\\.\\w+\\(\\))", Pattern.MULTILINE);
+        Pattern pattern_classes = Pattern.compile("^(?>\\s*)(\\w+\\.)+\\w+(?=\\s)", Pattern.MULTILINE);
+        Matcher matcher;
 
+        matcher = pattern_functions.matcher(input);
         while(matcher.find()) {
             String match = input.substring(matcher.start(), matcher.end()).trim();
+            System.out.println(match);
+            if(!match.startsWith("System")) imports.add(match);
+        }
+
+        matcher = pattern_classes.matcher(input);
+        while(matcher.find()) {
+            String match = input.substring(matcher.start(), matcher.end()).trim();
+            System.out.println(match);
             if(!match.startsWith("System")) imports.add(match);
         }
 
