@@ -7,6 +7,11 @@
     <groupId>groupId</groupId>
     <artifactId>ProgramAnalysis_group5</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <modules>
+        <module>Week02</module>
+        <module>Week01</module>
+    </modules>
 
     <dependencies>
         <dependency>

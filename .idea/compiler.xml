@@ -6,7 +6,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="ProgramAnalysis_group5" />
+        <module name="Week01" />
+        <module name="Week02" />
       </profile>
     </annotationProcessing>
   </component>
