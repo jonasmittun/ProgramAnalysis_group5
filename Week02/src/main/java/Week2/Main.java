@@ -5,6 +5,7 @@ import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.resolution.SymbolResolver;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
@@ -13,7 +14,16 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeS
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.io.IOException;
+
+import static guru.nidi.graphviz.attribute.Attributes.attrs;
+import static guru.nidi.graphviz.attribute.Records.rec;
+import static guru.nidi.graphviz.attribute.Records.turn;
+import static guru.nidi.graphviz.model.Factory.mutGraph;
+import static guru.nidi.graphviz.model.Factory.mutNode;
 
 public class Main {
     public static void main(String[] args) {
@@ -31,38 +41,89 @@ public class Main {
         // Set up the parser
         JavaParser parser = new JavaParser(parserConfiguration);
 
+        // List of records
+        List<Class> classes = new ArrayList<>();
+        for(String content : getFiles("src\\main\\java\\dtu").values()) {
+            Optional<Class> c = parseToRecord(parser, content);
+            c.ifPresent(classes::add);
+        }
+
+        // Initialize graphviz object
+        MutableGraph g = mutGraph("Graph").setDirected(true);
+
+        for(Class i : classes) {
+            g = addClass(g, i);
+        }
+
+        // Do some magic here to add edges (lmao)
+
+        //g.add(mutNode("Tricky").addLink(mutNode("Other")));
+
         try {
-            ParseResult<CompilationUnit> result = parser.parse(new File("src\\main\\java\\dtu\\deps\\tricky\\Tricky.java"));
-
-            if(!result.isSuccessful() || result.getResult().isEmpty()) return;
-
-            CompilationUnit cu = result.getResult().get();
-
-            cu.findAll(ClassOrInterfaceDeclaration.class).forEach(declaration -> {
-                // Class Name
-                System.out.println(declaration.getNameAsString());
-
-                // Extract Fields
-                declaration.getFields().forEach(field -> {
-                    ResolvedType type = field.getElementType().resolve();
-
-                    String name = getQualifiedName(type);
-
-                    System.out.println(field.getVariables() + " : " + name);
-                });
-
-                // Extract Methods
-                declaration.getMethods().forEach(method -> {
-                    System.out.println(method.getNameAsString() + " : " + method.getParameters().stream().map(p -> {
-                        ResolvedType type = p.getType().resolve();
-
-                        return getQualifiedName(type);
-                    }).toList() + " -> " + method.getTypeAsString());
-                });
-            });
-        } catch (FileNotFoundException e) {
+            Graphviz.fromGraph(g).height(600).render(Format.PNG).toFile(new File("graphs/graph.png"));
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /** Returns a map with every file in any directory and subdirectory of path together with its content as a string
+     * @return  A Map<String, String> where the key is the filename and the value is the content as a string
+     */
+    public static Map<String, String> getFiles(String path) {
+        Map<String, String> map = new HashMap<>();
+
+        Queue<File> files = new LinkedList<>();
+        files.add(new File(path));
+
+        while(!files.isEmpty()) {
+            File file = files.poll();
+
+            if(file.isFile()) {
+                try {
+                    map.put(file.getName(), Files.readString(Path.of(file.getAbsolutePath())));
+                } catch(IOException ignore) {}
+            } else {
+                File[] content = file.listFiles();
+                if(content != null) {
+                    Collections.addAll(files, content);
+                }
+            }
+        }
+
+        return map;
+    }
+
+    private record Class(String name, List<String> fields, List<String> methods) {}
+
+    private static Optional<Class> parseToRecord(JavaParser parser, String content) {
+        CompilationUnit cu;
+        ParseResult<CompilationUnit> parseResult = parser.parse(content);
+        if(!parseResult.isSuccessful() || parseResult.getResult().isEmpty()) return Optional.empty();
+        else cu = parseResult.getResult().get();
+
+        Optional<ClassOrInterfaceDeclaration> result = cu.findFirst(ClassOrInterfaceDeclaration.class);
+        if(result.isEmpty()) return Optional.empty();
+
+        ClassOrInterfaceDeclaration declaration = result.get();
+
+        // Class Name
+        String classname = declaration.getNameAsString();
+
+        // Extract Fields
+        List<String> fields = declaration.getFields().stream().map(field -> {
+            ResolvedType type = field.getElementType().resolve();
+
+            return field.getVariables().stream().map(VariableDeclarator::getName).toList() + " : " + getQualifiedName(type);
+        }).toList();
+
+        // Extract Methods
+        List<String> methods = declaration.getMethods().stream().map(method -> (method.getNameAsString() + " : " + method.getParameters().stream().map(p -> {
+            ResolvedType type = p.getType().resolve();
+
+            return getQualifiedName(type);
+        }).toList() + " → " + method.getTypeAsString())).toList();
+
+        return Optional.of(new Class(classname, fields, methods));
     }
 
     private static String getQualifiedName(ResolvedType type) {
