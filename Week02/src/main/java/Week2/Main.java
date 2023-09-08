@@ -131,7 +131,7 @@ public class Main {
     }
 
     private static String getQualifiedName(ResolvedType type) {
-        String name = null;
+        String name = "?";
 
         if(type.isReferenceType()) {
             name = type.asReferenceType().getQualifiedName();
