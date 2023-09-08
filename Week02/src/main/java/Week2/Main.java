@@ -52,8 +52,7 @@ public class Main {
         // List of records
         List<Class> classes = new ArrayList<>();
         for(String content : getFiles("src\\main\\java\\dtu").values()) {
-            Optional<Class> c = parseToRecord(parser, content);
-            c.ifPresent(classes::add);
+            classes.addAll(parseToRecord(parser, content));
         }
 
         // Initialize graphviz object
@@ -103,35 +102,32 @@ public class Main {
 
     private record Class(String name, List<String> fields, List<String> methods) {}
 
-    private static Optional<Class> parseToRecord(JavaParser parser, String content) {
+    private static List<Class> parseToRecord(JavaParser parser, String content) {
         CompilationUnit cu;
         ParseResult<CompilationUnit> parseResult = parser.parse(content);
-        if(!parseResult.isSuccessful() || parseResult.getResult().isEmpty()) return Optional.empty();
+        if(!parseResult.isSuccessful() || parseResult.getResult().isEmpty()) return Collections.emptyList();
         else cu = parseResult.getResult().get();
 
-        Optional<ClassOrInterfaceDeclaration> result = cu.findFirst(ClassOrInterfaceDeclaration.class);
-        if(result.isEmpty()) return Optional.empty();
+        return cu.findAll(ClassOrInterfaceDeclaration.class).stream().map(declaration -> {
+            // Class Name
+            String classname = declaration.getNameAsString();
 
-        ClassOrInterfaceDeclaration declaration = result.get();
+            // Extract Fields
+            List<String> fields = declaration.getFields().stream().map(field -> {
+                ResolvedType type = field.getElementType().resolve();
 
-        // Class Name
-        String classname = declaration.getNameAsString();
+                return field.getVariables().stream().map(VariableDeclarator::getName).toList() + " : " + getQualifiedName(type);
+            }).toList();
 
-        // Extract Fields
-        List<String> fields = declaration.getFields().stream().map(field -> {
-            ResolvedType type = field.getElementType().resolve();
+            // Extract Methods
+            List<String> methods = declaration.getMethods().stream().map(method -> (method.getNameAsString() + " : " + method.getParameters().stream().map(p -> {
+                ResolvedType type = p.getType().resolve();
 
-            return field.getVariables().stream().map(VariableDeclarator::getName).toList() + " : " + getQualifiedName(type);
+                return getQualifiedName(type);
+            }).toList() + " → " + method.getTypeAsString())).toList();
+
+            return new Class(classname, fields, methods);
         }).toList();
-
-        // Extract Methods
-        List<String> methods = declaration.getMethods().stream().map(method -> (method.getNameAsString() + " : " + method.getParameters().stream().map(p -> {
-            ResolvedType type = p.getType().resolve();
-
-            return getQualifiedName(type);
-        }).toList() + " → " + method.getTypeAsString())).toList();
-
-        return Optional.of(new Class(classname, fields, methods));
     }
 
     private static String getQualifiedName(ResolvedType type) {
