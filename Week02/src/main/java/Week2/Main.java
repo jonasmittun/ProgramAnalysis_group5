@@ -5,17 +5,18 @@ import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.nodeTypes.NodeWithName;
+import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
+import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.resolution.SymbolResolver;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
-import guru.nidi.graphviz.attribute.Label;
-import guru.nidi.graphviz.attribute.Records;
-import guru.nidi.graphviz.attribute.Shape;
-import guru.nidi.graphviz.attribute.Style;
+import guru.nidi.graphviz.attribute.*;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.model.MutableGraph;
@@ -26,10 +27,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static guru.nidi.graphviz.attribute.Attributes.attrs;
-import static guru.nidi.graphviz.attribute.Records.rec;
-import static guru.nidi.graphviz.attribute.Records.turn;
 import static guru.nidi.graphviz.model.Factory.mutGraph;
 import static guru.nidi.graphviz.model.Factory.mutNode;
 
@@ -100,7 +101,43 @@ public class Main {
         return map;
     }
 
-    private record Class(String name, List<String> fields, List<String> methods) {}
+    private record Field(List<String> names, Type type) {
+        @Override
+        public String toString() {
+            return names + " : " + getQualifiedName(type.resolve());
+        }
+    }
+
+    private record Method(String name, List<Type> parameterTypes, Type returnType) {
+        @Override
+        public String toString() {
+            return name + " : " + parameterTypes.stream().map(t -> getQualifiedName(t.resolve())).toList() + " → " + returnType.asString();
+        }
+    }
+
+    private record Class(Optional<String> packageName, String name, Optional<ClassOrInterfaceType> inheritance, List<Type> realizations, List<String> compositions, List<Field> fields, List<Method> methods) {
+        public String getFullyQualifiedName() {
+            return packageName.map(s -> s + "." + name).orElse(name);
+        }
+
+        public List<Type> getDependencies() {
+            List<Type> dependencies = new ArrayList<>();
+
+            for(Field field : fields) {
+                if(!field.type.isPrimitiveType()) dependencies.add(field.type);
+            }
+
+            for(Method method : methods) {
+                if(!method.returnType.isPrimitiveType()) dependencies.add(method.returnType);
+
+                for(Type parameter : method.parameterTypes) {
+                    if(!parameter.isPrimitiveType()) dependencies.add(parameter);
+                }
+            }
+
+            return dependencies;
+        }
+    }
 
     private static List<Class> parseToRecord(JavaParser parser, String content) {
         CompilationUnit cu;
@@ -108,25 +145,28 @@ public class Main {
         if(!parseResult.isSuccessful() || parseResult.getResult().isEmpty()) return Collections.emptyList();
         else cu = parseResult.getResult().get();
 
+        Optional<String> packageName = cu.getPackageDeclaration().map(NodeWithName::getNameAsString);
+
         return cu.findAll(ClassOrInterfaceDeclaration.class).stream().map(declaration -> {
             // Class Name
-            String classname = declaration.getNameAsString();
+            String className = declaration.getNameAsString();
+
+            // Class Extension
+            Optional<ClassOrInterfaceType> inheritance = declaration.getExtendedTypes().stream().findFirst();
+
+            // Class Implementations
+            List<Type> realizations = declaration.getImplementedTypes().stream().map(Type.class::cast).toList();
+
+            // Class compositions
+            List<String> compositions = declaration.getMembers().stream().filter(member -> member.isClassOrInterfaceDeclaration() && !member.asClassOrInterfaceDeclaration().isStatic()).map(member -> packageName.map(s -> s + "." + member.asClassOrInterfaceDeclaration().getNameAsString()).orElseGet(() -> member.asClassOrInterfaceDeclaration().getNameAsString())).toList();
 
             // Extract Fields
-            List<String> fields = declaration.getFields().stream().map(field -> {
-                ResolvedType type = field.getElementType().resolve();
-
-                return field.getVariables().stream().map(VariableDeclarator::getName).toList() + " : " + getQualifiedName(type);
-            }).toList();
+            List<Field> fields = declaration.getFields().stream().map(field -> new Field(field.getVariables().stream().map(NodeWithSimpleName::getNameAsString).toList(), field.getElementType())).toList();
 
             // Extract Methods
-            List<String> methods = declaration.getMethods().stream().map(method -> (method.getNameAsString() + " : " + method.getParameters().stream().map(p -> {
-                ResolvedType type = p.getType().resolve();
+            List<Method> methods = declaration.getMethods().stream().map(method -> new Method(method.getNameAsString(), method.getParameters().stream().map(Parameter::getType).toList(), method.getType())).toList();
 
-                return getQualifiedName(type);
-            }).toList() + " → " + method.getTypeAsString())).toList();
-
-            return new Class(classname, fields, methods);
+            return new Class(packageName, className, inheritance, realizations, compositions, fields, methods);
         }).toList();
     }
 
