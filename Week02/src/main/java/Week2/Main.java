@@ -63,9 +63,11 @@ public class Main {
             g = addClass(g, i);
         }
 
-        // Do some magic here to add edges (lmao)
-
-        //g.add(mutNode("Tricky").addLink(mutNode("Other")));
+        // Set of node names (Nodes we want to draw to)
+        Set<String> nodes = g.nodes().stream().map(node -> node.name().toString()).collect(Collectors.toSet());
+        for(Class cls : classes) {
+            g = drawArrows(g, nodes, cls);
+        }
 
         try {
             Graphviz.fromGraph(g).height(600).render(Format.PNG).toFile(new File("graphs/graph.png"));
@@ -204,6 +206,47 @@ public class Main {
             "\t\t\t</td> </tr>\n" +
             "\t\t</table>"));
         graph.add(temp);
+        return graph;
+    }
+
+    // TODO: Separate different types of arrows
+    private static MutableGraph drawArrows(MutableGraph graph, Set<String> nodes, Class cls) {
+        // Inheritance
+        cls.inheritance.ifPresent(classOrInterfaceType -> graph.add(mutNode(cls.getFullyQualifiedName()).addLink(mutNode(getQualifiedName(classOrInterfaceType.resolve())))));
+
+        // Realization
+        for(Type type : cls.realizations) {
+            String FQN = getQualifiedName(type.resolve());
+            if(nodes.contains(FQN)) {
+                // TODO: Dashed edge
+                graph.add(mutNode(cls.getFullyQualifiedName()).addLink(mutNode(FQN)));
+            }
+        }
+
+        // Aggregation
+        for(Field field : cls.fields) {
+            String FQN = getQualifiedName(field.type.resolve());
+            if(nodes.contains(FQN)) {
+                // TODO: White Diamond Arrowhead
+                graph.add(mutNode(cls.getFullyQualifiedName()).addLink(mutNode(FQN)));
+            }
+        }
+
+        // Composition
+        for(String composition : cls.compositions) {
+            // TODO: Black Diamond Arrowhead
+            graph.add(mutNode(cls.getFullyQualifiedName()).addLink(mutNode(composition)));
+        }
+
+        // Dependencies
+        for(Type type : cls.getDependencies()) {
+            String FQN = getQualifiedName(type.resolve());
+            if(nodes.contains(FQN)) {
+                // TODO: Dashed edge & "vee"-style Arrowhead
+                graph.add(mutNode(cls.getFullyQualifiedName()).addLink(mutNode(FQN)));
+            }
+        }
+
         return graph;
     }
 }
