@@ -187,19 +187,19 @@ public class Main {
     }
 
     private static MutableGraph addClass(MutableGraph graph, Class cls) {
-        MutableNode temp = mutNode(cls.name()).add(attrs(Shape.NONE));
+        MutableNode temp = mutNode(cls.getFullyQualifiedName()).add(attrs(Shape.NONE));
         temp.attrs().add(Label.html(
             "<table border=\"0\" cellborder=\"1\" cellspacing=\"0\" cellpadding=\"4\">\n" +
-            "\t\t\t<tr> <td> <b>" + cls.name + "</b> </td> </tr>\n" +
+            "\t\t\t<tr> <td> <b>" + cls.name() + "</b> </td> </tr>\n" +
             "\t\t\t<tr> <td>\n" +
             "\t\t\t\t<table border=\"0\" cellborder=\"0\" cellspacing=\"0\" >\n" +
-            String.join("", cls.fields.stream().map(field -> "\t\t\t\t\t<tr> <td port=\"ss2\" align=\"left\" >- " + field.replaceAll("<", "").replaceAll(">", "") + "</td> </tr>\n").toList()) +
+            String.join("", cls.fields.stream().map(field -> "\t\t\t\t\t<tr> <td port=\"ss2\" align=\"left\" >- " + field.toString().replaceAll("<", "").replaceAll(">", "") + "</td> </tr>\n").toList()) +
             "\t\t\t\t\t<tr> <td port=\"ss2\" align=\"left\" ></td> </tr>\n" +
             "\t\t\t\t</table>\n" +
             "\t\t\t</td> </tr>\n" +
             "\t\t\t<tr> <td>\n" +
             "\t\t\t\t<table border=\"0\" cellborder=\"0\" cellspacing=\"0\" >\n" +
-            String.join("", cls.methods.stream().map(method -> "\t\t\t\t\t<tr> <td align=\"left\" >+ " + method.replaceAll("<", "").replaceAll(">", "") + "</td> </tr>\n").toList()) +
+            String.join("", cls.methods.stream().map(method -> "\t\t\t\t\t<tr> <td align=\"left\" >+ " + method.toString().replaceAll("<", "").replaceAll(">", "") + "</td> </tr>\n").toList()) +
             "\t\t\t\t</table>\n" +
             "\t\t\t</td> </tr>\n" +
             "\t\t</table>"));
