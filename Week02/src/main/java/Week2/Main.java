@@ -67,7 +67,7 @@ public class Main {
         // Set of node names (Nodes we want to draw to)
         Set<String> nodes = g.nodes().stream().map(node -> node.name().toString()).collect(Collectors.toSet());
         for(Class cls : classes) {
-            g = drawArrows(g, nodes, cls);
+            g = drawArrows(g, nodes, cls, true, false);
         }
 
         try {
@@ -210,95 +210,91 @@ public class Main {
         return graph;
     }
 
-    private static MutableGraph drawArrows(MutableGraph graph, Set<String> nodes, Class cls) {
-        // Inheritance
-        cls.inheritance.ifPresent(classOrInterfaceType -> graph.add(mutNode(cls.getFullyQualifiedName()).addLink(mutNode(getQualifiedName(classOrInterfaceType.resolve())))));
+    /**
+     * Returns a MutableGraph where links (arrows) have been drawn according to the content of the class record
+     * @param include_external  Toggles whether to include edges for external classes.
+     * @param single_link       Toggles if multiple links between two nodes are allowed or not.
+     */
+    private static MutableGraph drawArrows(MutableGraph graph, Set<String> nodes, Class cls, boolean include_external, boolean single_link) {
+        // Map to keep track of links
+        Map<String, Set<String>> links = new HashMap<>();
 
-        // Adding white arrow head
-        if (cls.inheritance.isPresent()) {
-            for (Link link : graph.edges()) {
-                if (link.from().name().equals(mutNode(cls.getFullyQualifiedName()).name()) && link.to().name().equals(mutNode(getQualifiedName(cls.inheritance.get().resolve())).name()))
-                    link.add(Arrow.EMPTY);
+        String _FQN = cls.getFullyQualifiedName();
+
+        // Inheritance
+        cls.inheritance.ifPresent(child -> {
+            String FQN_ = getQualifiedName(child.resolve());
+
+            Set<String> set = links.computeIfAbsent(_FQN, k -> new HashSet<>());
+
+            if(!single_link || set.add(FQN_)) {
+                graph.add(mutNode(_FQN).addLink(mutNode(FQN_)));
             }
-        }
+        });
 
         // Realization
-        outerloop1:
         for(Type type : cls.realizations) {
-            String FQN = getQualifiedName(type.resolve());
-            if(nodes.contains(FQN)) {
-                // Adding realization only if this connection doesn't already exists
-                for (Link link : graph.edges()) {
-                    if (link.from().name().equals(mutNode(cls.getFullyQualifiedName()).name()) && link.to().name().equals(mutNode(FQN).name()))
-                        continue outerloop1;
-                }
+            String FQN_ = getQualifiedName(type.resolve());
 
-                graph.add(mutNode(cls.getFullyQualifiedName()).addLink(mutNode(FQN)));
+            Set<String> set = links.computeIfAbsent(_FQN, k -> new HashSet<>());
 
-                // Adding dashed edge
-                for (Link link : graph.edges()) {
-                    if (link.from().name().equals(mutNode(cls.getFullyQualifiedName()).name()) && link.to().name().equals(mutNode(FQN).name()))
-                        link.add(Style.DASHED);
+            if(include_external || nodes.contains(FQN_)) {
+                if(!single_link || set.add(FQN_)) {
+                    Link linkTarget = mutNode(FQN_).linkTo();
+                    linkTarget.add(Style.DASHED);
+                    MutableNode link = mutNode(_FQN).addLink(linkTarget);
+
+                    graph.add(link);
                 }
             }
         }
 
         // Aggregation
-        outerloop2:
         for(Field field : cls.fields) {
-            String FQN = getQualifiedName(field.type.resolve());
-            if(nodes.contains(FQN)) {
-                // Adding aggregation only if this connection doesn't already exists
-                for (Link link : graph.edges()) {
-                    if (link.from().name().equals(mutNode(cls.getFullyQualifiedName()).name()) && link.to().name().equals(mutNode(FQN).name()))
-                        continue outerloop2;
-                }
+            String FQN_ = getQualifiedName(field.type.resolve());
 
-                graph.add(mutNode(cls.getFullyQualifiedName()).addLink(mutNode(FQN)));
+            Set<String> set = links.computeIfAbsent(_FQN, k -> new HashSet<>());
 
-                // Adding White Diamond Arrowhead to the link
-                for (Link link : graph.edges()) {
-                    if (link.from().name().equals(mutNode(cls.getFullyQualifiedName()).name()) && link.to().name().equals(mutNode(FQN).name()))
-                        link.add(Arrow.EDIAMOND);
+            if(include_external || nodes.contains(FQN_)) {
+                if(!single_link || set.add(FQN_)) {
+                    Link linkTarget = mutNode(FQN_).linkTo();
+                    linkTarget.add(Arrow.EDIAMOND);
+                    MutableNode link = mutNode(_FQN).addLink(linkTarget);
+
+                    graph.add(link);
                 }
             }
         }
 
         // Composition
-        outerloop3:
-        for(String composition : cls.compositions) {
-            // Adding composition only if this connection doesn't already exists
-            for (Link link : graph.edges()) {
-                if (link.from().name().equals(mutNode(cls.getFullyQualifiedName()).name()) && link.to().name().equals(mutNode(composition).name()))
-                    continue outerloop3;
-            }
+        for(String FQN_ : cls.compositions) {
+            Set<String> set = links.computeIfAbsent(_FQN, k -> new HashSet<>());
 
-            graph.add(mutNode(cls.getFullyQualifiedName()).addLink(mutNode(composition)));
+            if(!single_link || set.add(FQN_)) {
+                Link linkTarget = mutNode(FQN_).linkTo();
+                linkTarget.add(Arrow.DIAMOND);
+                MutableNode link = mutNode(_FQN).addLink(linkTarget);
 
-            // Adding Black Diamond Arrowhead
-            for (Link link : graph.edges()) {
-                if (link.from().name().equals(mutNode(cls.getFullyQualifiedName()).name()) && link.to().name().equals(mutNode(composition).name()))
-                    link.add(Arrow.DIAMOND);
+                graph.add(link);
             }
         }
 
         // Dependencies
-        outerloop4:
         for(Type type : cls.getDependencies()) {
-            String FQN = getQualifiedName(type.resolve());
-            if(nodes.contains(FQN)) {
-                // Adding dependency only if this connection doesn't already exists
-                for (Link link : graph.edges()) {
-                    if (link.from().name().equals(mutNode(cls.getFullyQualifiedName()).name()) && link.to().name().equals(mutNode(FQN).name()))
-                        continue outerloop4;
-                }
+            if(type.isVoidType()) continue;
 
-                graph.add(mutNode(cls.getFullyQualifiedName()).addLink(mutNode(FQN)));
+            String FQN_ = getQualifiedName(type.resolve());
 
-                // Adding Dashed edge & "vee"-style Arrowhead
-                for (Link link : graph.edges()) {
-                    if (link.from().name().equals(mutNode(cls.getFullyQualifiedName()).name()) && link.to().name().equals(mutNode(FQN).name()))
-                        link.add(Arrow.VEE).add(Style.DASHED);
+            Set<String> set = links.computeIfAbsent(_FQN, k -> new HashSet<>());
+
+            if(include_external || nodes.contains(FQN_)) {
+                if(!single_link || set.add(FQN_)) {
+                    Link linkTarget = mutNode(FQN_).linkTo();
+                    linkTarget.add(Style.DASHED);
+                    linkTarget.add(Arrow.VEE);
+                    MutableNode link = mutNode(_FQN).addLink(linkTarget);
+
+                    graph.add(link);
                 }
             }
         }
