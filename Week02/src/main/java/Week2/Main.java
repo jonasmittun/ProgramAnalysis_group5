@@ -66,8 +66,12 @@ public class Main {
 
         // Set of node names (Nodes we want to draw to)
         Set<String> nodes = g.nodes().stream().map(node -> node.name().toString()).collect(Collectors.toSet());
+
+        // Map to keep track of links
+        Map<String, Set<String>> links = new HashMap<>();
+
         for(Class cls : classes) {
-            g = drawArrows(g, nodes, cls, false, true);
+            g = drawArrows(g, nodes, links, cls, false, true);
         }
 
         try {
@@ -211,14 +215,13 @@ public class Main {
     }
 
     /**
-     * Returns a MutableGraph where links (arrows) have been drawn according to the content of the class record
+     * Returns a MutableGraph where links (arrows) have been drawn according to the content of the class record.
+     * @param nodes             Arrows will only be drawn to nodes that exist in this set unless include_external is set to true.
+     * @param links             If single_link is set to true, a link will only be drawn if the link doesn't exist in the map.
      * @param include_external  Toggles whether to include edges for external classes.
      * @param single_link       Toggles if multiple links between two nodes are allowed or not.
      */
-    private static MutableGraph drawArrows(MutableGraph graph, Set<String> nodes, Class cls, boolean include_external, boolean single_link) {
-        // Map to keep track of links
-        Map<String, Set<String>> links = new HashMap<>();
-
+    private static MutableGraph drawArrows(MutableGraph graph, Set<String> nodes, Map<String, Set<String>> links, Class cls, boolean include_external, boolean single_link) {
         String _FQN = cls.getFullyQualifiedName();
 
         // Inheritance
