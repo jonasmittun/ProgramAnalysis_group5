@@ -67,7 +67,7 @@ public class Main {
         // Set of node names (Nodes we want to draw to)
         Set<String> nodes = g.nodes().stream().map(node -> node.name().toString()).collect(Collectors.toSet());
         for(Class cls : classes) {
-            g = drawArrows(g, nodes, cls, true, false);
+            g = drawArrows(g, nodes, cls, false, true);
         }
 
         try {
@@ -228,7 +228,11 @@ public class Main {
             Set<String> set = links.computeIfAbsent(_FQN, k -> new HashSet<>());
 
             if(!single_link || set.add(FQN_)) {
-                graph.add(mutNode(_FQN).addLink(mutNode(FQN_)));
+                Link linkTarget = mutNode(FQN_).linkTo();
+                linkTarget.add(Arrow.EMPTY);
+                MutableNode link = mutNode(_FQN).addLink(linkTarget);
+
+                graph.add(link);
             }
         });
 
