@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="Week01" />
         <module name="Week02" />
+        <module name="Week03" />
       </profile>
     </annotationProcessing>
   </component>
