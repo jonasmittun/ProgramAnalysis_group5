@@ -206,15 +206,14 @@ public class Main {
     private static Class process(JSONObject object) {
         JSONArray v_access = object.getJSONArray("access");
         List<String> access = IntStream.range(0, v_access.length()).mapToObj(i -> (String) v_access.get(i)).toList();
-        if(LOGGING) System.out.println("Access" + access);
+        if(LOGGING) System.out.println("Access\t\t\t" + access);
 
         String name = object.getString("name");
-        if(LOGGING) System.out.println(name);
+        if(LOGGING) System.out.println("Name\t\t\t" + name);
 
         JSONObject extension = object.getJSONObject("super");
-        String extensionName = (String) extension.get("name");
-        if(LOGGING) System.out.println("Extension" + extensionName);
         Optional<String> extensionName = !extension.isNull("name") ? Optional.of(extension.getString("name")) : Optional.empty();
+        if(LOGGING) System.out.println("Extension\t\t" + extensionName);
 
         JSONArray v_interfaces = object.getJSONArray("interfaces");
         List<String> interfaces = new ArrayList<>();
@@ -223,7 +222,7 @@ public class Main {
 
             interfaces.add(o.getString("name"));
         }
-        if(LOGGING) System.out.println("Implements " + interfaces);
+        if(LOGGING) System.out.println("Implements\t\t" + interfaces);
 
         JSONArray v_compositions = object.getJSONArray("innerclasses");
         List<String> compositions = new ArrayList<>();
@@ -232,7 +231,7 @@ public class Main {
 
             if(!o.isNull("name")) compositions.add(o.getString("name"));
         }
-        if(LOGGING) System.out.println("Compositions " + compositions);
+        if(LOGGING) System.out.println("Compositions\t" + compositions);
 
         JSONArray v_fields = object.getJSONArray("fields");
         List<Field> fields = new ArrayList<>();
@@ -249,7 +248,7 @@ public class Main {
 
             fields.add(new Field(fieldAccess, fieldName, fieldType));
         }
-        if(LOGGING) System.out.println("Fields " + fields);
+        if(LOGGING) System.out.println("Fields\t\t\t" + fields);
 
         JSONArray v_methods = object.getJSONArray("methods");
         List<Method> methods = new ArrayList<>();
@@ -277,7 +276,7 @@ public class Main {
 
             methods.add(new Method(methodAccess, methodName, methodParams, methodReturnType));
         }
-        if(LOGGING) System.out.println("Methods " + methods + "\n");
+        if(LOGGING) System.out.println("Methods\t\t\t" + methods + "\n");
 
         return new Class(access, name, extensionName, interfaces, compositions, fields, methods);
     }
