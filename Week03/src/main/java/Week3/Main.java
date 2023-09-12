@@ -92,8 +92,8 @@ public class Main {
     private static MutableGraph addConnections(MutableGraph g, List<Class> classes) {
         for(Class cls: classes) {
             // Inheritance
-            if (!cls.extension.isEmpty()) {
-                Link linkTarget = mutNode(cls.extension).linkTo();
+            if (cls.extension.isPresent()) {
+                Link linkTarget = mutNode(cls.extension.get()).linkTo();
                 linkTarget.add(Arrow.EMPTY);
                 MutableNode link = mutNode(cls.name).addLink(linkTarget);
 
@@ -183,7 +183,7 @@ public class Main {
         }
     }
 
-    private record Class(List<String> access, String name, String extension, List<String> interfaces, List<String> compositions, List<Field> fields, List<Method> methods) {
+    private record Class(List<String> access, String name, Optional<String> extension, List<String> interfaces, List<String> compositions, List<Field> fields, List<Method> methods) {
         public String getName() {
             int index = name.lastIndexOf("/");
             return index != -1 ? name.substring(index + 1) : name;
@@ -214,6 +214,7 @@ public class Main {
         JSONObject extension = object.getJSONObject("super");
         String extensionName = (String) extension.get("name");
         if(LOGGING) System.out.println("Extension" + extensionName);
+        Optional<String> extensionName = !extension.isNull("name") ? Optional.of(extension.getString("name")) : Optional.empty();
 
         JSONArray v_interfaces = object.getJSONArray("interfaces");
         List<String> interfaces = new ArrayList<>();
