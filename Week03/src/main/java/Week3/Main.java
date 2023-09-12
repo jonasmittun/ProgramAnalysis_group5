@@ -3,7 +3,6 @@ package Week3;
 import guru.nidi.graphviz.attribute.Shape;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
-import guru.nidi.graphviz.model.LinkTarget;
 import guru.nidi.graphviz.model.MutableNode;
 import org.json.*;
 
@@ -12,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -43,7 +43,7 @@ public class Main {
 
         g = addClasses(g, classes);
 
-        g = addConnections(g, classes);
+        g = addConnections(g, classes, false, true);
 
         try {
             //Graphviz.fromGraph(g).height(height).width(width).render(Format.SVG).toFile(new File("graphs/graph.svg"));
@@ -89,56 +89,78 @@ public class Main {
         return g;
     }
 
-    private static MutableGraph addConnections(MutableGraph g, List<Class> classes) {
-        for(Class cls: classes) {
-            // Inheritance
-            if (cls.extension.isPresent()) {
-                Link linkTarget = mutNode(cls.extension.get()).linkTo();
-                linkTarget.add(Arrow.EMPTY);
-                MutableNode link = mutNode(cls.name).addLink(linkTarget);
+    private static MutableGraph addConnections(MutableGraph g, List<Class> classes, boolean include_external, boolean single_link) {
+        Set<String> nodes = g.nodes().stream().map(n -> n.name().toString()).collect(Collectors.toSet());
 
-                g.add(link);
+        Map<String, Set<String>> links = new HashMap<>();
+
+        for(Class cls: classes) {
+            Set<String> set = links.computeIfAbsent(cls.name, k -> new HashSet<>());
+
+            Function<String, Boolean> validator = node -> (include_external || nodes.contains(node)) && (!single_link || set.add(node));
+
+            // Inheritance
+            if(cls.extension.isPresent()) {
+                if(validator.apply(cls.extension.get())) {
+                    Link linkTarget = mutNode(cls.extension.get()).linkTo();
+                    linkTarget.add(Arrow.EMPTY);
+
+                    MutableNode link = mutNode(cls.name).addLink(linkTarget);
+
+                    g.add(link);
+                }
             }
 
             // Realization
-            for (String implementedInterface : cls.interfaces) {
-                Link linkTarget = mutNode(implementedInterface).linkTo();
-                linkTarget.add(Style.DASHED);
-                MutableNode link = mutNode(cls.name).addLink(linkTarget);
+            for(String realization : cls.interfaces) {
+                if(validator.apply(realization))  {
+                    Link linkTarget = mutNode(realization).linkTo();
+                    linkTarget.add(Style.DASHED);
 
-                g.add(link);
+                    MutableNode link = mutNode(cls.name).addLink(linkTarget);
+
+                    g.add(link);
+                }
             }
 
             // Aggregation
             for(Field field : cls.fields) {
-                Link linkTarget = mutNode(field.type).linkTo();
-                linkTarget.add(Arrow.EDIAMOND);
+                if(validator.apply(field.type))  {
+                    Link linkTarget = mutNode(field.type).linkTo();
+                    linkTarget.add(Arrow.EDIAMOND);
 
-                MutableNode link = mutNode(cls.name).addLink(linkTarget);
+                    MutableNode link = mutNode(cls.name).addLink(linkTarget);
 
-                g.add(link);
+                    g.add(link);
+                }
             }
 
             // Composition
             for(String composition : cls.compositions) {
-                Link linkTarget = mutNode(composition).linkTo();
-                linkTarget.add(Arrow.DIAMOND);
-                MutableNode link = mutNode(cls.name).addLink(linkTarget);
+                if(validator.apply(composition)) {
+                    Link linkTarget = mutNode(composition).linkTo();
+                    linkTarget.add(Arrow.DIAMOND);
 
-                g.add(link);
+                    MutableNode link = mutNode(cls.name).addLink(linkTarget);
+
+                    g.add(link);
+                }
             }
 
             // Dependencies
             for(String dependency : cls.getDependencies()) {
-                Link linkTarget = mutNode(dependency).linkTo();
-                linkTarget.add(Style.DASHED);
-                linkTarget.add(Arrow.VEE);
+                if(validator.apply(dependency)) {
+                    Link linkTarget = mutNode(dependency).linkTo();
+                    linkTarget.add(Style.DASHED);
+                    linkTarget.add(Arrow.VEE);
 
-                MutableNode link = mutNode(cls.name).addLink(linkTarget);
+                    MutableNode link = mutNode(cls.name).addLink(linkTarget);
 
-                g.add(link);
+                    g.add(link);
+                }
             }
         }
+
         return g;
     }
 
