@@ -1,5 +1,10 @@
 package Week3;
 
+import guru.nidi.graphviz.attribute.Shape;
+import guru.nidi.graphviz.engine.Format;
+import guru.nidi.graphviz.engine.Graphviz;
+import guru.nidi.graphviz.model.LinkTarget;
+import guru.nidi.graphviz.model.MutableNode;
 import org.json.*;
 
 import java.io.File;
