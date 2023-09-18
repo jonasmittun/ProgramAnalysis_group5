@@ -20,8 +20,8 @@ import guru.nidi.graphviz.model.Link;
 import guru.nidi.graphviz.model.MutableGraph;
 
 import static guru.nidi.graphviz.attribute.Attributes.attrs;
-import static guru.nidi.graphviz.model.Factory.mutGraph;
-import static guru.nidi.graphviz.model.Factory.mutNode;
+import static guru.nidi.graphviz.attribute.GraphAttr.splines;
+import static guru.nidi.graphviz.model.Factory.*;
 
 public class Main {
     private static final boolean LOGGING = false;
@@ -39,7 +39,8 @@ public class Main {
         }
 
         // Initialize graphviz object
-        MutableGraph g = mutGraph("Graph").setDirected(true);
+        // MutableGraph g = mutGraph("Graph").setDirected(true); Arrows only work with this one
+        MutableGraph g = graph("Graph").graphAttr().with(splines(GraphAttr.SplineMode.ORTHO)).toMutable();
 
         g = addClasses(g, classes);
 
