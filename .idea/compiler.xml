@@ -9,6 +9,7 @@
         <module name="Week01" />
         <module name="Week02" />
         <module name="Week03" />
+        <module name="Week04" />
       </profile>
     </annotationProcessing>
   </component>
