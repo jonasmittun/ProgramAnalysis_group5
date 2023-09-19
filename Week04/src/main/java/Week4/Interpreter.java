@@ -1,32 +1,15 @@
 package Week4;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.*;
-import java.util.stream.IntStream;
 
 public class Interpreter {
-
-    private int program_counter;
-    private Map<Integer, JSONObject> bytecode;
-    private Stack<Object> operant_stack;
-    private List<Object> locals_variables;
 
     private Map<String, JSONObject> methods;
 
     public Interpreter(HashMap<String, JSONObject> cls) {
         this.methods = cls; // Consider renaming variable to be more representative
-        /*
-        this.methods = new HashMap<>();
-        JSONArray methods = cls.getJSONArray("methods");
-        for(int i = 0; i < methods.length(); i++) {
-            JSONObject method = methods.getJSONObject(i);
-            JSONArray annotations = method.getJSONArray("annotations");
-            if(IntStream.range(0, annotations.length()).noneMatch(j -> annotations.getJSONObject(j).getString("type").equals("dtu/compute/exec/Case"))) continue;
-            this.methods.put(method.getString("name"), method);
-        }
-        */
 
         JSONObject m = methods.get("add");
         run(m);
@@ -42,8 +25,8 @@ public class Interpreter {
     private record Method(JSONObject[] lambda, Stack<JSONObject> sigma, Pair<String, Integer> iota) {}
 
     public void run(JSONObject method) {
-        Map<String, Object> mu = new HashMap<>(); // Memory
-        Stack<Method> phi = new Stack<>(); // Method Stack
+        Map<String, Object> mu = new HashMap<>();   // Memory
+        Stack<Method> phi = new Stack<>();          // Method Stack
 
         phi.push(new Method(new JSONObject[method.getJSONObject("code").getInt("max_locals")], new Stack<>(), new Pair<>(method.getString("name"), 0)));
         while(!phi.isEmpty()) {
@@ -291,10 +274,21 @@ public class Interpreter {
                         case "gt"       -> v1 > v2;
                         case "is"       -> value1.equals(value2); // Arithmetic Compare Equality?
                         case "isnot"    -> !value1.equals(value2);
-                        default         -> false;
+                        default         -> {
+                            System.out.println("Unsupported condition");
+                            yield false;
+                        }
                     };
 
                     phi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, result ? target : m.iota.e2 + 1)));
+                }
+                case "goto" -> {
+                    phi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, instruction.getInt("target"))));
+                }
+                case "get" -> {
+                    boolean is_static = instruction.getBoolean("static");
+                    Object field = instruction.get("field");
+                    // What is "value"?
                 }
                 default -> {
                     System.out.println("Unsupported operation");
