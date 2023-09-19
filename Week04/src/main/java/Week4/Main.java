@@ -39,17 +39,29 @@ public class Main {
             HashMap<String, JSONObject> temp = peeler(files.get(i));
             peeledMethods2.putAll(temp);
         }
+        Interpreter in2 = new Interpreter(peeledMethods2);
+        */
+
+        // TODO create goldenFile (now it finds in this directory)
+        // TODO for every testcase run goldenTestTrace method
 
     }
 
-    // Mig
-    public static ArrayList<JSONObject> peeler(JSONObject xdd){
-        ArrayList<JSONObject> results = new ArrayList<JSONObject>();
+    // Might not be needed
+    public static HashMap<String, JSONObject> peeler(JSONObject theObject){
+        HashMap<String, JSONObject> results = new HashMap<>();
 
         //For each case in the JSONObject add to the list
-
-        //Temp thing so the ide stops crying
-        results.add(xdd);
+        JSONArray methods = theObject.getJSONArray("methods");
+        for(int i = 0; i < methods.length(); i++){
+            JSONArray annotations = methods.getJSONObject(i).getJSONArray("annotations");
+            for (int j = 0; j < annotations.length(); j++) {
+                if (annotations.getJSONObject(j).get("type").toString().equals("dtu/compute/exec/Case")){
+                    //System.out.println("xdd");
+                    results.put(methods.getJSONObject(i).getString("name"),methods.getJSONObject(i));
+                }
+            }
+        }
 
         return results;
     }
