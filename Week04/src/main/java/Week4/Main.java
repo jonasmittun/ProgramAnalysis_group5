@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -78,5 +79,19 @@ public class Main {
         }
 
         return map;
+    }
+
+    public static void goldenTestTrace(byte[] trace, String testcaseName) {
+        try {
+            byte[] expected = Files.readAllBytes(Paths.get("Week04\\src\\main\\java\\Week4\\goldenFile.txt"));
+
+            if (!Arrays.equals(expected, trace)) {
+                // Test Failure
+                System.err.println("Test failed for " + testcaseName);
+            }
+        } catch (IOException e) {
+            // Handle error
+            System.err.println("Failed to read goldenFile with error: " + e);
+        }
     }
 }
