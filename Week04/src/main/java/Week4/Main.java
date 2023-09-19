@@ -9,29 +9,35 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Main {
 
-    //private Map<String, ?> memory;
-    //private Stack<?> stack;
-
     public static void main(String[] args) {
         // Directory where out test binaries are located
-        String path = "src\\main\\java\\decompiled\\dtu\\compute\\exec";
+        String path = "src\\main\\java\\decompiled";
 
         Map<String, JSONObject> map = getFiles(path).entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> new JSONObject(entry.getValue())));
 
-        System.out.println(map.entrySet());
-
-        JSONObject simple = map.get("Simple.json");
-
-        JSONArray methods = simple.getJSONArray("methods");
-        for(int i = 0; i < methods.length(); i++) {
-            Interpreter in = new Interpreter(methods.getJSONObject(i));
+        ArrayList<JSONObject> files = new ArrayList<JSONObject>();
+        for(int i = 0; i < map.keySet().size(); i++) {
+            String index = map.keySet().toArray()[i].toString();
+            files.add(map.get(index));
         }
 
-        // TODO: for each file in dir
+        //For single files
 
+        JSONObject simple = map.get("Simple.json");
+        HashMap<String, JSONObject> peeledMethods = peeler(simple);
+        //
+        Interpreter in = new Interpreter(peeledMethods);
+
+        /* For multiple files
+        HashMap<String, JSONObject> peeledMethods2 = new HashMap<String, JSONObject>();
+        for(int i = 0; i < files.size(); i++) {
+            HashMap<String, JSONObject> temp = peeler(files.get(i));
+            peeledMethods2.putAll(temp);
+        }
 
     }
 
