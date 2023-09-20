@@ -70,7 +70,23 @@ public class Interpreter {
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
                 case "return" -> {
-                    return;
+                    JSONObject value = m.sigma.pop();
+
+                    switch(instruction.getString("type")) {
+                        case "int"      -> value.put("value", value.getInt("value"));
+                        case "long"     -> value.put("value", value.getLong("value"));
+                        case "float"    -> value.put("value", value.getFloat("value"));
+                        case "double"   -> value.put("value", value.getDouble("value"));
+                        case "ref"      -> value.put("value", value.getJSONObject("value"));
+                    }
+
+                    if(!psi.isEmpty()) {
+                        Method m2 = psi.peek();
+                        m2.sigma.push(value);
+                    } else {
+                        System.out.println("Returned " + value);
+                        return;
+                    }
                 }
                 case "load" -> {
                     int index = instruction.getInt("index");
