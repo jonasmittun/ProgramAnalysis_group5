@@ -224,12 +224,14 @@ public class Interpreter {
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
                 case "cast" -> {
-                    String from = instruction.getString("from"); // "int" | arith
-                    String to = instruction.getString("to"); // smalls | arith
+                    String from = instruction.getString("from");    // "int" | Arithmetic Type
+                    String to = instruction.getString("to");        // Small types | Arithmetic Type
+
                     JSONObject value = m.sigma.pop();
+
                     JSONObject result = new JSONObject();
-                    result.put("from", from);
-                    result.put("to", to);
+                    result.put("type", to);
+
                     switch (from) {
                         case "int" -> {
                             switch (to) {
@@ -251,23 +253,21 @@ public class Interpreter {
                         }
                         case "float" -> {
                             switch (to) {
-                                case "long"     -> result.put("value", (long) value.getFloat("value"));
                                 case "int"      -> result.put("value", (int) value.getFloat("value"));
+                                case "long"     -> result.put("value", (long) value.getFloat("value"));
                                 case "double"   -> result.put("value", (double) value.getFloat("value"));
                                 default         -> System.out.println("Unsupported cast target for float type");
                             }
                         }
                         case "double" -> {
                             switch (to) {
+                                case "int"      -> result.put("value", (int) value.getDouble("value"));
                                 case "long"     -> result.put("value", (long) value.getDouble("value"));
                                 case "float"    -> result.put("value", (float) value.getDouble("value"));
-                                case "int"      -> result.put("value", (int) value.getDouble("value"));
                                 default         -> System.out.println("Unsupported cast target for double type");
                             }
                         }
-                        default -> {
-                            System.out.println("Casting from this type is unsupported");
-                        }
+                        default -> System.out.println("Casting from this type is unsupported");
                     }
 
                     m.sigma.push(result);
