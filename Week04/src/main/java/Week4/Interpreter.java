@@ -343,6 +343,23 @@ public class Interpreter {
 
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, location)));
                 }
+                case "lookupswitch" -> {
+                    int location = instruction.getInt("default");
+
+                    JSONObject value = m.sigma.pop();
+                    int index = value.getInt("index");
+
+                    JSONArray targets = instruction.getJSONArray("targets");
+                    for(int i = 0; i < targets.length(); i++) {
+                        JSONObject target = targets.getJSONObject(i);
+                        if(target.getInt("key") == index) {
+                            location = target.getInt("target");
+                            break;
+                        }
+                    }
+
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, location)));
+                }
                 case "get" -> {
                     boolean is_static = instruction.getBoolean("static");
                     Object field = instruction.get("field");
