@@ -328,6 +328,16 @@ public class Interpreter {
                     Object field = instruction.get("field");
                     // What is "value"?
                 }
+                case "pop" -> {
+                    int words = instruction.getInt("words");
+
+                    while(!m.sigma.empty() && words > 0) {
+                        m.sigma.pop();
+                        words--;
+                    }
+
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
+                }
                 default -> {
                     System.out.println("Unsupported operation");
                 }
