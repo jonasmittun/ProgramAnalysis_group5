@@ -338,6 +338,26 @@ public class Interpreter {
 
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
+                case "dup" -> {
+                    int words = instruction.getInt("words");
+
+                    List<JSONObject> local = new ArrayList<>();
+                    for(int i = 0; i < words; i++) {
+                        if(m.sigma.isEmpty()) {
+                            System.out.println("Duplication ended early");
+                            break;
+                        }
+                        local.add(m.sigma.pop());
+                    }
+
+                    for(int i = 0; i < words; i++) {
+                        for(JSONObject jsonObject : local) {
+                            m.sigma.push(jsonObject);
+                        }
+                    }
+
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
+                }
                 default -> {
                     System.out.println("Unsupported operation");
                 }
