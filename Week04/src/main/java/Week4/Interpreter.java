@@ -145,7 +145,6 @@ public class Interpreter {
                 }
                 case "negate" -> {
                     String type = instruction.getString("type"); // Arithmetic Type
-                    int index = instruction.getInt("index");
                     JSONObject value1 = m.sigma.pop();
                     JSONObject result = new JSONObject();
                     result.put("type", type);
