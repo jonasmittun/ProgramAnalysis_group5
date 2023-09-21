@@ -392,6 +392,15 @@ public class Interpreter {
 
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
+                case "swap" -> {
+                    JSONObject value1 = m.sigma.pop();
+                    JSONObject value2 = m.sigma.pop();
+
+                    m.sigma.push(value1);
+                    m.sigma.push(value2);
+
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
+                }
                 default -> {
                     System.out.println("Unsupported operation");
                 }
