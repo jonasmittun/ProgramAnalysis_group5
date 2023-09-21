@@ -328,6 +328,9 @@ public class Interpreter {
                     Object field = instruction.get("field");
                     // What is "value"?
                 }
+                case "nop" -> {
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
+                }
                 case "pop" -> {
                     int words = instruction.getInt("words");
 
