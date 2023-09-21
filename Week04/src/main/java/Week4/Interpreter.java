@@ -1,5 +1,7 @@
 package Week4;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.*;
@@ -271,7 +273,26 @@ public class Interpreter {
 
                     JSONObject result = new JSONObject();
                     result.put("type", "int");
-                    result.put("value", (Float.compare(value1.getFloat("value"), value2.getFloat("value"))));
+                    switch(instruction.getString("type")) {
+                        case "float" -> {
+                            try {
+                                float v1 = value1.getFloat("value");
+                                float v2 = value2.getFloat("value");
+                                result.put("value", (Float.compare(v1, v2)));
+                            } catch(JSONException e) {
+                                result.put("value", instruction.getInt("onnan"));
+                            }
+                        }
+                        case "double" -> {
+                            try {
+                                double v1 = value1.getDouble("value");
+                                double v2 = value2.getDouble("value");
+                                result.put("value", (Double.compare(v1, v2)));
+                            } catch(JSONException e) {
+                                result.put("value", instruction.getInt("onnan"));
+                            }
+                        }
+                    }
 
                     m.sigma.push(result);
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
@@ -303,6 +324,16 @@ public class Interpreter {
                 }
                 case "goto" -> {
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, instruction.getInt("target"))));
+                }
+                case "tableswitch" -> {
+                    int _default = instruction.getInt("default");
+                    int low = instruction.getInt("low");
+
+                    JSONArray targets = instruction.getJSONArray("targets");
+                    for(int i = 0; i < targets.length(); i++) {
+                        int target = targets.getInt(i);
+                        
+                    }
                 }
                 case "get" -> {
                     boolean is_static = instruction.getBoolean("static");
