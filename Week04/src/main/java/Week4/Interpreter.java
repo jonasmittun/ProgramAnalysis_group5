@@ -277,12 +277,9 @@ public class Interpreter {
                     JSONObject value1 = m.sigma.pop();
                     JSONObject value2 = m.sigma.pop();
 
-                    long v1 = value1.getLong("value");
-                    long v2 = value2.getLong("value");
-
                     JSONObject result = new JSONObject();
                     result.put("type", "int");
-                    result.put("value", (Long.compare(v1, v2)));
+                    result.put("value", (Long.compare(value1.getLong("value"), value2.getLong("value"))));
 
                     m.sigma.push(result);
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
@@ -291,12 +288,9 @@ public class Interpreter {
                     JSONObject value1 = m.sigma.pop();
                     JSONObject value2 = m.sigma.pop();
 
-                    float v1 = value1.getFloat("value");
-                    float v2 = value2.getFloat("value");
-
                     JSONObject result = new JSONObject();
                     result.put("type", "int");
-                    result.put("value", (Float.compare(v1, v2)));
+                    result.put("value", (Float.compare(value1.getFloat("value"), value2.getFloat("value"))));
 
                     m.sigma.push(result);
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
