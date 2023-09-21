@@ -326,14 +326,22 @@ public class Interpreter {
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, instruction.getInt("target"))));
                 }
                 case "tableswitch" -> {
-                    int _default = instruction.getInt("default");
+                    int location = instruction.getInt("default");
                     int low = instruction.getInt("low");
+
+                    JSONObject value = m.sigma.pop();
+                    int index = value.getInt("index");
 
                     JSONArray targets = instruction.getJSONArray("targets");
                     for(int i = 0; i < targets.length(); i++) {
                         int target = targets.getInt(i);
-                        
+                        if(target == index) {
+                            location = index - low;
+                            break;
+                        }
                     }
+
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, location)));
                 }
                 case "get" -> {
                     boolean is_static = instruction.getBoolean("static");
