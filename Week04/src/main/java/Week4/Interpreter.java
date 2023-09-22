@@ -392,6 +392,23 @@ public class Interpreter {
                 case "goto" -> {
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, instruction.getInt("target"))));
                 }
+                case "jsr" -> {
+                    int target = instruction.getInt("target");
+
+                    Method next = psi.peek();
+                    JSONObject value = new JSONObject();
+                    value.put("type", "int");
+                    value.put("value", next.iota.e2);
+                    m.sigma.push(value);
+
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, target)));
+                }
+                case "ret" -> {
+                    JSONObject value = m.sigma.pop();
+                    int address = value.getInt("value");
+
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, address)));
+                }
                 case "tableswitch" -> {
                     int location = instruction.getInt("default");
                     int low = instruction.getInt("low");
