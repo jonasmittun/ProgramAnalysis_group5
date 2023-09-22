@@ -48,7 +48,7 @@ public class Interpreter {
 
     /** Method stack element:
      * lambda:  Local Variables
-     * sigma:   Operational stack
+     * sigma:   Operand Stack
      * iota:    Program Counter
      */
     public record Method(JSONObject[] lambda, Stack<JSONObject> sigma, Pair<String, Integer> iota) {
