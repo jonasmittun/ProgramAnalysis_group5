@@ -317,28 +317,75 @@ public class Interpreter {
                     m.sigma.push(result);
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
-                case "if" -> { // TODO: Is it correct to compare two elements in sigma?
+                case "if" -> {
                     int target = instruction.getInt("target");
 
                     JSONObject value1 = m.sigma.pop();
                     JSONObject value2 = m.sigma.pop();
-                    int v1 = value1.getInt("value");
-                    int v2 = value2.getInt("value");
+                    String type1 = value1.getString("type");
+                    String type2 = value2.getString("type");
+
+                    if(!type1.equals(type2)) {
+                        System.out.println("Type mismatch in comparison: " + type1  + " != " + type2);
+                        return;
+                    }
 
                     boolean result = switch(instruction.getString("condition")) {
-                        case "eq"       -> v1 == v2;
-                        case "ne"       -> v1 != v2;
-                        case "le"       -> v1 <= v2;
-                        case "lt"       -> v1 < v2;
-                        case "ge"       -> v1 >= v2;
-                        case "gt"       -> v1 > v2;
-                        case "is"       -> value1.equals(value2); // Arithmetic Compare Equality?
-                        case "isnot"    -> !value1.equals(value2);
+                        case "eq"       -> value1.getInt("value") == value2.getInt("value");
+                        case "ne"       -> value1.getInt("value") != value2.getInt("value");
+                        case "le"       -> value1.getInt("value") <= value2.getInt("value");
+                        case "lt"       -> value1.getInt("value") < value2.getInt("value");
+                        case "ge"       -> value1.getInt("value") >= value2.getInt("value");
+                        case "gt"       -> value1.getInt("value") > value2.getInt("value");
+                        case "is"       -> mu.get(System.identityHashCode(value1)).equals(mu.get(System.identityHashCode(value2)));
+                        case "isnot"    -> !mu.get(System.identityHashCode(value1)).equals(mu.get(System.identityHashCode(value2)));
                         default         -> {
                             System.out.println("Unsupported condition");
                             yield false;
                         }
                     };
+
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, result ? target : m.iota.e2 + 1)));
+                }
+                case "ifz" -> {
+                    String condition = instruction.getString("condition");
+                    int target = instruction.getInt("target");
+
+                    JSONObject value = m.sigma.pop();
+
+                    boolean result;
+                    switch(value.getString("type")) {
+                        case "int" -> {
+                            int v = value.getInt("value");
+                            result = switch(condition) {
+                                case "eq"       -> v == 0;
+                                case "ne"       -> v != 0;
+                                case "le"       -> v <= 0;
+                                case "lt"       -> v < 0;
+                                case "ge"       -> v >= 0;
+                                case "gt"       -> v > 0;
+                                default         -> {
+                                    System.out.println("Unsupported condition in \"int\"");
+                                    yield false;
+                                }
+                            };
+                        }
+                        case "ref" -> {
+                            JSONObject v = mu.get(System.identityHashCode(value));
+                            result = switch(condition) {
+                                case "is"       -> v == null;
+                                case "isnot"    -> v != null;
+                                default         -> {
+                                    System.out.println("Unsupported condition in \"ref\"");
+                                    yield false;
+                                }
+                            };
+                        }
+                        default -> {
+                            System.out.println("Unsupported type");
+                            result = false;
+                        }
+                    }
 
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, result ? target : m.iota.e2 + 1)));
                 }
@@ -382,8 +429,12 @@ public class Interpreter {
                 }
                 case "get" -> {
                     boolean is_static = instruction.getBoolean("static");
-                    Object field = instruction.get("field");
-                    // What is "value"?
+                    JSONObject field = instruction.getJSONObject("field");
+
+                    JSONObject ref = m.sigma.pop();
+
+                    JSONObject object = mu.get(System.identityHashCode(ref));
+
                 }
                 case "newarray" -> {
                     int dim = instruction.getInt("dim"); // Recurse / While-loop magic
