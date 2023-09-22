@@ -10,8 +10,8 @@ public class Interpreter {
 
     private Map<String, JSONObject> methods;    // Map of every method
 
-    private Map<String, Object> mu; // Memory
-    private Stack<Method> psi;      // Method Stack
+    private Map<Integer, JSONObject> mu;    // Memory
+    private Stack<Method> psi;              // Method Stack
 
     public Interpreter(HashMap<String, JSONObject> methods) {
         this.methods = methods;
@@ -66,6 +66,26 @@ public class Interpreter {
             JSONObject instruction = methods.get(m.iota.e1).getJSONObject("code").getJSONArray("bytecode").getJSONObject(m.iota.e2);
 
             switch(instruction.getString("opr")) {
+                case "array_load" -> {
+                    JSONObject index = m.sigma.pop();
+                    JSONObject ref = m.sigma.pop();
+
+                    JSONObject actual = mu.get(System.identityHashCode(ref));
+                    JSONArray array = actual.getJSONArray("value");
+                    JSONObject value = array.getJSONObject(index.getInt("value"));
+
+                    m.sigma.push(value);
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
+                }
+                case "array_store" -> {
+                    JSONObject value = m.sigma.pop();
+                    JSONObject index = m.sigma.pop();
+                    JSONObject ref = m.sigma.pop();
+
+                    JSONObject actual = mu.get(System.identityHashCode(ref));
+                    JSONArray array = actual.getJSONArray("value");
+                    array.put(index.getInt("value"), value);
+                }
                 case "push" -> {
                     JSONObject value = instruction.getJSONObject("value");
                     m.sigma.push(value);
@@ -364,6 +384,48 @@ public class Interpreter {
                     boolean is_static = instruction.getBoolean("static");
                     Object field = instruction.get("field");
                     // What is "value"?
+                }
+                case "newarray" -> {
+                    int dim = instruction.getInt("dim"); // Recurse / While-loop magic
+                    String type = instruction.getString("type");
+
+                    JSONObject value_length = m.sigma.pop();
+                    int length = value_length.getInt("value");
+
+                    // Create value
+                    JSONObject result = new JSONObject();
+                    result.put("type", type);
+                    JSONArray value = new JSONArray(length);
+                    for(int i = 0; i < length; i++) {
+                        JSONObject value_inner = new JSONObject();
+                        value_inner.put("type", type);
+                        value_inner.put("value", 0); // Set default value?
+                        value.put(i, value_inner);
+                    }
+                    result.put("value", value);
+
+                    // Create reference to value
+                    JSONObject ref = new JSONObject();
+                    ref.put("type", "ref");
+                    ref.put("kind", "array");
+
+                    mu.put(System.identityHashCode(ref), result);
+                    m.sigma.push(ref);
+
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
+                }
+                case "arraylength" -> {
+                    JSONObject ref = m.sigma.pop();
+
+                    JSONObject array = mu.get(System.identityHashCode(ref));
+
+                    JSONObject result = new JSONObject();
+                    result.put("type", "int");
+                    result.put("value", array.getJSONArray("value").length());
+
+                    m.sigma.push(result);
+
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
                 case "return" -> {
                     JSONObject value = m.sigma.pop();

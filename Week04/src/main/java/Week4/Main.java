@@ -22,7 +22,7 @@ public class Main {
 
         Map<String, JSONObject> map = getFiles(path).entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> new JSONObject(entry.getValue())));
 
-        ArrayList<JSONObject> files = new ArrayList<JSONObject>();
+        ArrayList<JSONObject> files = new ArrayList<>();
         for(int i = 0; i < map.keySet().size(); i++) {
             String index = map.keySet().toArray()[i].toString();
             files.add(map.get(index));
