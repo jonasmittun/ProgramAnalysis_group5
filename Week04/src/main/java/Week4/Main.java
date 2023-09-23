@@ -4,15 +4,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class Main {
 
@@ -20,20 +16,23 @@ public class Main {
         // Directory where out test binaries are located
         String path = "src\\main\\java\\decompiled";
 
-        Map<String, JSONObject> map = getFiles(path).entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> new JSONObject(entry.getValue())));
+        Map<String, String> files = getFiles(path);         // Map<Filename, Content>
 
-        ArrayList<JSONObject> files = new ArrayList<>();
-        for(int i = 0; i < map.keySet().size(); i++) {
-            String index = map.keySet().toArray()[i].toString();
-            files.add(map.get(index));
+        Map<String, String> mapper = new HashMap<>();       // Map<Filename, Classname>
+        Map<String, JSONObject> classes = new HashMap<>();  // Map<Classname, JSONObject>
+        for(Map.Entry<String, String> entry : files.entrySet()) {
+            String filename = entry.getKey();
+            String content = entry.getValue();
+
+            JSONObject file = new JSONObject(content);
+            String classname = file.getString("name");
+
+            classes.put(classname, file);
+            mapper.put(filename, classname);
         }
 
-        //For single files
-
-        JSONObject simple = map.get("Simple.json");
-        HashMap<String, JSONObject> peeledMethods = peeler(simple);
-        //
-        Interpreter in = new Interpreter(peeledMethods);
+        Interpreter in = new Interpreter(classes);
+        in.run(new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new Stack<>(), new Interpreter.Pair<>(mapper.get("Simple.json") + "/" + "add", 0)));
 
         /* For multiple files
         HashMap<String, JSONObject> peeledMethods2 = new HashMap<String, JSONObject>();

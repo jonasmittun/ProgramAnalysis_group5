@@ -8,38 +8,34 @@ import java.util.*;
 
 public class Interpreter {
 
-    private Map<String, JSONObject> methods;    // Map of every method
+    private final Map<String, JSONObject> classes;                      // Map<Classname, JSONObject>
+    private final Map<String, Map<String, JSONObject>> class_methods;   // Map<Classname, Map<Methodname, JSONObject>> // TODO: Fix overwrite if two methods have the same name
 
     private Map<Integer, JSONObject> mu;    // Memory
     private Stack<Method> psi;              // Method Stack
 
-    public Interpreter(HashMap<String, JSONObject> methods) {
-        this.methods = methods;
+    public Interpreter(Map<String, JSONObject> classes) {
+        this.classes = classes;
+
+        // Map methods for all classes
+        class_methods = new HashMap<>();
+        for(Map.Entry<String, JSONObject> entry : classes.entrySet()) {
+            Map<String, JSONObject> methods = new HashMap<>();
+
+            JSONArray ms = entry.getValue().getJSONArray("methods");
+            for(int i = 0; i < ms.length(); i++) {
+                JSONObject m = ms.getJSONObject(i);
+                methods.put(m.getString("name"), m);
+            }
+
+            class_methods.put(entry.getKey(), methods);
+        }
 
         mu = new HashMap<>();
         psi = new Stack<>();
-
-        // Example run of "add" method
-        JSONObject m = methods.get("add");
-
-        JSONObject[] lambda = new JSONObject[m.getJSONObject("code").getInt("max_locals")];
-
-        JSONObject v1 = new JSONObject();
-        v1.put("type", "int");
-        v1.put("value", 1);
-
-        JSONObject v2 = new JSONObject();
-        v2.put("type", "int");
-        v2.put("value", 2);
-
-        lambda[0] = v1;
-        lambda[1] = v2;
-
-        psi.push(new Method(lambda, new Stack<>(), new Pair<>(m.getString("name"), 0)));
-        run();
     }
 
-    private record Pair<T1, T2>(T1 e1, T2 e2) {
+    public record Pair<T1, T2>(T1 e1, T2 e2) {
         @Override
         public String toString() {
             return "(" + e1.toString() + ", " + e2.toString() + ")";
@@ -58,12 +54,22 @@ public class Interpreter {
         }
     }
 
-    public void run() {
+    private JSONObject getMethod(String absolute_name) {
+        int index = absolute_name.lastIndexOf("/") + 1;
+        String classname = absolute_name.substring(0, index - 1);
+        String methodname = absolute_name.substring(index);
+
+        return class_methods.get(classname).get(methodname);
+    }
+
+    public void run(Method first) {
+        psi.push(first);
+
         System.out.println(psi);
         while(!psi.isEmpty()) {
             Method m = psi.pop();
 
-            JSONObject instruction = methods.get(m.iota.e1).getJSONObject("code").getJSONArray("bytecode").getJSONObject(m.iota.e2);
+            JSONObject instruction = getMethod(m.iota.e1).getJSONObject("code").getJSONArray("bytecode").getJSONObject(m.iota.e2);
 
             switch(instruction.getString("opr")) {
                 case "array_load" -> {
