@@ -451,13 +451,78 @@ public class Interpreter {
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, location)));
                 }
                 case "get" -> {
-                    boolean is_static = instruction.getBoolean("static");
                     JSONObject field = instruction.getJSONObject("field");
 
-                    JSONObject ref = m.sigma.pop();
+                    JSONObject value = null;
 
-                    JSONObject object = mu.get(System.identityHashCode(ref));
+                    JSONObject object;
+                    if(instruction.getBoolean("static")) {
+                        object = classes.get(field.getString("class"));
+                    } else {
+                        JSONObject ref = m.sigma.pop();
+                        object = mu.get(System.identityHashCode(ref));
+                    }
 
+                    JSONArray fields = object.getJSONArray("fields");
+                    for(int i = 0; i < fields.length(); i++) {
+                        JSONObject f = fields.getJSONObject(i);
+                        if(f.getString("name").equals(field.getString("name"))) {
+                            value = f.getJSONObject("value");
+                            break;
+                        }
+                    }
+
+                    m.sigma.push(value);
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
+                }
+                case "put" -> {
+                    JSONObject field = instruction.getJSONObject("field");
+
+                    JSONObject value = m.sigma.pop();
+
+                    JSONObject object;
+                    if(instruction.getBoolean("static")) {
+                        object = classes.get(field.getString("class"));
+                    } else {
+                        JSONObject ref = m.sigma.pop();
+                        object = mu.get(System.identityHashCode(ref));
+                    }
+
+                    JSONArray fields = object.getJSONArray("fields");
+                    for(int i = 0; i < fields.length(); i++) {
+                        JSONObject f = fields.getJSONObject(i);
+                        if(f.getString("name").equals(field.getString("name"))) {
+                            switch(f.getString("type")) {
+                                case "integer"  -> f.put("value", value.getInt("value"));
+                                case "long"     -> f.put("value", value.getLong("value"));
+                                case "float"    -> f.put("value", value.getFloat("value"));
+                                case "double"   -> f.put("value", value.getDouble("value"));
+                                case "string"   -> f.put("value", value.getString("value"));
+                                case "class"    -> f.put("value", value.getJSONObject("value"));
+                                default         -> System.out.println("Unsupported type");
+                            }
+                        }
+                    }
+
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
+                }
+                case "new" -> {
+                    String classname = instruction.getString("class");
+
+                    JSONObject objectref = new JSONObject();
+                    objectref.put("kind", "class");
+                    objectref.put("name", classname);
+
+                    if(!classes.containsKey(classname)) {
+                        System.out.println("Operation \"new\" failed: Class " + classname + " is not available!");
+                    }
+
+                    JSONObject result = new JSONObject(classes.get(classname).toString());
+
+                    mu.put(System.identityHashCode(objectref), result);
+
+                    m.sigma.push(objectref);
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
                 case "newarray" -> {
                     int dim = instruction.getInt("dim"); // Recurse / While-loop magic

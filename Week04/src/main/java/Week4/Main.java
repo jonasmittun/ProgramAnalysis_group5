@@ -31,7 +31,7 @@ public class Main {
             mapper.put(filename, classname);
         }
 
-        Interpreter in = new Interpreter(classes);
+        Interpreter in = new Interpreter(new HashMap<>(classes));
         in.run(new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new Stack<>(), new Interpreter.Pair<>(mapper.get("Simple.json") + "/" + "add", 0)));
 
         /* For multiple files
