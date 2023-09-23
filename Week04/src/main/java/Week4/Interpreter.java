@@ -496,21 +496,26 @@ public class Interpreter {
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
                 case "return" -> {
+                    if(instruction.isNull("type")) continue;
+
+                    String type = instruction.getString("type");
                     JSONObject value = m.sigma.pop();
 
-                    switch(instruction.getString("type")) {
-                        case "int"      -> value.put("value", value.getInt("value"));
-                        case "long"     -> value.put("value", value.getLong("value"));
-                        case "float"    -> value.put("value", value.getFloat("value"));
-                        case "double"   -> value.put("value", value.getDouble("value"));
-                        case "ref"      -> value.put("value", value.getJSONObject("value"));
+                    JSONObject result = new JSONObject();
+                    result.put("type", type);
+                    switch(type) {
+                        case "int"      -> result.put("value", value.getInt("value"));
+                        case "long"     -> result.put("value", value.getLong("value"));
+                        case "float"    -> result.put("value", value.getFloat("value"));
+                        case "double"   -> result.put("value", value.getDouble("value"));
+                        case "ref"      -> result.put("value", value.getJSONObject("value"));
                     }
 
                     if(!psi.isEmpty()) {
                         Method m2 = psi.peek();
-                        m2.sigma.push(value);
+                        m2.sigma.push(result);
                     } else {
-                        System.out.println("Returned " + value);
+                        System.out.println("Returned " + result);
                         return;
                     }
                 }
