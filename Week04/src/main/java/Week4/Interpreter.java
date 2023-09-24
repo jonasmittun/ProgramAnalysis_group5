@@ -605,17 +605,14 @@ public class Interpreter {
                 }
                 case "dup" -> {
                     int words = instruction.getInt("words");
+                    if(m.sigma.size() < words) System.out.println("Not enough elements in stack for duplication");
 
                     List<JSONObject> local = new ArrayList<>();
                     for(int i = 0; i < words; i++) {
-                        if(m.sigma.isEmpty()) {
-                            System.out.println("Duplication ended early");
-                            break;
-                        }
                         local.add(m.sigma.pop());
                     }
 
-                    for(int i = 0; i < words; i++) {
+                    for(int i = 0; i < words+1; i++) {
                         for(JSONObject jsonObject : local) {
                             m.sigma.push(jsonObject);
                         }
