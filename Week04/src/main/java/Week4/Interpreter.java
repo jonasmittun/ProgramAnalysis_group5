@@ -620,6 +620,62 @@ public class Interpreter {
 
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
+                case "dup_x1" -> {
+                    int words = instruction.getInt("words");
+                    if(m.sigma.size() < words + 1) System.out.println("Not enough elements in stack for duplication");
+
+                    List<JSONObject> local = new ArrayList<>();
+                    for(int i = 0; i < words; i++) {
+                        local.add(m.sigma.pop());
+                    }
+
+                    JSONObject word = m.sigma.pop();
+
+                    for(int i = 0; i < words; i++) {
+                        for(JSONObject jsonObject : local) {
+                            m.sigma.push(jsonObject);
+                        }
+                    }
+
+                    m.sigma.push(word);
+
+                    for(int i = 0; i < words; i++) {
+                        for(JSONObject jsonObject : local) {
+                            m.sigma.push(jsonObject);
+                        }
+                    }
+
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
+                }
+                case "dup_x2" -> {
+                    int words = instruction.getInt("words");
+                    if(m.sigma.size() < words + 2) System.out.println("Not enough elements in stack for duplication");
+
+                    List<JSONObject> local = new ArrayList<>();
+                    for(int i = 0; i < words; i++) {
+                        local.add(m.sigma.pop());
+                    }
+
+                    JSONObject word1 = m.sigma.pop();
+                    JSONObject word2 = m.sigma.pop();
+
+                    for(int i = 0; i < words; i++) {
+                        for(JSONObject jsonObject : local) {
+                            m.sigma.push(jsonObject);
+                        }
+                    }
+
+                    m.sigma.push(word2);
+                    m.sigma.push(word1);
+
+                    for(int i = 0; i < words; i++) {
+                        for(JSONObject jsonObject : local) {
+                            m.sigma.push(jsonObject);
+                        }
+                    }
+
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
+                }
                 case "swap" -> {
                     JSONObject value1 = m.sigma.pop();
                     JSONObject value2 = m.sigma.pop();
