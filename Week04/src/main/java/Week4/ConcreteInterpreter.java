@@ -596,7 +596,7 @@ public class ConcreteInterpreter implements Interpreter {
             case "return" -> {
                 if(instruction.isNull("type")) break;
 
-                String type = instruction.getString("type");
+                String type = instruction.getString("type"); // LocalType
                 JSONObject value = m.sigma().pop();
 
                 JSONObject result = new JSONObject();
@@ -606,7 +606,7 @@ public class ConcreteInterpreter implements Interpreter {
                     case "long"     -> result.put("value", value.getLong("value"));
                     case "float"    -> result.put("value", value.getFloat("value"));
                     case "double"   -> result.put("value", value.getDouble("value"));
-                    case "ref"      -> result.put("value", value.getJSONObject("value"));
+                    case "ref"      -> result.put("value", value);
                 }
 
                 if(!psi.isEmpty()) {
