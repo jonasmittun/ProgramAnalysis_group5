@@ -350,14 +350,14 @@ public class Interpreter {
                     }
 
                     boolean result = switch(instruction.getString("condition")) {
-                        case "eq"       -> value1.getInt("value") == value2.getInt("value");
-                        case "ne"       -> value1.getInt("value") != value2.getInt("value");
-                        case "le"       -> value1.getInt("value") <= value2.getInt("value");
-                        case "lt"       -> value1.getInt("value") < value2.getInt("value");
-                        case "ge"       -> value1.getInt("value") >= value2.getInt("value");
-                        case "gt"       -> value1.getInt("value") > value2.getInt("value");
-                        case "is"       -> mu.get(System.identityHashCode(value1)).equals(mu.get(System.identityHashCode(value2)));
-                        case "isnot"    -> !mu.get(System.identityHashCode(value1)).equals(mu.get(System.identityHashCode(value2)));
+                        case "eq"       -> value2.getInt("value") == value1.getInt("value");
+                        case "ne"       -> value2.getInt("value") != value1.getInt("value");
+                        case "le"       -> value2.getInt("value") <= value1.getInt("value");
+                        case "lt"       -> value2.getInt("value") < value1.getInt("value");
+                        case "ge"       -> value2.getInt("value") >= value1.getInt("value");
+                        case "gt"       -> value2.getInt("value") > value1.getInt("value");
+                        case "is"       -> mu.get(System.identityHashCode(value2)).equals(mu.get(System.identityHashCode(value1)));
+                        case "isnot"    -> !mu.get(System.identityHashCode(value2)).equals(mu.get(System.identityHashCode(value1)));
                         default         -> {
                             System.out.println("Unsupported condition");
                             yield false;
