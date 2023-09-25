@@ -52,9 +52,7 @@ class ArrayTest {
 
     @Test
     void first() {
-        JSONObject ref = new JSONObject();
-        ref.put("type", "ref");
-        ref.put("kind", "array");
+        JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
         Method m = new Method(new JSONObject[] {ref}, new Stack<>(), new Pair<>(mapper.get("Array.json") + "/" + "first", 0));
 
@@ -67,9 +65,7 @@ class ArrayTest {
 
     @Test
     void firstSafe() {
-        JSONObject ref = new JSONObject();
-        ref.put("type", "ref");
-        ref.put("kind", "array");
+        JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
         Method m = new Method(new JSONObject[] {ref}, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "firstSafe", 0));
 
@@ -82,9 +78,7 @@ class ArrayTest {
 
     @Test
     void access() {
-        JSONObject ref = new JSONObject();
-        ref.put("type", "ref");
-        ref.put("kind", "array");
+        JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
         JSONObject i = new JSONObject(Map.of("type", "int", "value", 2));
 
@@ -118,9 +112,7 @@ class ArrayTest {
 
     @Test
     void accessSafe() {
-        JSONObject ref = new JSONObject();
-        ref.put("type", "ref");
-        ref.put("kind", "array");
+        JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
         JSONObject i = new JSONObject(Map.of("type", "int", "value", 2));
 
@@ -135,9 +127,7 @@ class ArrayTest {
 
     @Test
     void bubbleSort() {
-        JSONObject ref = new JSONObject();
-        ref.put("type", "ref");
-        ref.put("kind", "array");
+        JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
         JSONObject i = new JSONObject(Map.of("type", "int", "value", 2));
 
