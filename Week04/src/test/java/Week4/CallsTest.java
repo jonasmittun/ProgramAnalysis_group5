@@ -35,10 +35,10 @@ class CallsTest {
 
     @Test
     void fib() {
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)) }, new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "fib", 0));
+        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)) }, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "fib", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 

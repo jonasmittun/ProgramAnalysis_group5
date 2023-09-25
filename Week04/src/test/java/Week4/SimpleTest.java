@@ -36,63 +36,63 @@ class SimpleTest {
 
     @Test
     void noop() {
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[] {}, new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "noop", 0));
+        Method m = new Method(new JSONObject[] {}, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "noop", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
     @Test
     void zero() {
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[] {}, new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "zero", 0));
+        Method m = new Method(new JSONObject[] {}, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "zero", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
     @Test
     void hundredAndTwo() {
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[] {}, new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "hundredAndTwo", 0));
+        Method m = new Method(new JSONObject[] {}, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "hundredAndTwo", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
     @Test
     void identity() {
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 7)) }, new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "identity", 0));
+        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 7)) }, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "identity", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
     @Test
     void add() {
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "add", 0));
+        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "add", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
     @Test
     void min() {
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "min", 0));
+        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "min", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
     @Test
     void factorial() {
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)), new JSONObject(Map.of("type", "int", "value", 0)) }, new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "factorial", 0));
+        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)), new JSONObject(Map.of("type", "int", "value", 0)) }, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "factorial", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 }

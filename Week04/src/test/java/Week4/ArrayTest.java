@@ -56,12 +56,12 @@ class ArrayTest {
         ref.put("type", "ref");
         ref.put("kind", "array");
 
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[] {ref}, new Stack<>(), new Interpreter.Pair<>(mapper.get("Array.json") + "/" + "first", 0));
+        Method m = new Method(new JSONObject[] {ref}, new Stack<>(), new Pair<>(mapper.get("Array.json") + "/" + "first", 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 1, 2, 3, 4 }));
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
@@ -71,12 +71,12 @@ class ArrayTest {
         ref.put("type", "ref");
         ref.put("kind", "array");
 
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[] {ref}, new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "firstSafe", 0));
+        Method m = new Method(new JSONObject[] {ref}, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "firstSafe", 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 1, 2, 3, 4 }));
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
@@ -88,31 +88,31 @@ class ArrayTest {
 
         JSONObject i = new JSONObject(Map.of("type", "int", "value", 2));
 
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[] { i, ref }, new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "access", 0));
+        Method m = new Method(new JSONObject[] { i, ref }, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "access", 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 1, 2, 3, 4 }));
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
     @Test
     void newArray() {
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[1], new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "newArray", 0));
+        Method m = new Method(new JSONObject[1], new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "newArray", 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
     @Test
     void newArrayOutOfBounds() {
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[1], new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "newArrayOutOfBounds", 0));
+        Method m = new Method(new JSONObject[1], new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "newArrayOutOfBounds", 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
@@ -124,12 +124,12 @@ class ArrayTest {
 
         JSONObject i = new JSONObject(Map.of("type", "int", "value", 2));
 
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[] { i, ref }, new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "accessSafe", 0));
+        Method m = new Method(new JSONObject[] { i, ref }, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "accessSafe", 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 1, 2, 3, 4 }));
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
@@ -145,32 +145,32 @@ class ArrayTest {
         lambda[0] = i;
         lambda[1] = ref;
 
-        Interpreter.Method m = new Interpreter.Method(lambda, new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "bubbleSort", 0));
+        Method m = new Method(lambda, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "bubbleSort", 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 4, 3, 2, 1 }));
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
     @Test
     void aWierdOneOutOfBounds() {
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[1], new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "aWierdOneOutOfBounds", 0));
+        Method m = new Method(new JSONObject[1], new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "aWierdOneOutOfBounds", 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
     @Test
     void aWierdOneWithinBounds() {
-        Interpreter.Method m = new Interpreter.Method(new JSONObject[1], new Stack<>(), new Interpreter.Pair<>(mapper.get(filename) + "/" + "aWierdOneWithinBounds", 0));
+        Method m = new Method(new JSONObject[1], new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "aWierdOneWithinBounds", 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Interpreter in = new Interpreter(new HashMap<>(classes));
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 }
