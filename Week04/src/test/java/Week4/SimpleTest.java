@@ -34,6 +34,23 @@ class SimpleTest {
     }
 
     @Test
+    void noop() {
+        Interpreter in = new Interpreter(new HashMap<>(classes));
+        in.run(new Interpreter.Method(new JSONObject[] {}, new Stack<>(), new Interpreter.Pair<>(mapper.get("Simple.json") + "/" + "noop", 0)));
+    }
+
+    @Test
+    void zero() {
+        Interpreter in = new Interpreter(new HashMap<>(classes));
+        in.run(new Interpreter.Method(new JSONObject[] {}, new Stack<>(), new Interpreter.Pair<>(mapper.get("Simple.json") + "/" + "zero", 0)));
+    }
+
+    @Test
+    void hundredAndTwo() {
+        Interpreter in = new Interpreter(new HashMap<>(classes));
+        in.run(new Interpreter.Method(new JSONObject[] {}, new Stack<>(), new Interpreter.Pair<>(mapper.get("Simple.json") + "/" + "hundredAndTwo", 0)));
+    }
+    @Test
     void identity() {
         Interpreter in = new Interpreter(new HashMap<>(classes));
         in.run(new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 7)) }, new Stack<>(), new Interpreter.Pair<>(mapper.get("Simple.json") + "/" + "identity", 0)));
@@ -49,6 +66,12 @@ class SimpleTest {
     void min() {
         Interpreter in = new Interpreter(new HashMap<>(classes));
         in.run(new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new Stack<>(), new Interpreter.Pair<>(mapper.get("Simple.json") + "/" + "min", 0)));
+    }
+
+    @Test
+    void factorial() {
+        Interpreter in = new Interpreter(new HashMap<>(classes));
+        in.run(new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)) }, new Stack<>(), new Interpreter.Pair<>(mapper.get("Simple.json") + "/" + "factorial", 0)));
     }
 
 
