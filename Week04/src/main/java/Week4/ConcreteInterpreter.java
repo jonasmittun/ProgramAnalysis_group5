@@ -573,9 +573,7 @@ public class ConcreteInterpreter implements Interpreter {
                 result.put("value", value);
 
                 // Create reference to value
-                JSONObject ref = new JSONObject();
-                ref.put("type", "ref");
-                ref.put("kind", "array");
+                JSONObject ref = new JSONObject(Map.of("kind", "array", "type", type));
 
                 mu.put(System.identityHashCode(ref), result);
                 m.sigma().push(ref);
