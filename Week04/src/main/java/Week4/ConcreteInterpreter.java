@@ -80,7 +80,7 @@ public class ConcreteInterpreter implements Interpreter {
                 }
                 case "load" -> {
                     int index = instruction.getInt("index");
-                    m.sigma().push(m.lambda()[index]);
+                    m.sigma().push(new JSONObject(m.lambda()[index].toMap()));
                     psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
                 }
                 case "store" -> {
