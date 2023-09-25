@@ -34,6 +34,15 @@ class CallsTest {
     }
 
     @Test
+    void helloWorld() {
+        Method m = new Method(new JSONObject[0], new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "helloWorld", 0));
+        Map<Integer, JSONObject> mu = new HashMap<>();
+
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
+        in.run(m, mu);
+    }
+
+    @Test
     void fib() {
         Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)) }, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "fib", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
