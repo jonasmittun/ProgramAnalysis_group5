@@ -121,8 +121,8 @@ public class Interpreter {
                 }
                 case "binary" -> {
                     String type = instruction.getString("type"); // Arithmetic Type
-                    JSONObject value1 = m.sigma.pop();
                     JSONObject value2 = m.sigma.pop();
+                    JSONObject value1 = m.sigma.pop();
 
                     JSONObject result = new JSONObject();
                     result.put("type", type);
