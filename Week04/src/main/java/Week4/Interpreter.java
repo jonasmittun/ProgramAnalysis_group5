@@ -730,7 +730,7 @@ public class Interpreter {
                 }
             }
 
-            System.out.println(String.format("%-10s", instruction.getString("opr")) + psi);
+            System.out.println(String.format("%-10s", instruction.getString("opr")) + "Ψ" + psi);
         }
     }
 }
