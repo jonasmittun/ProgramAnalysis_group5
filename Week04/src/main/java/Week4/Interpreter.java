@@ -295,8 +295,8 @@ public class Interpreter {
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
                 case "comparelongs" -> {
-                    JSONObject value1 = m.sigma.pop();
                     JSONObject value2 = m.sigma.pop();
+                    JSONObject value1 = m.sigma.pop();
 
                     JSONObject result = new JSONObject();
                     result.put("type", "int");
@@ -306,8 +306,8 @@ public class Interpreter {
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
                 case "comparefloating" -> {
-                    JSONObject value1 = m.sigma.pop();
                     JSONObject value2 = m.sigma.pop();
+                    JSONObject value1 = m.sigma.pop();
 
                     JSONObject result = new JSONObject();
                     result.put("type", "int");
@@ -338,18 +338,18 @@ public class Interpreter {
                 case "if" -> {
                     int target = instruction.getInt("target");
 
-                    JSONObject value1 = m.sigma.pop();
                     JSONObject value2 = m.sigma.pop();
+                    JSONObject value1 = m.sigma.pop();
 
                     boolean result = switch(instruction.getString("condition")) {
-                        case "eq"       -> value2.getInt("value") == value1.getInt("value");
-                        case "ne"       -> value2.getInt("value") != value1.getInt("value");
-                        case "le"       -> value2.getInt("value") <= value1.getInt("value");
-                        case "lt"       -> value2.getInt("value") < value1.getInt("value");
-                        case "ge"       -> value2.getInt("value") >= value1.getInt("value");
-                        case "gt"       -> value2.getInt("value") > value1.getInt("value");
-                        case "is"       -> mu.get(System.identityHashCode(value2)).equals(mu.get(System.identityHashCode(value1)));
-                        case "isnot"    -> !mu.get(System.identityHashCode(value2)).equals(mu.get(System.identityHashCode(value1)));
+                        case "eq"       -> value1.getInt("value") == value2.getInt("value");
+                        case "ne"       -> value1.getInt("value") != value2.getInt("value");
+                        case "le"       -> value1.getInt("value") <= value2.getInt("value");
+                        case "lt"       -> value1.getInt("value") < value2.getInt("value");
+                        case "ge"       -> value1.getInt("value") >= value2.getInt("value");
+                        case "gt"       -> value1.getInt("value") > value2.getInt("value");
+                        case "is"       -> mu.get(System.identityHashCode(value1)).equals(mu.get(System.identityHashCode(value2)));
+                        case "isnot"    -> !mu.get(System.identityHashCode(value1)).equals(mu.get(System.identityHashCode(value2)));
                         default         -> {
                             System.out.println("Unsupported condition");
                             yield false;
@@ -717,11 +717,11 @@ public class Interpreter {
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
                 case "swap" -> {
-                    JSONObject value1 = m.sigma.pop();
                     JSONObject value2 = m.sigma.pop();
+                    JSONObject value1 = m.sigma.pop();
 
-                    m.sigma.push(value1);
                     m.sigma.push(value2);
+                    m.sigma.push(value1);
 
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
