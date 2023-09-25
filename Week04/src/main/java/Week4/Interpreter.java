@@ -11,9 +11,6 @@ public class Interpreter {
     private final Map<String, JSONObject> classes;                      // Map<Classname, JSONObject>
     private final Map<String, Map<String, JSONObject>> class_methods;   // Map<Classname, Map<Methodname, JSONObject>> // TODO: Fix overwrite if two methods have the same name
 
-    private Map<Integer, JSONObject> mu;    // Memory
-    private Stack<Method> psi;              // Method Stack
-
     public Interpreter(Map<String, JSONObject> classes) {
         this.classes = classes;
 
@@ -30,9 +27,6 @@ public class Interpreter {
 
             class_methods.put(entry.getKey(), methods);
         }
-
-        mu = new HashMap<>();
-        psi = new Stack<>();
     }
 
     public record Pair<T1, T2>(T1 e1, T2 e2) {
@@ -62,7 +56,12 @@ public class Interpreter {
         return class_methods.get(classname).get(methodname);
     }
 
-    public void run(Method first) {
+    /** Runs the method
+     * mu:      Memory
+     * first:   Method
+     * */
+    public void run( Method first, Map<Integer, JSONObject> mu) {
+        Stack<Method> psi = new Stack<>();  // Method Stack
         psi.push(first);
 
         System.out.println(psi);
