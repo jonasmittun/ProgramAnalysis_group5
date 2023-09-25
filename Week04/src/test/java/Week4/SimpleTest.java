@@ -19,7 +19,7 @@ class SimpleTest {
 
     @BeforeAll
     static void initAll() {
-        String path = "src\\test\\decompiled\\dtu\\compute\\exec";
+        String path = "src\\main\\java\\decompiled\\dtu\\compute\\exec";
         Map<String, String> files = getFiles(path);
         for(Map.Entry<String, String> entry : files.entrySet()) {
             String filename = entry.getKey();
@@ -71,7 +71,7 @@ class SimpleTest {
     @Test
     void factorial() {
         Interpreter in = new Interpreter(new HashMap<>(classes));
-        in.run(new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)) }, new Stack<>(), new Interpreter.Pair<>(mapper.get("Simple.json") + "/" + "factorial", 0)));
+        in.run(new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)), new JSONObject(Map.of("type", "int", "value", 0)) }, new Stack<>(), new Interpreter.Pair<>(mapper.get("Simple.json") + "/" + "factorial", 0)));
     }
 
 
