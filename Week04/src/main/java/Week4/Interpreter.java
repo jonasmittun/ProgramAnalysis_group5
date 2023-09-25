@@ -104,7 +104,8 @@ public class Interpreter {
                 }
                 case "store" -> {
                     int index = instruction.getInt("index");
-                    m.lambda[index] = instruction.getJSONObject("value");
+                    JSONObject value = m.sigma.pop();
+                    m.lambda[index] = value;
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
                 case "binary" -> {
@@ -686,7 +687,7 @@ public class Interpreter {
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
                 default -> {
-                    System.out.println("Unsupported operation");
+                    System.out.println("Unsupported operation + \"" + instruction.getString("opr") + "\"");
                 }
             }
 
