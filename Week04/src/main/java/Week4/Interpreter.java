@@ -340,13 +340,6 @@ public class Interpreter {
 
                     JSONObject value1 = m.sigma.pop();
                     JSONObject value2 = m.sigma.pop();
-                    String type1 = value1.getString("type");
-                    String type2 = value2.getString("type");
-
-                    if(!type1.equals(type2)) {
-                        System.out.println("Type mismatch in comparison: " + type1  + " != " + type2);
-                        return;
-                    }
 
                     boolean result = switch(instruction.getString("condition")) {
                         case "eq"       -> value2.getInt("value") == value1.getInt("value");
