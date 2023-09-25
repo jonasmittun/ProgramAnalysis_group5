@@ -108,6 +108,18 @@ public class Interpreter {
                     m.lambda[index] = value;
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
+                case "incr" -> {
+                    int index = instruction.getInt("index");
+                    JSONObject value = m.lambda[index];
+                    switch(value.getString("type")) {
+                        case "int"      -> value.put("value", value.getInt("value") + instruction.getInt("amount"));
+                        case "long"     -> value.put("value", value.getLong("value") + instruction.getLong("amount"));
+                        case "float"    -> value.put("value", value.getFloat("value") + instruction.getFloat("amount"));
+                        case "double"   -> value.put("value", value.getDouble("value") + instruction.getDouble("amount"));
+                    }
+
+                    psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
+                }
                 case "binary" -> {
                     String type = instruction.getString("type"); // Arithmetic Type
                     JSONObject value1 = m.sigma.pop();
