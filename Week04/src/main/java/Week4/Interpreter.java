@@ -518,6 +518,41 @@ public class Interpreter {
 
                     psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
                 }
+                case "invoke" -> {
+                    JSONObject method = instruction.getJSONObject("method");
+
+                    switch(instruction.getString("access")) {
+                        case "special" -> {}
+                        case "virtual" -> {}
+                        case "static" -> {
+                            JSONObject m_ref = method.getJSONObject("ref");
+                            String classname = m_ref.getString("name");
+                            String methodname = method.getString("name");
+                            JSONArray args = method.getJSONArray("args");
+
+                            if(m.sigma.size() < args.length()) System.out.println("Not enough elements in stack for invocation of method!");
+
+                            JSONObject[] lambda = new JSONObject[args.length()];
+                            for(int i = 0; i < args.length(); i++) {
+                                JSONObject arg = m.sigma.pop();
+
+                                String type_expected = args.get(i) instanceof String ? args.getString(i) : (args.getJSONObject(i).has("kind") ? "ref" : args.getJSONObject(i).getString("type"));
+                                String type_actual = arg.getString("type");
+
+                                if(!type_actual.equals(type_expected)) {
+                                    System.out.println("Type mismatch: Expected " + type_expected + " but was " + type_actual);
+                                }
+
+                                lambda[i] = arg;
+                            }
+
+                            psi.push(new Method(m.lambda, m.sigma, new Pair<>(m.iota.e1, m.iota.e2 + 1)));
+                            psi.push(new Method(lambda, new Stack<>(), new Pair<>(classname + "/" + methodname, 0)));
+                        }
+                        case "interface" -> {}
+                        case "dynamic" -> {}
+                    }
+                }
                 case "new" -> {
                     String classname = instruction.getString("class");
 
