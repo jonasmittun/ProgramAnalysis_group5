@@ -18,5 +18,5 @@ public interface Interpreter {
      * @param mu:       The memory
      * @param psi:      The method stack
      */
-    void step(Method method, Map<Integer, JSONObject> mu, Stack<Method> psi);
+    Set<State> step(Method method, Map<Integer, JSONObject> mu, Stack<Method> psi);
 }
