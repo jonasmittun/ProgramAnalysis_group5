@@ -42,7 +42,7 @@ public class ConcreteInterpreter implements Interpreter {
         Stack<Method> psi = new Stack<>();  // Method Stack
         psi.push(method);
 
-        System.out.println(psi);
+        System.out.println(String.format("%-12s", "entry") + "Ψ" + psi);
         while(!psi.isEmpty()) {
             Method m = psi.pop();
 
@@ -613,7 +613,7 @@ public class ConcreteInterpreter implements Interpreter {
                     Method m2 = psi.peek();
                     m2.sigma().push(result);
                 } else {
-                    System.out.println("Returned " + result);
+                    System.out.println(String.format("%-12s", "return") + result);
                     return;
                 }
             }
