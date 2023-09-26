@@ -37,7 +37,6 @@ public class ConcreteInterpreter implements Interpreter {
         return class_methods.get(classname).get(methodname);
     }
 
-    @Override
     public void run(Method method, Map<Integer, JSONObject> mu) {
         Stack<Method> psi = new Stack<>();  // Method Stack
         psi.push(method);
@@ -50,7 +49,6 @@ public class ConcreteInterpreter implements Interpreter {
         }
     }
 
-    @Override
     public void step(Method m, Map<Integer, JSONObject> mu, Stack<Method> psi) {
         JSONObject instruction = getMethod(m.iota().e1()).getJSONObject("code").getJSONArray("bytecode").getJSONObject(m.iota().e2());
 
