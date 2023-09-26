@@ -6,7 +6,7 @@ import org.json.JSONObject;
 
 import java.util.*;
 
-public class ConcreteInterpreter implements Interpreter {
+public class ConcreteInterpreter {
 
     private final Map<String, JSONObject> classes;                      // Map<Classname, JSONObject>
     private final Map<String, Map<String, JSONObject>> class_methods;   // Map<Classname, Map<Methodname, JSONObject>> // TODO: Fix overwrite if two methods have the same name
