@@ -1,4 +1,4 @@
-package Week4;
+package Week5;
 
 import org.json.JSONObject;
 
@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-public class RangeInterpreter implements Interpreter {
+public class ConstantInterpreter implements Interpreter {
     @Override
     public void run(Method method, Map<Integer, JSONObject> mu) {
 
