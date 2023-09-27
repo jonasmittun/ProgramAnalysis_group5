@@ -90,8 +90,11 @@ public class ConcreteInterpreter {
                 JSONObject actual = mu.get(System.identityHashCode(ref));
                 JSONArray array = actual.getJSONArray("value");
                 JSONObject value = array.getJSONObject(index.getInt("value"));
-
-                m.sigma().push(value);
+                if(value.has("kind")) { // Check if it's a reference type
+                    m.sigma().push(value);
+                } else {
+                    m.sigma().push(new JSONObject(value.toMap()));
+                }
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
             }
             case "array_store" -> {
