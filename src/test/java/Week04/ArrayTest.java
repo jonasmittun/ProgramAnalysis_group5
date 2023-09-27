@@ -124,11 +124,8 @@ class ArrayTest {
     void bubbleSort() {
         JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
-        JSONObject i = new JSONObject(Map.of("type", "int", "value", 2));
-
         JSONObject[] lambda = new JSONObject[5];
         lambda[0] = ref;
-        lambda[1] = i;
 
         Method m = new Method(lambda, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "bubbleSort", 0));
 
