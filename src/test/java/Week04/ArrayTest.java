@@ -36,18 +36,12 @@ class ArrayTest {
 
     private JSONObject createArray(int[] array) {
         // Create value
-        JSONObject result = new JSONObject();
-        result.put("type", "int");
         JSONArray value = new JSONArray(array.length);
         for(int i = 0; i < array.length; i++) {
-            JSONObject value_inner = new JSONObject();
-            value_inner.put("type", "int");
-            value_inner.put("value", array[i]);
-            value.put(i, value_inner);
+            value.put(i, new JSONObject(Map.of("type", "int", "value", array[i])));
         }
-        result.put("value", value);
 
-        return result;
+        return new JSONObject(Map.of("type", "int", "value", value));
     }
 
     @Test
