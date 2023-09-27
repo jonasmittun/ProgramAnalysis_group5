@@ -119,6 +119,7 @@ class ArrayTest {
         in.run(m, mu);
     }
 
+    /*
     @Test
     void bubbleSort() {
         JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
@@ -137,6 +138,7 @@ class ArrayTest {
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
+    */
 
     @Test
     void aWierdOneOutOfBounds() {

@@ -72,6 +72,7 @@ public class ConcreteInterpreter {
                 JSONObject actual = mu.get(System.identityHashCode(ref));
                 JSONArray array = actual.getJSONArray("value");
                 array.put(index.getInt("value"), value);
+                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
             }
             case "push" -> {
                 JSONObject value = instruction.getJSONObject("value");
