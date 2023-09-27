@@ -49,6 +49,36 @@ public class ConcreteInterpreter {
         }
     }
 
+    /** Returns a new JSONObject of the specified type with the default value for that type
+     * @param SimpleType:
+     *  <pre>
+     *  BaseType: "byte", "char", "double", "float", "int", "long", "short" or "boolean"<br>
+     *  SimpleReferenceType: { "kind": "class", "name": &lt;ClassName&gt; } or { "kind": "array", "name": &lt;SimpleType&gt; }
+     *  </pre>
+     */
+    private static JSONObject createSimpleType(Object SimpleType) {
+        JSONObject result = new JSONObject();
+        if(SimpleType instanceof String type) {
+            result.put("type", type);
+            switch(type) {
+                case "byte", "short", "int" -> result.put("value", 0);
+                case "char"     -> result.put("value", '\u0000');
+                case "double"   -> result.put("value", 0d);
+                case "float"    -> result.put("value", 0f);
+                case "long"     -> result.put("value", 0L);
+                case "boolean"  -> result.put("value", false);
+                default         -> System.out.println("Unsupported type");
+            }
+        } else if(SimpleType instanceof JSONObject o) {
+            result.put("type", o);
+            result.put("value", JSONObject.NULL);
+        } else {
+            System.out.println("Could not determine type: " + SimpleType);
+        }
+
+        return result;
+    }
+
     public void step(Method m, Map<Integer, JSONObject> mu, Stack<Method> psi) {
         JSONObject instruction = getMethod(m.iota().e1()).getJSONObject("code").getJSONArray("bytecode").getJSONObject(m.iota().e2());
 
@@ -554,22 +584,17 @@ public class ConcreteInterpreter {
             }
             case "newarray" -> {
                 int dim = instruction.getInt("dim"); // Recurse / While-loop magic
-                String type = instruction.getString("type");
+                Object type = instruction.get("type"); // SimpleType
 
                 JSONObject value_length = m.sigma().pop();
                 int length = value_length.getInt("value");
 
                 // Create value
-                JSONObject result = new JSONObject();
-                result.put("type", type);
                 JSONArray value = new JSONArray(length);
                 for(int i = 0; i < length; i++) {
-                    JSONObject value_inner = new JSONObject();
-                    value_inner.put("type", type);
-                    value_inner.put("value", 0); // Set default value?
-                    value.put(i, value_inner);
+                    value.put(i, createSimpleType(type));
                 }
-                result.put("value", value);
+                JSONObject result = new JSONObject(Map.of("type", type, "value", value));
 
                 // Create reference to value
                 JSONObject ref = new JSONObject(Map.of("kind", "array", "type", type));
