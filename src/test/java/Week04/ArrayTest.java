@@ -4,10 +4,12 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.TimeUnit;
 
 import static Week01.Main.getFiles;
 
@@ -119,8 +121,8 @@ class ArrayTest {
         in.run(m, mu);
     }
 
-    /*
     @Test
+    @Timeout(value = 100, unit = TimeUnit.MILLISECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     void bubbleSort() {
         JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
@@ -135,7 +137,6 @@ class ArrayTest {
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
-    */
 
     @Test
     void aWierdOneOutOfBounds() {
