@@ -36,8 +36,7 @@ class ArrayTest {
         }
     }
 
-    private JSONObject createArray(int[] array) {
-        // Create value
+    private static JSONObject createArray(int[] array) {
         JSONArray value = new JSONArray(array.length);
         for(int i = 0; i < array.length; i++) {
             value.put(i, new JSONObject(Map.of("type", "int", "value", array[i])));
