@@ -109,7 +109,11 @@ public class ConcreteInterpreter {
             }
             case "push" -> {
                 JSONObject value = instruction.getJSONObject("value");
-                m.sigma().push(value);
+                if(value.getString("type").equals("class")) { // Value is a <SimpleReferenceType>
+                    m.sigma().push(value);
+                } else {
+                    m.sigma().push(new JSONObject(value.toMap()));
+                }
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
             }
             case "load" -> {
