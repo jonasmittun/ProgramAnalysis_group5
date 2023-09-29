@@ -29,6 +29,36 @@ public class ConcreteInterpreter {
         }
     }
 
+    /** Returns a new JSONObject of the specified type with the default value for that type
+     * @param SimpleType:
+     *  <pre>
+     *  BaseType: "byte", "char", "double", "float", "int", "long", "short" or "boolean"<br>
+     *  SimpleReferenceType: { "kind": "class", "name": &lt;ClassName&gt; } or { "kind": "array", "name": &lt;SimpleType&gt; }
+     *  </pre>
+     */
+    private static JSONObject createSimpleType(Object SimpleType) {
+        JSONObject result = new JSONObject();
+        if(SimpleType instanceof String BaseType) {
+            result.put("type", BaseType);
+            switch(BaseType) {
+                case "byte", "short", "int" -> result.put("value", 0);
+                case "char"     -> result.put("value", '\u0000');
+                case "double"   -> result.put("value", 0d);
+                case "float"    -> result.put("value", 0f);
+                case "long"     -> result.put("value", 0L);
+                case "boolean"  -> result.put("value", false);
+                default         -> System.out.println("Unsupported type");
+            }
+        } else if(SimpleType instanceof JSONObject SimpleReferenceType) {
+            result.put("type", SimpleReferenceType);
+            result.put("value", JSONObject.NULL);
+        } else {
+            System.out.println("Could not determine type: " + SimpleType);
+        }
+
+        return result;
+    }
+
     private JSONObject getMethod(String absolute_name) {
         int index = absolute_name.lastIndexOf("/") + 1;
         String classname = absolute_name.substring(0, index - 1);
@@ -38,7 +68,7 @@ public class ConcreteInterpreter {
     }
 
     public void run(Method method, Map<Integer, JSONObject> mu) {
-        Stack<Method> psi = new Stack<>();  // Method Stack
+        Deque<Method> psi = new ArrayDeque<>();  // Method Stack
         psi.push(method);
 
         System.out.println(String.format("%-12s", "entry") + "Ψ" + psi);
@@ -53,37 +83,7 @@ public class ConcreteInterpreter {
         }
     }
 
-    /** Returns a new JSONObject of the specified type with the default value for that type
-     * @param SimpleType:
-     *  <pre>
-     *  BaseType: "byte", "char", "double", "float", "int", "long", "short" or "boolean"<br>
-     *  SimpleReferenceType: { "kind": "class", "name": &lt;ClassName&gt; } or { "kind": "array", "name": &lt;SimpleType&gt; }
-     *  </pre>
-     */
-    private static JSONObject createSimpleType(Object SimpleType) {
-        JSONObject result = new JSONObject();
-        if(SimpleType instanceof String type) {
-            result.put("type", type);
-            switch(type) {
-                case "byte", "short", "int" -> result.put("value", 0);
-                case "char"     -> result.put("value", '\u0000');
-                case "double"   -> result.put("value", 0d);
-                case "float"    -> result.put("value", 0f);
-                case "long"     -> result.put("value", 0L);
-                case "boolean"  -> result.put("value", false);
-                default         -> System.out.println("Unsupported type");
-            }
-        } else if(SimpleType instanceof JSONObject o) {
-            result.put("type", o);
-            result.put("value", JSONObject.NULL);
-        } else {
-            System.out.println("Could not determine type: " + SimpleType);
-        }
-
-        return result;
-    }
-
-    public void step(Method m, Map<Integer, JSONObject> mu, Stack<Method> psi) {
+    public void step(Method m, Map<Integer, JSONObject> mu, Deque<Method> psi) {
         JSONObject instruction = getMethod(m.iota().e1()).getJSONObject("code").getJSONArray("bytecode").getJSONObject(m.iota().e2());
 
         switch(instruction.getString("opr")) {
