@@ -65,7 +65,8 @@ public class SignInterpreter implements Interpreter {
         int depthCounter = 1;
         int depth = 0;
         Stack<Method> psi = new Stack<>();  // Method Stack
-        psi.push(method);
+
+        psi.push(addSigns(method));
 
         State first = new State(psi, mu);
 
@@ -84,6 +85,25 @@ public class SignInterpreter implements Interpreter {
                 depthCounter = queue.size();
             }
         }
+
+        System.out.println(Arrays.stream(method.lambda()).toList());
+        System.out.println(method.sigma().toString());
+    }
+
+    private Method addSigns(Method m) {
+        int len = m.lambda().length;
+        List<JSONObject> nums = Arrays.stream(m.lambda()).toList();
+        for(int i = 0; i < len; i++) {
+            int val = nums.get(i).getInt("value");
+            if (val == 0) {
+                m.lambda()[i].put("sign", "0");
+            } else if (val < 0) {
+                m.lambda()[i].put("sign", "-");
+            } else {
+                m.lambda()[i].put("sign", "+");
+            }
+        }
+        return new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2()));
     }
 
     @Override
@@ -118,6 +138,7 @@ public class SignInterpreter implements Interpreter {
                 JSONObject value = instruction.getJSONObject("value");
                 m.sigma().push(value);
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                results.add(new State(psi, mu));
             }
             case "load" -> {
                 int index = instruction.getInt("index");
@@ -128,6 +149,7 @@ public class SignInterpreter implements Interpreter {
                     m.sigma().push(new JSONObject(value.toMap()));
                 }
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                results.add(new State(psi, mu));
             }
             case "store" -> {
                 int index = instruction.getInt("index");
@@ -160,33 +182,24 @@ public class SignInterpreter implements Interpreter {
                         switch(value1.getString("sign")) {
                             case "-"      -> {
                                 switch(value2.getString("sign")) {
-                                    case "-"      -> {
-                                        result.put("sign", Set.of('-'));
-                                        /*
-                                        Stack<Method> psi_next = psi.clone();
-                                        Method m_next = m.clone();
-                                        m_next.push(result);
-                                        State next = new State(psi, mu);
-                                        results.add(next);
-                                        */
-                                    }
+                                    case "-"      -> result.put("sign", Set.of('-'));
                                     case "0"      -> result.put("sign", Set.of('-'));
                                     case "+"      -> result.put("sign", Set.of('-','0','+'));
                                 }
                             }
                             case "0"      -> {
-                                switch(value2.getString("value")) {
-                                    case "-"      -> result.put("value", Set.of('-'));
-                                    case "0"      -> result.put("value", Set.of('0'));
-                                    case "+"      -> result.put("value", Set.of('+'));
+                                switch(value2.getString("sign")) {
+                                    case "-"      -> result.put("sign", Set.of('-'));
+                                    case "0"      -> result.put("sign", Set.of('0'));
+                                    case "+"      -> result.put("sign", Set.of('+'));
                                 }
                             }
 
                             case "+"      -> {
-                                switch(value2.getString("value")) {
-                                    case "-"      -> result.put("value", Set.of('-', '0', '+'));
-                                    case "0"      -> result.put("value", Set.of('+'));
-                                    case "+"      -> result.put("value", Set.of('+'));
+                                switch(value2.getString("sign")) {
+                                    case "-"      -> result.put("sign", Set.of('-', '0', '+'));
+                                    case "0"      -> result.put("sign", Set.of('+'));
+                                    case "+"      -> result.put("sign", Set.of('+'));
                                 }
                             }
                         }
@@ -826,7 +839,8 @@ public class SignInterpreter implements Interpreter {
             }
         }
 
-        System.out.println(String.format("%-12s", instruction.getString("opr")) + "Ψ" + psi);
+        // Currently incompatible with signs, crashes
+        //System.out.println(String.format("%-12s", instruction.getString("opr")) + "Ψ" + psi);
 
         return results;
     }

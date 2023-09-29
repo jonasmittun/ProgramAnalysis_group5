@@ -73,7 +73,7 @@ class SimpleTest {
 
     @Test
     void add() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "add", 0));
+        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", -1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "add", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
