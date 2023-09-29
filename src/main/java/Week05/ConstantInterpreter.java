@@ -3,9 +3,9 @@ package Week05;
 import Week04.Method;
 import org.json.JSONObject;
 
+import java.util.Deque;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 
 public class ConstantInterpreter implements Interpreter {
     @Override
@@ -14,7 +14,7 @@ public class ConstantInterpreter implements Interpreter {
     }
 
     @Override
-    public Set<State> step(Method method, Map<Integer, JSONObject> mu, Stack<Method> psi) {
+    public Set<State> step(Method method, Map<Integer, JSONObject> mu, Deque<Method> psi) {
         return null;
     }
 }

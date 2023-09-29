@@ -32,8 +32,8 @@ public class Main {
         }
 
         //Interpreter in = new Interpreter(new HashMap<>(classes));
-        //in.run(new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new Stack<>(), new Interpreter.Pair<>(mapper.get("Simple.json") + "/" + "add", 0)));
-        //in.run(new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 5)), new JSONObject(Map.of("type", "int", "value", 2)) }, new Stack<>(), new Interpreter.Pair<>(mapper.get("Simple.json") + "/" + "factorial", 0)));
+        //in.run(new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Interpreter.Pair<>(mapper.get("Simple.json") + "/" + "add", 0)));
+        //in.run(new Interpreter.Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 5)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Interpreter.Pair<>(mapper.get("Simple.json") + "/" + "factorial", 0)));
         /* For multiple files
         HashMap<String, JSONObject> peeledMethods2 = new HashMap<String, JSONObject>();
         for(int i = 0; i < files.size(); i++) {

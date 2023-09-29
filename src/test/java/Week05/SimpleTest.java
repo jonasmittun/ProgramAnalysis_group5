@@ -7,9 +7,9 @@ import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Stack;
 
 class SimpleTest {
 
@@ -38,7 +38,7 @@ class SimpleTest {
 
     @Test
     void noop() {
-        Method m = new Method(new JSONObject[] {}, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "noop", 0));
+        Method m = new Method(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "noop", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
@@ -47,7 +47,7 @@ class SimpleTest {
 
     @Test
     void zero() {
-        Method m = new Method(new JSONObject[] {}, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "zero", 0));
+        Method m = new Method(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "zero", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
@@ -56,7 +56,7 @@ class SimpleTest {
 
     @Test
     void hundredAndTwo() {
-        Method m = new Method(new JSONObject[] {}, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "hundredAndTwo", 0));
+        Method m = new Method(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "hundredAndTwo", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
@@ -64,7 +64,7 @@ class SimpleTest {
     }
     @Test
     void identity() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 7)) }, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "identity", 0));
+        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 7)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "identity", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
@@ -73,7 +73,7 @@ class SimpleTest {
 
     @Test
     void add() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", -1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "add", 0));
+        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", -1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "add", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
@@ -82,7 +82,7 @@ class SimpleTest {
 
     @Test
     void min() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "min", 0));
+        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "min", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
@@ -91,7 +91,7 @@ class SimpleTest {
 
     @Test
     void factorial() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)), new JSONObject(Map.of("type", "int", "value", 0)) }, new Stack<>(), new Pair<>(mapper.get(filename) + "/" + "factorial", 0));
+        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "factorial", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);

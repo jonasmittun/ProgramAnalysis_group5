@@ -3,9 +3,9 @@ package Week05;
 import Week04.Method;
 import org.json.JSONObject;
 
+import java.util.Deque;
 import java.util.Map;
-import java.util.Stack;
 
-public record State(Stack<Method> psi, Map<Integer, JSONObject> mu) {
+public record State(Deque<Method> psi, Map<Integer, JSONObject> mu) {
     // TODO: Make a method that will create a deep clone
 }

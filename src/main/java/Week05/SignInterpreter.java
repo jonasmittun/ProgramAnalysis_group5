@@ -64,8 +64,8 @@ public class SignInterpreter implements Interpreter {
         Queue<State> queue = new LinkedList<>();
         int depthCounter = 1;
         int depth = 0;
-        Stack<Method> psi = new Stack<>();  // Method Stack
 
+        Deque<Method> psi = new ArrayDeque<>();  // Method Stack
         psi.push(addSigns(method));
 
         State first = new State(psi, mu);
@@ -107,7 +107,7 @@ public class SignInterpreter implements Interpreter {
     }
 
     @Override
-    public Set<State> step(Method m, Map<Integer, JSONObject> mu, Stack<Method> psi){
+    public Set<State> step(Method m, Map<Integer, JSONObject> mu, Deque<Method> psi){
         Set<State> results = new HashSet<>();
         JSONObject instruction = getMethod(m.iota().e1()).getJSONObject("code").getJSONArray("bytecode").getJSONObject(m.iota().e2());
 
@@ -652,7 +652,7 @@ public class SignInterpreter implements Interpreter {
                         }
 
                         psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
-                        psi.push(new Method(lambda, new Stack<>(), new Pair<>(classname + "/" + methodname, 0)));
+                        psi.push(new Method(lambda, new ArrayDeque<>(), new Pair<>(classname + "/" + methodname, 0)));
                     }
                     case "interface" -> {}
                     case "dynamic" -> {}
@@ -745,7 +745,7 @@ public class SignInterpreter implements Interpreter {
             case "pop" -> {
                 int words = instruction.getInt("words");
 
-                while(!m.sigma().empty() && words > 0) {
+                while(!m.sigma().isEmpty() && words > 0) {
                     m.sigma().pop();
                     words--;
                 }

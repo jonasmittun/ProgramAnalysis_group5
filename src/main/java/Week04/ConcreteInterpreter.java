@@ -571,7 +571,7 @@ public class ConcreteInterpreter {
                         }
 
                         psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
-                        psi.push(new Method(lambda, new Stack<>(), new Pair<>(classname + "/" + methodname, 0)));
+                        psi.push(new Method(lambda, new ArrayDeque<>(), new Pair<>(classname + "/" + methodname, 0)));
                     }
                     case "interface" -> {}
                     case "dynamic" -> {}
@@ -660,7 +660,7 @@ public class ConcreteInterpreter {
             case "pop" -> {
                 int words = instruction.getInt("words");
 
-                while(!m.sigma().empty() && words > 0) {
+                while(!m.sigma().isEmpty() && words > 0) {
                     m.sigma().pop();
                     words--;
                 }

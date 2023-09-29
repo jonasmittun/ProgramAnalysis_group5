@@ -3,9 +3,9 @@ package Week05;
 import Week04.Method;
 import org.json.JSONObject;
 
+import java.util.Deque;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 
 public interface Interpreter {
 
@@ -21,5 +21,5 @@ public interface Interpreter {
      * @param mu:       The memory
      * @param psi:      The method stack
      */
-    Set<State> step(Method method, Map<Integer, JSONObject> mu, Stack<Method> psi);
+    Set<State> step(Method method, Map<Integer, JSONObject> mu, Deque<Method> psi);
 }
