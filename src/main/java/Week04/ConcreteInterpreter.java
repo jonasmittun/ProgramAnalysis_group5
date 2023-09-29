@@ -47,6 +47,10 @@ public class ConcreteInterpreter {
 
             step(m, mu, psi);
         }
+
+        if(!mu.isEmpty()) {
+            System.out.println(String.format("%-12s", "memory") + "µ" + mu);
+        }
     }
 
     /** Returns a new JSONObject of the specified type with the default value for that type
