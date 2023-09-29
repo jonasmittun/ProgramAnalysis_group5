@@ -646,7 +646,7 @@ public class ConcreteInterpreter {
                     Method m2 = psi.peek();
                     m2.sigma().push(result);
                 } else {
-                    System.out.println(String.format("%-12s", "return") + result);
+                    System.out.println(String.format("%-12s", "return") + Main.toFormattedString(result));
                     return;
                 }
             }

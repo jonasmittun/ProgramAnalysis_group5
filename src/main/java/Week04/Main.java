@@ -48,6 +48,22 @@ public class Main {
 
     }
 
+    /** Converts a JSONObject into a formatted value string. */
+    public static String toFormattedString(JSONObject o) {
+        if(o == null) {
+            return "(null)";
+        } else if(o.has("kind")) {
+            return "(" + o.getString("kind") + "ref" + " r)";
+        } else {
+            String inner = switch(o.getString("type")) {
+                case "int", "integer"   -> "int";
+                default                 -> o.getString("type");
+            };
+
+            return "(" + inner + " " + o.get("value").toString() + ")";
+        }
+    }
+
     // Might not be needed
     public static HashMap<String, JSONObject> peeler(JSONObject theObject){
         HashMap<String, JSONObject> results = new HashMap<>();
