@@ -131,11 +131,13 @@ public class ConcreteInterpreter {
             case "incr" -> {
                 int index = instruction.getInt("index");
                 JSONObject value = m.lambda()[index];
-                switch(value.getString("type")) {
-                    case "int"      -> value.put("value", value.getInt("value") + instruction.getInt("amount"));
-                    case "long"     -> value.put("value", value.getLong("value") + instruction.getLong("amount"));
-                    case "float"    -> value.put("value", value.getFloat("value") + instruction.getFloat("amount"));
-                    case "double"   -> value.put("value", value.getDouble("value") + instruction.getDouble("amount"));
+                String type = value.getString("type");
+                switch(type) {
+                    case "int", "integer"   -> value.put("value", value.getInt("value") + instruction.getInt("amount"));
+                    case "long"             -> value.put("value", value.getLong("value") + instruction.getLong("amount"));
+                    case "float"            -> value.put("value", value.getFloat("value") + instruction.getFloat("amount"));
+                    case "double"           -> value.put("value", value.getDouble("value") + instruction.getDouble("amount"));
+                    default                 -> System.out.println("Unsupported \"incr\" type: " + type);
                 }
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
