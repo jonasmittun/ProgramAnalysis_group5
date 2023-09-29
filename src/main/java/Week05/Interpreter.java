@@ -16,9 +16,10 @@ public interface Interpreter {
 
     /**
      * Execute a single bytecode instruction in the method
-     * @param method:   The method to be executed
-     * @param mu:       The memory
-     * @param psi:      The method stack
+     * @param state:    Record of the following
+     * method:          The method to be executed
+     * mu:              The memory
+     * psi:             The method stack
      */
-    Set<State> step(Method method, Map<Integer, JSONObject> mu, Deque<Method> psi);
+    Set<State> step(State state);
 }

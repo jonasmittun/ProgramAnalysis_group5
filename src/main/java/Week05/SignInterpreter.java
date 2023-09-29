@@ -106,22 +106,6 @@ public class SignInterpreter implements Interpreter {
         }
     }
 
-    private Method addSigns(Method m) {
-        int len = m.lambda().length;
-        List<JSONObject> nums = Arrays.stream(m.lambda()).toList();
-        for(int i = 0; i < len; i++) {
-            int val = nums.get(i).getInt("value");
-            if (val == 0) {
-                m.lambda()[i].put("sign", "0");
-            } else if (val < 0) {
-                m.lambda()[i].put("sign", "-");
-            } else {
-                m.lambda()[i].put("sign", "+");
-            }
-        }
-        return new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2()));
-    }
-
     @Override
     public Set<State> step(State state) {
         Set<State> results = new HashSet<>();
@@ -186,7 +170,10 @@ public class SignInterpreter implements Interpreter {
                 int index = instruction.getInt("index");
                 JSONObject value = m.sigma().pop();
                 m.lambda()[index] = value;
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+
+                state.psi().push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+
+                results.add(state);
             }
             /*
             case "incr" -> {
