@@ -87,6 +87,15 @@ class SimpleTest {
     }
 
     @Test
+    void div() {
+        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "min", 0));
+        Map<Integer, JSONObject> mu = new HashMap<>();
+
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
+        in.run(m, mu);
+    }
+
+    @Test
     void factorial() {
         Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "factorial", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();

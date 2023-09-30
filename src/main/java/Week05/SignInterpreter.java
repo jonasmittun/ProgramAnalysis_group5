@@ -8,6 +8,7 @@ import org.json.JSONObject;
 
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static Week05.Sign.*;
@@ -175,20 +176,65 @@ public class SignInterpreter implements Interpreter {
 
                 results.add(state);
             }
-            /*
-            case "incr" -> {
+            case "incr" -> { // For now we're assuming everything is an integer :)
                 int index = instruction.getInt("index");
                 JSONObject value = m.lambda()[index];
-                switch(value.getString("type")) {
+                int amountInt = instruction.getInt("amount");
+                JSONObject amount;
+                if (amountInt < 0) {
+                    amount = new JSONObject(Map.of("sign", new JSONArray(Set.of(NEGATIVE))));
+                } else if (amountInt > 0) {
+                    amount = new JSONObject(Map.of("sign", new JSONArray(Set.of(POSITIVE))));
+                } else {
+                    amount = new JSONObject(Map.of("sign", new JSONArray(Set.of(ZERO))));
+                }
+
+                BiFunction<Sign, Sign, Set<Sign>> f = (s1, s2) -> {
+                    return switch(s1) {
+                        case NEGATIVE -> switch(s2) {
+                            case NEGATIVE   -> Set.of(NEGATIVE);
+                            case ZERO       -> Set.of(NEGATIVE);
+                            case POSITIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
+                        };
+                        case ZERO -> switch(s2) {
+                            case NEGATIVE   -> Set.of(NEGATIVE);
+                            case ZERO       -> Set.of(ZERO);
+                            case POSITIVE   -> Set.of(POSITIVE);
+                        };
+                        case POSITIVE -> switch(s2) {
+                            case NEGATIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
+                            case ZERO       -> Set.of(POSITIVE);
+                            case POSITIVE   -> Set.of(POSITIVE);
+                        };
+                    };
+                };
+
+                /*switch(value.getString("type")) {
                     case "int"      -> value.put("value", value.getInt("value") + instruction.getInt("amount"));
                     case "long"     -> value.put("value", value.getLong("value") + instruction.getLong("amount"));
                     case "float"    -> value.put("value", value.getFloat("value") + instruction.getFloat("amount"));
                     case "double"   -> value.put("value", value.getDouble("value") + instruction.getDouble("amount"));
-                }
+                }*/
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                for(Object s1 : value.getJSONArray("sign")) {
+                    for(Object s2 : amount.getJSONArray("sign")) {
+                        Set<Sign> signs = f.apply((Sign) s1, (Sign) s2);
+                        if(signs.isEmpty()) System.out.println("Error msg");
+
+                        JSONObject result = new JSONObject(Map.of("sign", signs));
+
+                        Deque<Method> _psi = psi.stream().map(Method::clone).collect(Collectors.toCollection(ArrayDeque::new));
+                        Map<Integer, JSONObject> _mu = mu.entrySet().stream().map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), new JSONObject(e.getValue().toMap()))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        Method _m = m.clone();
+
+                        _m.sigma().push(result);
+
+                        _psi.push(new Method(_m.lambda(), _m.sigma(), new Pair<>(_m.iota().e1(), _m.iota().e2() + 1)));
+
+                        results.add(new State(_psi, _mu));
+                    }
+                }
             }
-            */
             case "binary" -> {
                 String type = instruction.getString("type"); // Arithmetic Type
                 JSONObject value2 = m.sigma().pop();
@@ -469,7 +515,7 @@ public class SignInterpreter implements Interpreter {
 
                 m.sigma().push(result);
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
-            }
+            }*/
             case "if" -> {
                 int target = instruction.getInt("target");
 
@@ -502,19 +548,82 @@ public class SignInterpreter implements Interpreter {
                 boolean result;
                 switch(value.getString("type")) {
                     case "int" -> {
-                        int v = value.getInt("value");
-                        result = switch(condition) {
-                            case "eq"       -> v == 0;
-                            case "ne"       -> v != 0;
-                            case "le"       -> v <= 0;
-                            case "lt"       -> v < 0;
-                            case "ge"       -> v >= 0;
-                            case "gt"       -> v > 0;
-                            default         -> {
-                                System.out.println("Unsupported condition in \"int\"");
-                                yield false;
+                        // int v = value.getInt("value"); We don't use this (?)
+                        Function<Sign, Set<Boolean>> f = switch(condition) {
+                            case "eq"       -> {
+                                yield (s) -> {
+                                    return switch (s) {
+                                        case NEGATIVE -> Set.of(false);
+                                        case ZERO -> Set.of(true);
+                                        case POSITIVE -> Set.of(false);
+                                    };
+                                };
                             }
+                            case "ne"       -> {
+                                yield (s) -> {
+                                    return switch (s) {
+                                        case NEGATIVE -> Set.of(true);
+                                        case ZERO -> Set.of(false);
+                                        case POSITIVE -> Set.of(true);
+                                    };
+                                };
+                            }
+                            case "le"       -> {
+                                yield (s) -> {
+                                    return switch (s) {
+                                        case NEGATIVE -> Set.of(true);
+                                        case ZERO -> Set.of(true);
+                                        case POSITIVE -> Set.of(false);
+                                    };
+                                };
+                            }
+                            case "lt"       -> {
+                                yield (s) -> {
+                                    return switch (s) {
+                                        case NEGATIVE -> Set.of(true);
+                                        case ZERO -> Set.of(false);
+                                        case POSITIVE -> Set.of(false);
+                                    };
+                                };
+                            }
+                            case "ge"       -> {
+                                yield (s) -> {
+                                    return switch (s) {
+                                        case NEGATIVE -> Set.of(false);
+                                        case ZERO -> Set.of(true);
+                                        case POSITIVE -> Set.of(true);
+                                    };
+                                };
+                            }
+                            case "gt"       -> {
+                                yield (s) -> {
+                                    return switch (s) {
+                                        case NEGATIVE -> Set.of(false);
+                                        case ZERO -> Set.of(false);
+                                        case POSITIVE -> Set.of(true);
+                                    };
+                                };
+                            }
+                            default -> throw new IllegalStateException("Unexpected value: " + condition);
                         };
+
+                        for(Object s : value.getJSONArray("sign")) {
+                            Set<Boolean> signs = f.apply((Sign) s);
+                            if(signs.isEmpty()) System.out.println("Error msg");
+
+                            JSONObject signResult = new JSONObject(Map.of("sign", signs));
+
+                            Deque<Method> _psi = psi.stream().map(Method::clone).collect(Collectors.toCollection(ArrayDeque::new));
+                            Map<Integer, JSONObject> _mu = mu.entrySet().stream().map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), new JSONObject(e.getValue().toMap()))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                            Method _m = m.clone();
+
+                            _m.sigma().push(signResult);
+
+                            _psi.push(new Method(_m.lambda(), _m.sigma(), new Pair<>(_m.iota().e1(), _m.iota().e2() + 1)));
+
+                            results.add(new State(_psi, _mu));
+                        }
+
                     }
                     case "ref" -> {
                         JSONObject v = mu.get(System.identityHashCode(value));
@@ -533,11 +642,12 @@ public class SignInterpreter implements Interpreter {
                     }
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), result ? target : m.iota().e2() + 1)));
+                //psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), result ? target : m.iota().e2() + 1)));
             }
             case "goto" -> {
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), instruction.getInt("target"))));
-            }
+                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                results.add(new State(psi, mu));
+            }/*
             case "jsr" -> {
                 int target = instruction.getInt("target");
 
