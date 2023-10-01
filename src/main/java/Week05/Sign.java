@@ -6,7 +6,7 @@ public enum Sign {
     NEGATIVE;
 
     public static Sign toSign(int i) {
-        return switch(i) {
+        return switch(Integer.compare(i, 0)) {
             case -1 -> NEGATIVE;
             case 0  -> ZERO;
             case 1  -> POSITIVE;
