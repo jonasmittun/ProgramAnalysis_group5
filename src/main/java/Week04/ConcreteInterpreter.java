@@ -548,16 +548,42 @@ public class ConcreteInterpreter {
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
             }
             case "invoke" -> {
-                JSONObject method = instruction.getJSONObject("method");
+                JSONObject invoke_method = instruction.getJSONObject("method");
 
                 switch(instruction.getString("access")) {
-                    case "special" -> {}
+                    case "special" -> {
+                        JSONObject m_ref = invoke_method.getJSONObject("ref");
+                        String classname = m_ref.getString("name");
+                        String methodname = invoke_method.getString("name");
+                        JSONArray args = invoke_method.getJSONArray("args");
+
+                        if(m.sigma().size() < args.length()) System.out.println("Not enough elements in stack for invocation of method!");
+
+                        // TODO: Make a method resolver
+
+                        JSONObject[] lambda = new JSONObject[args.length()];
+                        for(int j = 0; j < args.length(); j++) {
+                            JSONObject arg = m.sigma().pop();
+
+                            String type_expected = args.get(j) instanceof String ? args.getString(j) : (args.getJSONObject(j).has("kind") ? "ref" : args.getJSONObject(j).getString("type"));
+                            String type_actual = arg.getString("type");
+
+                            if(!type_actual.equals(type_expected)) {
+                                System.out.println("Type mismatch: Expected " + type_expected + " but was " + type_actual);
+                            }
+
+                            lambda[j] = arg;
+                        }
+
+                        psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                        psi.push(new Method(lambda, new ArrayDeque<>(), new Pair<>(classname + "/" + methodname, 0)));
+                    }
                     case "virtual" -> {}
                     case "static" -> {
-                        JSONObject m_ref = method.getJSONObject("ref");
+                        JSONObject m_ref = invoke_method.getJSONObject("ref");
                         String classname = m_ref.getString("name");
-                        String methodname = method.getString("name");
-                        JSONArray args = method.getJSONArray("args");
+                        String methodname = invoke_method.getString("name");
+                        JSONArray args = invoke_method.getJSONArray("args");
 
                         if(m.sigma().size() < args.length()) System.out.println("Not enough elements in stack for invocation of method!");
 
