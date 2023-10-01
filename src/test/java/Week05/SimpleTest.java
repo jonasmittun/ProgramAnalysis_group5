@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static Week01.Main.getFiles;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SimpleTest {
 
@@ -105,7 +107,9 @@ class SimpleTest {
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-        in.run(m, mu);
+        Exception exception = assertThrows(java.lang.ArithmeticException.class, () -> in.run(m, mu));
+
+        assertTrue(exception.getMessage().contains("Illegal divide by zero"));
     }
 
     @Test
