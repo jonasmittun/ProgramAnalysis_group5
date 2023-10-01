@@ -1,9 +1,9 @@
 package Week05;
 
+import Week04.Main;
 import Week04.Method;
 import Week04.Pair;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.*;
@@ -874,7 +874,7 @@ public class SignInterpreter implements Interpreter {
 
                     results.add(state);
                 } else {
-                    System.out.println(String.format("%-12s", "return") + result);
+                    System.out.println(String.format("%-12s", "return") + Main.toFormattedString(result));
                 }
             }
             /*

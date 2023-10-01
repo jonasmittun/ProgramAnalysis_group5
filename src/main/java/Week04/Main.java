@@ -1,5 +1,6 @@
 package Week04;
 
+import Week05.Sign;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -55,12 +56,24 @@ public class Main {
         } else if(o.has("kind")) {
             return "(" + o.getString("kind") + "ref" + " r)";
         } else {
-            String inner = switch(o.getString("type")) {
-                case "int", "integer"   -> "int";
-                default                 -> o.getString("type");
-            };
+            if(o.has("sign")) {
+                StringJoiner sj = new StringJoiner(", ");
+                for(Object sign : o.getJSONArray("sign")) {
+                    switch((Sign) sign) {
+                        case NEGATIVE   -> sj.add("-");
+                        case ZERO       -> sj.add("0");
+                        case POSITIVE   -> sj.add("+");
+                    }
+                }
+                return "{" + sj + "}";
+            } else {
+                String inner = switch(o.getString("type")) {
+                    case "int", "integer" -> "int";
+                    default -> o.getString("type");
+                };
 
-            return "(" + inner + " " + o.get("value").toString() + ")";
+                return "(" + inner + " " + o.get("value").toString() + ")";
+            }
         }
     }
 
