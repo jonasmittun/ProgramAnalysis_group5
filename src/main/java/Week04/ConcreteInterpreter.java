@@ -91,8 +91,6 @@ public class ConcreteInterpreter {
                 JSONObject index = m.sigma().pop();
                 JSONObject arrayref = m.sigma().pop();
 
-                System.out.println(arrayref);
-
                 if(arrayref == null) throw new NullPointerException("Cannot load from array because \"arrayref\" is null");
 
                 JSONObject actual = mu.get(System.identityHashCode(arrayref));
