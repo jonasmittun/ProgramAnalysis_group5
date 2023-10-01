@@ -179,15 +179,7 @@ public class SignInterpreter implements Interpreter {
             case "incr" -> { // For now we're assuming everything is an integer :)
                 int index = instruction.getInt("index");
                 JSONObject value = m.lambda()[index];
-                int amountInt = instruction.getInt("amount");
-                JSONObject amount;
-                if (amountInt < 0) {
-                    amount = new JSONObject(Map.of("sign", new JSONArray(Set.of(NEGATIVE))));
-                } else if (amountInt > 0) {
-                    amount = new JSONObject(Map.of("sign", new JSONArray(Set.of(POSITIVE))));
-                } else {
-                    amount = new JSONObject(Map.of("sign", new JSONArray(Set.of(ZERO))));
-                }
+                Sign amount = Sign.toSign(instruction.getInt("amount"));
 
                 BiFunction<Sign, Sign, Set<Sign>> f = (s1, s2) -> {
                     return switch(s1) {
@@ -209,30 +201,20 @@ public class SignInterpreter implements Interpreter {
                     };
                 };
 
-                /*switch(value.getString("type")) {
-                    case "int"      -> value.put("value", value.getInt("value") + instruction.getInt("amount"));
-                    case "long"     -> value.put("value", value.getLong("value") + instruction.getLong("amount"));
-                    case "float"    -> value.put("value", value.getFloat("value") + instruction.getFloat("amount"));
-                    case "double"   -> value.put("value", value.getDouble("value") + instruction.getDouble("amount"));
-                }*/
+                for(Object sign : value.getJSONArray("sign")) {
+                    Set<Sign> signs = f.apply((Sign) sign, amount);
 
-                for(Object s1 : value.getJSONArray("sign")) {
-                    for(Object s2 : amount.getJSONArray("sign")) {
-                        Set<Sign> signs = f.apply((Sign) s1, (Sign) s2);
-                        if(signs.isEmpty()) System.out.println("Error msg");
+                    JSONObject result = new JSONObject(Map.of("sign", signs));
 
-                        JSONObject result = new JSONObject(Map.of("sign", signs));
+                    Deque<Method> _psi = psi.stream().map(Method::clone).collect(Collectors.toCollection(ArrayDeque::new));
+                    Map<Integer, JSONObject> _mu = mu.entrySet().stream().map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), new JSONObject(e.getValue().toMap()))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                    Method _m = m.clone();
 
-                        Deque<Method> _psi = psi.stream().map(Method::clone).collect(Collectors.toCollection(ArrayDeque::new));
-                        Map<Integer, JSONObject> _mu = mu.entrySet().stream().map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), new JSONObject(e.getValue().toMap()))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                        Method _m = m.clone();
+                    _m.sigma().push(result);
 
-                        _m.sigma().push(result);
+                    _psi.push(new Method(_m.lambda(), _m.sigma(), new Pair<>(_m.iota().e1(), _m.iota().e2() + 1)));
 
-                        _psi.push(new Method(_m.lambda(), _m.sigma(), new Pair<>(_m.iota().e1(), _m.iota().e2() + 1)));
-
-                        results.add(new State(_psi, _mu));
-                    }
+                    results.add(new State(_psi, _mu));
                 }
             }
             case "binary" -> {
