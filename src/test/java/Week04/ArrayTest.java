@@ -22,9 +22,8 @@ class ArrayTest {
 
     @BeforeAll
     static void initAll() {
-        String path = "src\\main\\resources\\decompiled\\dtu\\compute\\exec";
-        Map<String, String> files = getFiles(path);
-        for(Map.Entry<String, String> entry : files.entrySet()) {
+        String path = "src\\main\\resources\\decompiled";
+        for(Map.Entry<String, String> entry : getFiles(path).entrySet()) {
             String filename = entry.getKey();
             String content = entry.getValue();
 

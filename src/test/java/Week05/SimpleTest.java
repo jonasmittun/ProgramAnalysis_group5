@@ -1,6 +1,5 @@
 package Week05;
 
-import Week01.Main;
 import Week04.Method;
 import Week04.Pair;
 import org.json.JSONObject;
@@ -10,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
+
+import static Week01.Main.getFiles;
 
 class SimpleTest {
 
@@ -22,9 +23,8 @@ class SimpleTest {
 
     @BeforeAll
     static void initAll() {
-        String path = "src\\main\\resources\\decompiled\\dtu\\compute\\exec";
-        Map<String, String> files = Main.getFiles(path);
-        for(Map.Entry<String, String> entry : files.entrySet()) {
+        String path = "src\\main\\resources\\decompiled";
+        for(Map.Entry<String, String> entry : getFiles(path).entrySet()) {
             String filename = entry.getKey();
             String content = entry.getValue();
 
