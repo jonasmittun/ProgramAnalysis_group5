@@ -11,6 +11,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static Week04.ConcreteInterpreter.createSimpleType;
 import static Week05.Sign.*;
 
 public class SignInterpreter implements Interpreter {
@@ -44,15 +45,15 @@ public class SignInterpreter implements Interpreter {
 
     public JSONObject toAbstract(JSONObject o) {
         if(!o.has("kind") && o.has("type") && o.has("value")) {
-            int r = switch(o.getString("type")) {
-                case "int", "integer"   -> Integer.compare(o.getInt("value"), 0);
-                case "long"             -> Long.compare(o.getLong("value"), 0);
-                case "float"            -> Float.compare(o.getFloat("value"), 0);
-                case "double"           -> Double.compare(o.getDouble("value"), 0);
-                default                 -> throw new IllegalStateException("Unsupported type: " + o.getString("type"));
+            Optional<Integer> r = switch(o.getString("type")) {
+                case "int", "integer"   -> Optional.of(Integer.compare(o.getInt("value"), 0));
+                case "long"             -> Optional.of(Long.compare(o.getLong("value"), 0));
+                case "float"            -> Optional.of(Float.compare(o.getFloat("value"), 0));
+                case "double"           -> Optional.of(Double.compare(o.getDouble("value"), 0));
+                default                 -> Optional.empty();
             };
 
-            o.put("sign", new JSONArray(Set.of(Sign.toSign(r))));
+            if(r.isPresent()) o.put("sign", new JSONArray(Set.of(Sign.toSign(r.get()))));
             return o;
         }
 
@@ -748,6 +749,7 @@ public class SignInterpreter implements Interpreter {
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), location)));
             }
+            */
             case "get" -> {
                 JSONObject field = instruction.getJSONObject("field");
 
@@ -765,14 +767,23 @@ public class SignInterpreter implements Interpreter {
                 for(int i = 0; i < fields.length(); i++) {
                     JSONObject f = fields.getJSONObject(i);
                     if(f.getString("name").equals(field.getString("name"))) {
-                        value = f.getJSONObject("value");
+                        if(f.isNull("value")) {
+                            value = createSimpleType(field.get("type"), mu);
+                        } else {
+                            value = new JSONObject(f.getJSONObject("value").toMap());
+                        }
+
+                        value = toAbstract(value);
                         break;
                     }
                 }
 
                 m.sigma().push(value);
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+
+                results.add(state);
             }
+            /*
             case "put" -> {
                 JSONObject field = instruction.getJSONObject("field");
 
