@@ -503,7 +503,12 @@ public class ConcreteInterpreter {
                 for(int i = 0; i < fields.length(); i++) {
                     JSONObject f = fields.getJSONObject(i);
                     if(f.getString("name").equals(field.getString("name"))) {
-                        value = f.getJSONObject("value");
+                        if(f.isNull("value")) {
+                            value = createSimpleType(field.get("type"));
+                        } else {
+                            // TODO: Check if it's a reference type
+                            value = new JSONObject(f.getJSONObject("value").toMap());
+                        }
                         break;
                     }
                 }
