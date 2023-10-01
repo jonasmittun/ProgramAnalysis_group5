@@ -505,9 +505,13 @@ public class ConcreteInterpreter {
                     JSONObject f = fields.getJSONObject(i);
                     if(f.getString("name").equals(field.getString("name"))) {
                         if(f.isNull("value")) {
-                            value = createSimpleType(field.get("type"));
+                            if(f.get("type") instanceof String BaseType) {
+                                value = createSimpleType(BaseType);
+                            } else {
+                                value = f.getJSONObject("type");
+                                mu.put(System.identityHashCode(value), null);
+                            }
                         } else {
-                            // TODO: Check if it's a reference type
                             value = new JSONObject(f.getJSONObject("value").toMap());
                         }
                         break;
@@ -637,7 +641,7 @@ public class ConcreteInterpreter {
                 // Create value
                 JSONArray value = new JSONArray(length);
                 for(int i = 0; i < length; i++) {
-                    value.put(i, createSimpleType(type));
+                    value.put(i, createSimpleType(type)); // TODO: Fix if type is a reference type
                 }
                 JSONObject result = new JSONObject(Map.of("type", type, "value", value));
 
@@ -709,8 +713,8 @@ public class ConcreteInterpreter {
                 }
 
                 for(int i = 0; i < words+1; i++) {
-                    for(JSONObject jsonObject : local) {
-                        m.sigma().push(jsonObject);
+                    for(JSONObject value : local) {
+                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
@@ -728,16 +732,16 @@ public class ConcreteInterpreter {
                 JSONObject word = m.sigma().pop();
 
                 for(int i = 0; i < words; i++) {
-                    for(JSONObject jsonObject : local) {
-                        m.sigma().push(jsonObject);
+                    for(JSONObject value : local) {
+                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
                 m.sigma().push(word);
 
                 for(int i = 0; i < words; i++) {
-                    for(JSONObject jsonObject : local) {
-                        m.sigma().push(jsonObject);
+                    for(JSONObject value : local) {
+                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
@@ -756,8 +760,8 @@ public class ConcreteInterpreter {
                 JSONObject word2 = m.sigma().pop();
 
                 for(int i = 0; i < words; i++) {
-                    for(JSONObject jsonObject : local) {
-                        m.sigma().push(jsonObject);
+                    for(JSONObject value : local) {
+                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
@@ -765,8 +769,8 @@ public class ConcreteInterpreter {
                 m.sigma().push(word1);
 
                 for(int i = 0; i < words; i++) {
-                    for(JSONObject jsonObject : local) {
-                        m.sigma().push(jsonObject);
+                    for(JSONObject value : local) {
+                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
