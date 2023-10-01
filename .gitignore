@@ -172,3 +172,6 @@ replay_pid*
 
 # Graphviz Output
 /graphs/
+
+# Decompiled Java
+/src/main/resources/decompiled/java/
