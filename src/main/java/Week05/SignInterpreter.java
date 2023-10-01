@@ -839,24 +839,26 @@ public class SignInterpreter implements Interpreter {
                     case "dynamic" -> {}
                 }
             }
+            */
             case "new" -> {
                 String classname = instruction.getString("class");
 
-                JSONObject objectref = new JSONObject();
-                objectref.put("kind", "class");
-                objectref.put("name", classname);
+                if(!classes.containsKey(classname)) throw new InstantiationError(classname + " does not exist.");
+                List<Object> access = classes.get(classname).getJSONArray("access").toList();
+                if(access.contains("abstract")) throw new InstantiationError(classname + " is abstract.");
+                if(access.contains("interface")) throw new InstantiationError(classname + " is an interface.");
 
-                if(!classes.containsKey(classname)) {
-                    System.out.println("Operation \"new\" failed: Class " + classname + " is not available!");
-                }
+                JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", classname));
+                JSONObject value = new JSONObject(classes.get(classname).toMap());
 
-                JSONObject result = new JSONObject(classes.get(classname).toString());
-
-                mu.put(System.identityHashCode(objectref), result);
+                mu.put(System.identityHashCode(objectref), value);
 
                 m.sigma().push(objectref);
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+
+                results.add(state);
             }
+            /*
             case "newarray" -> {
                 int dim = instruction.getInt("dim"); // Recurse / While-loop magic
                 String type = instruction.getString("type");
