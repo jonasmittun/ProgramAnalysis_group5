@@ -86,8 +86,17 @@ class SimpleTest {
     }
 
     @Test
-    void div() {
+    void div_success() {
         Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "div", 0));
+        Map<Integer, JSONObject> mu = new HashMap<>();
+
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
+        in.run(m, mu);
+    }
+
+    @Test
+    void div_fail() {
+        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "div", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
