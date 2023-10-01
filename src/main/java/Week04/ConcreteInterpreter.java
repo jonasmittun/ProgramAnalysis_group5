@@ -36,7 +36,7 @@ public class ConcreteInterpreter {
      *  SimpleReferenceType: { "kind": "class", "name": &lt;ClassName&gt; } or { "kind": "array", "name": &lt;SimpleType&gt; }
      *  </pre>
      */
-    private static JSONObject createSimpleType(Object SimpleType, Map<Integer, JSONObject> mu) {
+    public static JSONObject createSimpleType(Object SimpleType, Map<Integer, JSONObject> mu) {
         if(SimpleType instanceof String BaseType) {
             JSONObject result = new JSONObject();
             result.put("type", BaseType);
