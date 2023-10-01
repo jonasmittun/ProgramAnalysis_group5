@@ -282,17 +282,17 @@ public class SignInterpreter implements Interpreter {
                         yield switch(s1) {
                             case NEGATIVE -> switch(s2) {
                                 case NEGATIVE   -> Set.of(POSITIVE);
-                                case ZERO       -> Set.of();
+                                case ZERO       -> throw new ArithmeticException("Illegal divide by zero");
                                 case POSITIVE   -> Set.of(NEGATIVE);
                             };
                             case ZERO -> switch(s2) {
                                 case NEGATIVE   -> Set.of(ZERO);
-                                case ZERO       -> Set.of();
+                                case ZERO       -> throw new ArithmeticException("Illegal divide by zero");
                                 case POSITIVE   -> Set.of(ZERO);
                             };
                             case POSITIVE -> switch(s2) {
                                 case NEGATIVE   -> Set.of(NEGATIVE);
-                                case ZERO       -> Set.of();
+                                case ZERO       -> throw new ArithmeticException("Illegal divide by zero");
                                 case POSITIVE   -> Set.of(POSITIVE);
                             };
                         };
@@ -303,7 +303,6 @@ public class SignInterpreter implements Interpreter {
                 for(Object s1 : value1.getJSONArray("sign")) {
                     for(Object s2 : value2.getJSONArray("sign")) {
                         Set<Sign> signs = f.apply((Sign) s1, (Sign) s2);
-                        if(signs.isEmpty()) System.out.println("Error msg");
 
                         JSONObject result = new JSONObject(Map.of("sign", signs));
 
