@@ -503,22 +503,117 @@ public class SignInterpreter implements Interpreter {
                 JSONObject value2 = m.sigma().pop();
                 JSONObject value1 = m.sigma().pop();
 
-                boolean result = switch(instruction.getString("condition")) {
-                    case "eq"       -> value1.getInt("value") == value2.getInt("value");
-                    case "ne"       -> value1.getInt("value") != value2.getInt("value");
-                    case "le"       -> value1.getInt("value") <= value2.getInt("value");
-                    case "lt"       -> value1.getInt("value") < value2.getInt("value");
-                    case "ge"       -> value1.getInt("value") >= value2.getInt("value");
-                    case "gt"       -> value1.getInt("value") > value2.getInt("value");
-                    case "is"       -> mu.get(System.identityHashCode(value1)).equals(mu.get(System.identityHashCode(value2)));
-                    case "isnot"    -> !mu.get(System.identityHashCode(value1)).equals(mu.get(System.identityHashCode(value2)));
-                    default         -> {
-                        System.out.println("Unsupported condition");
-                        yield false;
+                // Value1 opr Value2
+                BiFunction<Sign, Sign, Set<Boolean>> f = (s1, s2) -> switch(instruction.getString("condition")) {
+                    case "eq"       -> {
+                        if((s1 == NEGATIVE && s2 == NEGATIVE) || (s1 == POSITIVE && s2 == POSITIVE)) yield Set.of(true, false);
+                        else if(s1 == ZERO && s2 == ZERO) yield Set.of(true);
+                        else yield Set.of(false);
                     }
+                    case "ne"       -> {
+                        if(s1 == s2) yield Set.of(false);
+                        else yield Set.of(true, false);
+                    }
+                    case "le"       -> {
+                        yield switch(s1) {
+                            case NEGATIVE   -> switch(s2) {
+                                case NEGATIVE   -> Set.of(true, false);
+                                case ZERO       -> Set.of(true);
+                                case POSITIVE   -> Set.of(true);
+                            };
+                            case ZERO       -> switch(s2) {
+                                case NEGATIVE   -> Set.of(false);
+                                case ZERO       -> Set.of(false);
+                                case POSITIVE   -> Set.of(true);
+                            };
+                            case POSITIVE   -> switch(s2) {
+                                case NEGATIVE   -> Set.of(false);
+                                case ZERO       -> Set.of(false);
+                                case POSITIVE   -> Set.of(true, false);
+                            };
+                        };
+                    }
+                    case "lt"       -> {
+                        yield switch(s1) {
+                            case NEGATIVE   -> switch(s2) {
+                                case NEGATIVE   -> Set.of(true, false);
+                                case ZERO       -> Set.of(true);
+                                case POSITIVE   -> Set.of(true);
+                            };
+                            case ZERO       -> switch(s2) {
+                                case NEGATIVE   -> Set.of(false);
+                                case ZERO       -> Set.of(true);
+                                case POSITIVE   -> Set.of(true);
+                            };
+                            case POSITIVE   -> switch(s2) {
+                                case NEGATIVE   -> Set.of(false);
+                                case ZERO       -> Set.of(false);
+                                case POSITIVE   -> Set.of(true, false);
+                            };
+                        };
+                    }
+                    case "ge"       -> {
+                        yield switch(s1) {
+                            case NEGATIVE   -> switch(s2) {
+                                case NEGATIVE   -> Set.of(true, false);
+                                case ZERO       -> Set.of(false);
+                                case POSITIVE   -> Set.of(false);
+                            };
+                            case ZERO       -> switch(s2) {
+                                case NEGATIVE   -> Set.of(true);
+                                case ZERO       -> Set.of(true);
+                                case POSITIVE   -> Set.of(false);
+                            };
+                            case POSITIVE   -> switch(s2) {
+                                case NEGATIVE   -> Set.of(true);
+                                case ZERO       -> Set.of(true);
+                                case POSITIVE   -> Set.of(true, false);
+                            };
+                        };
+                    }
+                    case "gt"       -> {
+                        yield switch(s1) {
+                            case NEGATIVE   -> switch(s2) {
+                                case NEGATIVE   -> Set.of(true, false);
+                                case ZERO       -> Set.of(false);
+                                case POSITIVE   -> Set.of(false);
+                            };
+                            case ZERO       -> switch(s2) {
+                                case NEGATIVE   -> Set.of(false);
+                                case ZERO       -> Set.of(false);
+                                case POSITIVE   -> Set.of(false);
+                            };
+                            case POSITIVE   -> switch(s2) {
+                                case NEGATIVE   -> Set.of(true);
+                                case ZERO       -> Set.of(true);
+                                case POSITIVE   -> Set.of(true, false);
+                            };
+                        };
+                    }
+                    // For object equality we assume both cases can be true/false
+                    default         -> Set.of(true, false);
                 };
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), result ? target : m.iota().e2() + 1)));
+                Set<Boolean> bools = new HashSet<>();
+                for(Object s1 : value1.getJSONArray("sign")) {
+                    for(Object s2 : value2.getJSONArray("sign")) {
+                        bools.addAll(f.apply((Sign) s1, (Sign) s2));
+                        if(bools.size() > 1) break;
+                    }
+                    if(bools.size() > 1) break;
+                }
+
+                List<Boolean> if_results = bools.stream().toList();
+                if(bools.size() > 1) {
+                    Deque<Method> _psi = psi.stream().map(Method::clone).collect(Collectors.toCollection(ArrayDeque::new));
+                    Map<Integer, JSONObject> _mu = mu.entrySet().stream().map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), new JSONObject(e.getValue().toMap()))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                    Method _m = m.clone();
+
+                    _psi.push(new Method(_m.lambda(), _m.sigma(), new Pair<>(_m.iota().e1(), if_results.get(1) ? target : _m.iota().e2() + 1)));
+                    results.add(new State(_psi, _mu));
+                }
+
+                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), if_results.get(0) ? target : m.iota().e2() + 1)));
             }
             case "ifz" -> {
                 String condition = instruction.getString("condition");
@@ -580,17 +675,17 @@ public class SignInterpreter implements Interpreter {
                     }
                     ifz_results.addAll(local);
                 } else {
+                    // For object equality we assume both cases can be true/false
                     ifz_results.add(true);
                     ifz_results.add(false);
                 }
 
                 if(ifz_results.size() > 1) {
-                    Boolean result = ifz_results.get(1);
                     Deque<Method> _psi = psi.stream().map(Method::clone).collect(Collectors.toCollection(ArrayDeque::new));
                     Map<Integer, JSONObject> _mu = mu.entrySet().stream().map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), new JSONObject(e.getValue().toMap()))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                     Method _m = m.clone();
 
-                    _psi.push(new Method(_m.lambda(), _m.sigma(), new Pair<>(_m.iota().e1(), result ? target : _m.iota().e2() + 1)));
+                    _psi.push(new Method(_m.lambda(), _m.sigma(), new Pair<>(_m.iota().e1(), ifz_results.get(1) ? target : _m.iota().e2() + 1)));
                     results.add(new State(_psi, _mu));
                 }
 
