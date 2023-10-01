@@ -58,13 +58,26 @@ class ArrayTest {
     }
 
     @Test
-    void firstSafe() {
+    void firstSafe_success() {
         JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
         Method m = new Method(new JSONObject[] {ref}, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "firstSafe", 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 1, 2, 3, 4 }));
+
+        ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
+        in.run(m, mu);
+    }
+
+    @Test
+    void firstSafe_fail() {
+        JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
+
+        Method m = new Method(new JSONObject[] {ref}, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "firstSafe", 0));
+
+        Map<Integer, JSONObject> mu = new HashMap<>();
+        mu.put(System.identityHashCode(ref), createArray(new int[] {}));
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
         in.run(m, mu);
