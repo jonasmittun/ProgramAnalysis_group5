@@ -36,9 +36,9 @@ public class ConcreteInterpreter {
      *  SimpleReferenceType: { "kind": "class", "name": &lt;ClassName&gt; } or { "kind": "array", "name": &lt;SimpleType&gt; }
      *  </pre>
      */
-    private static JSONObject createSimpleType(Object SimpleType) {
-        JSONObject result = new JSONObject();
+    private static JSONObject createSimpleType(Object SimpleType, Map<Integer, JSONObject> mu) {
         if(SimpleType instanceof String BaseType) {
+            JSONObject result = new JSONObject();
             result.put("type", BaseType);
             switch(BaseType) {
                 case "byte", "short", "int" -> result.put("value", 0);
@@ -47,16 +47,16 @@ public class ConcreteInterpreter {
                 case "float"    -> result.put("value", 0f);
                 case "long"     -> result.put("value", 0L);
                 case "boolean"  -> result.put("value", false);
-                default         -> System.out.println("Unsupported type: " + BaseType);
+                default         -> throw new IllegalArgumentException("Unsupported BaseType: " + BaseType);
             }
-        } else if(SimpleType instanceof JSONObject SimpleReferenceType) {
-            result.put("type", SimpleReferenceType);
-            result.put("value", JSONObject.NULL);
-        } else {
-            System.out.println("Could not determine type: " + SimpleType);
-        }
 
-        return result;
+            return result;
+        } else if(SimpleType instanceof JSONObject SimpleReferenceType) {
+            mu.put(System.identityHashCode(SimpleReferenceType), null);
+            return SimpleReferenceType;
+        } else {
+            throw new IllegalArgumentException("Invalid SimpleType: " + SimpleType);
+        }
     }
 
     private JSONObject getMethod(String absolute_name) {
@@ -518,12 +518,7 @@ public class ConcreteInterpreter {
                     JSONObject f = fields.getJSONObject(i);
                     if(f.getString("name").equals(field.getString("name"))) {
                         if(f.isNull("value")) {
-                            if(field.get("type") instanceof String BaseType) {
-                                value = createSimpleType(BaseType);
-                            } else {
-                                value = field.getJSONObject("type");
-                                mu.put(System.identityHashCode(value), null);
-                            }
+                            value = createSimpleType(field.get("type"), mu);
                         } else {
                             value = new JSONObject(f.getJSONObject("value").toMap());
                         }
@@ -652,7 +647,7 @@ public class ConcreteInterpreter {
                 // Create value
                 JSONArray value = new JSONArray(length);
                 for(int i = 0; i < length; i++) {
-                    value.put(i, createSimpleType(type)); // TODO: Fix if type is a reference type
+                    value.put(i, createSimpleType(type, mu));
                 }
                 JSONObject result = new JSONObject(Map.of("type", type, "value", value));
 
