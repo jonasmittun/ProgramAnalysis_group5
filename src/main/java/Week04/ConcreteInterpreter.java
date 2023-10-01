@@ -47,7 +47,7 @@ public class ConcreteInterpreter {
                 case "float"    -> result.put("value", 0f);
                 case "long"     -> result.put("value", 0L);
                 case "boolean"  -> result.put("value", false);
-                default         -> System.out.println("Unsupported type");
+                default         -> System.out.println("Unsupported type: " + BaseType);
             }
         } else if(SimpleType instanceof JSONObject SimpleReferenceType) {
             result.put("type", SimpleReferenceType);
