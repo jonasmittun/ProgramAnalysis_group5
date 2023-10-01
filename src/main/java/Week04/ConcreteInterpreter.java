@@ -89,26 +89,41 @@ public class ConcreteInterpreter {
         switch(instruction.getString("opr")) {
             case "array_load" -> {
                 JSONObject index = m.sigma().pop();
-                JSONObject ref = m.sigma().pop();
+                JSONObject arrayref = m.sigma().pop();
 
-                JSONObject actual = mu.get(System.identityHashCode(ref));
+                System.out.println(arrayref);
+
+                if(arrayref == null) throw new NullPointerException("Cannot load from array because \"arrayref\" is null");
+
+                JSONObject actual = mu.get(System.identityHashCode(arrayref));
                 JSONArray array = actual.getJSONArray("value");
-                JSONObject value = array.getJSONObject(index.getInt("value"));
-                if(value.has("kind")) { // Check if it's a reference type
-                    m.sigma().push(value);
-                } else {
-                    m.sigma().push(new JSONObject(value.toMap()));
-                }
+
+                if(array == null) throw new NullPointerException("Cannot load from array because \"array\" is null");
+
+                int index_value = index.getInt("value");
+                if(array.length() < index_value) throw new ArrayIndexOutOfBoundsException("Index " + index_value + " out of bounds for length " + array.length());
+
+                JSONObject value = array.getJSONObject(index_value);
+
+                m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
             }
             case "array_store" -> {
                 JSONObject value = m.sigma().pop();
                 JSONObject index = m.sigma().pop();
-                JSONObject ref = m.sigma().pop();
+                JSONObject arrayref = m.sigma().pop();
 
-                JSONObject actual = mu.get(System.identityHashCode(ref));
+                if(arrayref == null) throw new NullPointerException("Cannot store to array because \"arrayref\" is null");
+
+                JSONObject actual = mu.get(System.identityHashCode(arrayref));
                 JSONArray array = actual.getJSONArray("value");
-                array.put(index.getInt("value"), value);
+
+                if(array == null) throw new NullPointerException("Cannot store to array because \"array\" is null");
+
+                int index_value = index.getInt("value");
+                if(array.length() < index_value) throw new ArrayIndexOutOfBoundsException("Index " + index_value + " out of bounds for length " + array.length());
+
+                array.put(index_value, value);
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
             }
             case "push" -> {
