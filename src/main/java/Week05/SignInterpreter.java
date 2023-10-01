@@ -585,9 +585,11 @@ public class SignInterpreter implements Interpreter {
 
                 List<Boolean> ifz_results = new ArrayList<>();
                 if(value.has("sign")) {
+                    Set<Boolean> local = new HashSet<>();
                     for(Object sign : value.getJSONArray("sign")) {
-                        ifz_results.add(f.apply((Sign) sign));
+                        local.add(f.apply((Sign) sign));
                     }
+                    ifz_results.addAll(local);
                 } else {
                     ifz_results.add(true);
                     ifz_results.add(false);
