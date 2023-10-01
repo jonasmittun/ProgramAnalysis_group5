@@ -505,10 +505,10 @@ public class ConcreteInterpreter {
                     JSONObject f = fields.getJSONObject(i);
                     if(f.getString("name").equals(field.getString("name"))) {
                         if(f.isNull("value")) {
-                            if(f.get("type") instanceof String BaseType) {
+                            if(field.get("type") instanceof String BaseType) {
                                 value = createSimpleType(BaseType);
                             } else {
-                                value = f.getJSONObject("type");
+                                value = field.getJSONObject("type");
                                 mu.put(System.identityHashCode(value), null);
                             }
                         } else {
