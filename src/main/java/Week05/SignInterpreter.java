@@ -1035,7 +1035,7 @@ public class SignInterpreter implements Interpreter {
             }
             */
             default -> {
-                System.out.println("Unsupported operation + \"" + instruction.getString("opr") + "\"");
+                System.out.println("Unsupported operation \"" + instruction.getString("opr") + "\"");
             }
         }
 
