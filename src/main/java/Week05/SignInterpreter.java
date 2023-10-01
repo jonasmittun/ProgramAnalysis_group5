@@ -318,20 +318,27 @@ public class SignInterpreter implements Interpreter {
                     }
                 }
             }
-            /*
             case "negate" -> {
                 String type = instruction.getString("type"); // Arithmetic Type
-                JSONObject value1 = m.sigma().pop();
-                JSONObject result = new JSONObject();
-                result.put("type", type);
-                switch(value1.getString("value")) {
-                    case "-"    -> result.put("value", Set.of('+'));
-                    case "0"    -> result.put("value", Set.of('0'));
-                    case "+"    -> result.put("value", Set.of('-'));
+                JSONObject value = m.sigma().pop();
+
+                Function<Sign, Sign> negate = (sign) -> switch(sign) {
+                    case POSITIVE   -> NEGATIVE;
+                    case ZERO       -> ZERO;
+                    case NEGATIVE   -> POSITIVE;
+                };
+
+                JSONArray signs = value.getJSONArray("sign");
+                for(int i = 0; i < signs.length(); i++) {
+                    signs.put(i, negate.apply((Sign) signs.get(i)));
                 }
-                m.sigma().push(result);
+
+                m.sigma().push(value);
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+
+                results.add(state);
             }
+            /*
             case "bitopr" -> {
                 String type = instruction.getString("type"); // "int" | "long"
                 JSONObject value = m.sigma().pop();
