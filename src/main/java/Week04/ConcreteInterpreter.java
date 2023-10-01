@@ -424,7 +424,7 @@ public class ConcreteInterpreter {
                         };
                     }
                     default -> {
-                        System.out.println("Unsupported type");
+                        System.out.println("Unsupported type: " + value.get("type"));
                         result = false;
                     }
                 }
