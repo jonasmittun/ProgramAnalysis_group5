@@ -397,6 +397,7 @@ public class ConcreteInterpreter {
 
                 boolean result;
                 switch(value.getString("type")) {
+                    case "boolean" -> result = value.getBoolean("value");
                     case "int" -> {
                         int v = value.getInt("value");
                         result = switch(condition) {
