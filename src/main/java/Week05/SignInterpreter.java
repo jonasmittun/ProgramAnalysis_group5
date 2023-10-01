@@ -606,7 +606,7 @@ public class SignInterpreter implements Interpreter {
                 }
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), ifz_results.get(0) ? target : m.iota().e2() + 1)));
-                results.add(new State(psi, mu));
+                results.add(state);
             }
             case "goto" -> {
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
