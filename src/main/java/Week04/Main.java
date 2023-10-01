@@ -72,7 +72,12 @@ public class Main {
                     default -> o.getString("type");
                 };
 
-                return "(" + inner + " " + o.get("value").toString() + ")";
+                String value = o.get("value").toString();
+                if(o.get("value") instanceof String) {
+                    value = "\"" + value.replace("\n", "\\n") + "\"";
+                }
+
+                return "(" + inner + " " + value + ")";
             }
         }
     }
