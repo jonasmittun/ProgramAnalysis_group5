@@ -540,7 +540,7 @@ public class ConcreteInterpreter {
                             case "double"   -> f.put("value", value.getDouble("value"));
                             case "string"   -> f.put("value", value.getString("value"));
                             case "class"    -> f.put("value", value.getJSONObject("value"));
-                            default         -> System.out.println("Unsupported type");
+                            default         -> System.out.println("Unsupported type " + f.get("type") + " in \"put\"");
                         }
                     }
                 }
