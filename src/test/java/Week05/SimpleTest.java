@@ -62,6 +62,7 @@ class SimpleTest {
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
         in.run(m, mu);
     }
+
     @Test
     void identity() {
         Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 7)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "identity", 0));
@@ -83,6 +84,24 @@ class SimpleTest {
     @Test
     void min() {
         Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "min", 0));
+        Map<Integer, JSONObject> mu = new HashMap<>();
+
+        SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
+        in.run(m, mu);
+    }
+
+    @Test
+    void div_success() {
+        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "div", 0));
+        Map<Integer, JSONObject> mu = new HashMap<>();
+
+        SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
+        in.run(m, mu);
+    }
+
+    @Test
+    void div_fail() {
+        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "div", 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
