@@ -114,7 +114,7 @@ class SimpleTest {
         }
         @Test
         void min_full_sets_input() {
-            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 2, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "add", 0));
+            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 2, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "min", 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
             SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
@@ -122,25 +122,61 @@ class SimpleTest {
         }
     }
 
-    @Test
-    void div_success() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "div", 0));
-        Map<Integer, JSONObject> mu = new HashMap<>();
+    @Nested
+    @DisplayName("div tests")
+    class div {
+        @Test
+        void div_int_input() {
+            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "div", 0));
+            Map<Integer, JSONObject> mu = new HashMap<>();
 
-        SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-        in.run(m, mu);
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
+            in.run(m, mu);
+        }
+
+        @Test
+        void div_int_input_fail() {
+            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "div", 0));
+            Map<Integer, JSONObject> mu = new HashMap<>();
+
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
+            Exception exception = assertThrows(java.lang.ArithmeticException.class, () -> in.run(m, mu));
+
+            assertTrue(exception.getMessage().contains("Illegal divide by zero"));
+        }
+
+        @Test
+        void div_sets_input() {
+            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 2, "sign", new JSONArray(Set.of(NEGATIVE, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "div", 0));
+            Map<Integer, JSONObject> mu = new HashMap<>();
+
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
+            in.run(m, mu);
+        }
+
+        @Test
+        void div_sets_input_fail() {
+            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 0, "sign", new JSONArray(Set.of(ZERO)))) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "div", 0));
+            Map<Integer, JSONObject> mu = new HashMap<>();
+
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
+            Exception exception = assertThrows(java.lang.ArithmeticException.class, () -> in.run(m, mu));
+
+            assertTrue(exception.getMessage().contains("Illegal divide by zero"));
+        }
+
+        @Test
+        void div_full_sets_input_fail() {
+            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 0, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "div", 0));
+            Map<Integer, JSONObject> mu = new HashMap<>();
+
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
+            Exception exception = assertThrows(java.lang.ArithmeticException.class, () -> in.run(m, mu));
+
+            assertTrue(exception.getMessage().contains("Illegal divide by zero"));
+        }
     }
 
-    @Test
-    void div_fail() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "div", 0));
-        Map<Integer, JSONObject> mu = new HashMap<>();
-
-        SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-        Exception exception = assertThrows(java.lang.ArithmeticException.class, () -> in.run(m, mu));
-
-        assertTrue(exception.getMessage().contains("Illegal divide by zero"));
-    }
 
     @Test
     void factorial() {
