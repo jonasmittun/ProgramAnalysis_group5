@@ -44,17 +44,19 @@ public class SignInterpreter implements Interpreter {
     }
 
     public JSONObject toAbstract(JSONObject o) {
-        if(!o.has("kind") && o.has("type") && o.has("value")) {
-            Optional<Integer> r = switch(o.getString("type")) {
-                case "int", "integer"   -> Optional.of(Integer.compare(o.getInt("value"), 0));
-                case "long"             -> Optional.of(Long.compare(o.getLong("value"), 0));
-                case "float"            -> Optional.of(Float.compare(o.getFloat("value"), 0));
-                case "double"           -> Optional.of(Double.compare(o.getDouble("value"), 0));
-                default                 -> Optional.empty();
-            };
+        if(!o.has("sign")) {
+            if (!o.has("kind") && o.has("type") && o.has("value")) {
+                Optional<Integer> r = switch (o.getString("type")) {
+                    case "int", "integer" -> Optional.of(Integer.compare(o.getInt("value"), 0));
+                    case "long" -> Optional.of(Long.compare(o.getLong("value"), 0));
+                    case "float" -> Optional.of(Float.compare(o.getFloat("value"), 0));
+                    case "double" -> Optional.of(Double.compare(o.getDouble("value"), 0));
+                    default -> Optional.empty();
+                };
 
-            if(r.isPresent()) o.put("sign", new JSONArray(Set.of(Sign.toSign(r.get()))));
-            return o;
+                if (r.isPresent()) o.put("sign", new JSONArray(Set.of(Sign.toSign(r.get()))));
+                return o;
+            }
         }
 
         return o;
