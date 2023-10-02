@@ -26,7 +26,7 @@ class SimpleTest {
 
     static String filename = "Simple.json";
 
-    static int depthLimit = 10;
+    static int depthLimit = 20;
 
     @BeforeAll
     static void initAll() {
@@ -178,12 +178,26 @@ class SimpleTest {
     }
 
 
-    @Test
-    void factorial() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "factorial", 0));
-        Map<Integer, JSONObject> mu = new HashMap<>();
+    @Nested
+    @DisplayName("factorial tests")
+    class Factorial {
+        @Test
+        void factorial_int() {
+            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "factorial", 0));
+            Map<Integer, JSONObject> mu = new HashMap<>();
 
-        SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-        in.run(m, mu);
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
+            in.run(m, mu);
+        }
+
+        @Test
+        void factorial_sets() {
+            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 0, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "factorial", 0));
+            Map<Integer, JSONObject> mu = new HashMap<>();
+
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
+            in.run(m, mu);
+        }
     }
+
 }
