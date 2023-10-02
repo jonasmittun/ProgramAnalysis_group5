@@ -678,15 +678,7 @@ public class ConcreteInterpreter {
                 String type = instruction.getString("type"); // LocalType
                 JSONObject value = m.sigma().pop();
 
-                JSONObject result = new JSONObject();
-                result.put("type", type);
-                switch(type) {
-                    case "int"      -> result.put("value", value.getInt("value"));
-                    case "long"     -> result.put("value", value.getLong("value"));
-                    case "float"    -> result.put("value", value.getFloat("value"));
-                    case "double"   -> result.put("value", value.getDouble("value"));
-                    case "ref"      -> result.put("value", value);
-                }
+                JSONObject result = type.equals("ref") ? value : new JSONObject(value.toMap());
 
                 if(!psi.isEmpty()) {
                     Method m2 = psi.peek();
