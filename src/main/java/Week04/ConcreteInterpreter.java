@@ -4,6 +4,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.module.ResolutionException;
 import java.util.*;
 
 public class ConcreteInterpreter {
@@ -29,8 +30,79 @@ public class ConcreteInterpreter {
         }
     }
 
+    /** Returns the resolved method as a JSONObject
+     * @param ref           SimpleReferenceType: { "kind": "class", "name": &lt;ClassName&gt; }
+     * @param name          String
+     * @param args          SimpleType[]
+     * @param return_type   nullable SimpleType
+     * @return              The method - if correctly resolved
+     */
+    public JSONObject resolveMethod(JSONObject ref, String name, JSONArray args, Object return_type) {
+        if(!ref.has("name")) throw new IllegalArgumentException("Incorrect reference type!");
+        if(!classes.containsKey(ref.getString("name"))) throw new ResolutionException("Class " + ref.getString("name") + " not found!");
+        JSONObject cls = classes.get(ref.getString("name"));
+
+        JSONArray methods = cls.getJSONArray("methods");
+        compare:
+        for(int i = 0; i < methods.length(); i++) {
+            JSONObject method = methods.getJSONObject(i);
+
+            //System.out.println(method.getString("name") + " " + method.getJSONArray("params") + " → " + method.getJSONObject("returns"));
+
+            // Check Name
+            String method_name = method.getString("name");
+            if(!method_name.equals(name)) continue;
+
+            // Check Return Type
+            JSONObject method_returns = method.getJSONObject("returns");
+            JSONObject method_return_type = method_returns.isNull("type") ? null : method_returns.getJSONObject("type"); // <Type>
+            if(!typeIsEqual(method_return_type, return_type)) continue;
+
+            // Check Arguments
+            JSONArray method_params = method.getJSONArray("params");
+            if(args.length() != method_params.length()) continue;
+            for(int j = 0; j < method_params.length(); j++) {
+                JSONObject method_param = method_params.getJSONObject(j);
+                if(!typeIsEqual(method_param.getJSONObject("type"), args.get(j))) continue compare;
+                // TODO: Verify that the order of elements is the same
+            }
+
+            return method;
+        }
+
+        throw new ResolutionException(ref.getString("name") + "." + name + " " + args + " → " + return_type + " not found!");
+    }
+
+    /** Checks if the &lt;Type&gt; is equal to the &lt;SimpleType&gt; */
+    public boolean typeIsEqual(JSONObject Type, Object SimpleType) {
+        if(Type == null && SimpleType == null) {
+            return true;
+        } else if(Type != null && SimpleType != null) {
+            if(SimpleType instanceof String BaseType) {
+                if(!Type.has("base")) return false;
+                else return BaseType.equals(Type.getString("base"));
+            } else {
+                if(!(SimpleType instanceof JSONObject SimpleReferenceType) || !Type.has("kind")) return false;
+
+                return switch(Type.getString("kind")) {
+                    case "class" -> {
+                        if(!SimpleReferenceType.getString("kind").equals("class")) yield false;
+                        else yield SimpleReferenceType.getString("name").equals(Type.getString("name"));
+                    }
+                    case "array" -> {
+                        if(!SimpleReferenceType.getString("kind").equals("array")) yield false;
+                        else yield typeIsEqual(Type.getJSONObject("type"), SimpleReferenceType.get("type"));
+                    }
+                    default -> false;
+                };
+            }
+        } else {
+            return false;
+        }
+    }
+
     /** Returns a new JSONObject of the specified type with the default value for that type
-     * @param SimpleType:
+     * @param SimpleType
      *  <pre>
      *  BaseType: "byte", "char", "double", "float", "int", "long", "short" or "boolean"<br>
      *  SimpleReferenceType: { "kind": "class", "name": &lt;ClassName&gt; } or { "kind": "array", "name": &lt;SimpleType&gt; }
@@ -59,14 +131,6 @@ public class ConcreteInterpreter {
         }
     }
 
-    private JSONObject getMethod(String absolute_name) {
-        int index = absolute_name.lastIndexOf("/") + 1;
-        String classname = absolute_name.substring(0, index - 1);
-        String methodname = absolute_name.substring(index);
-
-        return class_methods.get(classname).get(methodname);
-    }
-
     public void run(Method method, Map<Integer, JSONObject> mu) {
         Deque<Method> psi = new ArrayDeque<>();  // Method Stack
         psi.push(method);
@@ -84,7 +148,7 @@ public class ConcreteInterpreter {
     }
 
     public void step(Method m, Map<Integer, JSONObject> mu, Deque<Method> psi) {
-        JSONObject instruction = getMethod(m.iota().e1()).getJSONObject("code").getJSONArray("bytecode").getJSONObject(m.iota().e2());
+        JSONObject instruction = m.iota().e1().getJSONObject("code").getJSONArray("bytecode").getJSONObject(m.iota().e2());
 
         switch(instruction.getString("opr")) {
             case "array_load" -> {
@@ -563,63 +627,51 @@ public class ConcreteInterpreter {
             case "invoke" -> {
                 JSONObject invoke_method = instruction.getJSONObject("method");
 
-                switch(instruction.getString("access")) {
-                    case "special" -> {
-                        JSONObject m_ref = invoke_method.getJSONObject("ref");
-                        String classname = m_ref.getString("name");
-                        String methodname = invoke_method.getString("name");
-                        JSONArray args = invoke_method.getJSONArray("args");
+                String methodname = invoke_method.getString("name");
+                JSONArray args = invoke_method.getJSONArray("args");
+                Object returns = invoke_method.isNull("returns") ? null : invoke_method.get("returns");
 
-                        if(m.sigma().size() < args.length()) System.out.println("Not enough elements in stack for invocation of method!");
+                JSONObject resolvedMethod = switch(instruction.getString("access")) {
+                    case "virtual" -> {
+                        JSONObject classref = invoke_method.getJSONObject("ref");
 
-                        // TODO: Make a method resolver
-
-                        JSONObject[] lambda = new JSONObject[args.length()];
-                        for(int j = 0; j < args.length(); j++) {
-                            JSONObject arg = m.sigma().pop();
-
-                            String type_expected = args.get(j) instanceof String ? args.getString(j) : (args.getJSONObject(j).has("kind") ? "ref" : args.getJSONObject(j).getString("type"));
-                            String type_actual = arg.getString("type");
-
-                            if(!type_actual.equals(type_expected)) {
-                                System.out.println("Type mismatch: Expected " + type_expected + " but was " + type_actual);
-                            }
-
-                            lambda[j] = arg;
-                        }
-
-                        psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
-                        psi.push(new Method(lambda, new ArrayDeque<>(), new Pair<>(classname + "/" + methodname, 0)));
+                        yield resolveMethod(classref, methodname, args, returns);
                     }
-                    case "virtual" -> {}
-                    case "static" -> {
-                        JSONObject m_ref = invoke_method.getJSONObject("ref");
-                        String classname = m_ref.getString("name");
-                        String methodname = invoke_method.getString("name");
-                        JSONArray args = invoke_method.getJSONArray("args");
+                    case "special", "static" -> {
+                        JSONObject classref = invoke_method.getJSONObject("ref");
+                        boolean is_interface = invoke_method.getBoolean("is_interface");
 
-                        if(m.sigma().size() < args.length()) System.out.println("Not enough elements in stack for invocation of method!");
-
-                        JSONObject[] lambda = new JSONObject[args.length()];
-                        for(int i = 0; i < args.length(); i++) {
-                            JSONObject arg = m.sigma().pop();
-
-                            String type_expected = args.get(i) instanceof String ? args.getString(i) : (args.getJSONObject(i).has("kind") ? "ref" : args.getJSONObject(i).getString("type"));
-                            String type_actual = arg.getString("type");
-
-                            if(!type_actual.equals(type_expected)) {
-                                System.out.println("Type mismatch: Expected " + type_expected + " but was " + type_actual);
-                            }
-
-                            lambda[i] = arg;
-                        }
-
-                        psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
-                        psi.push(new Method(lambda, new ArrayDeque<>(), new Pair<>(classname + "/" + methodname, 0)));
+                        yield resolveMethod(classref, methodname, args, returns);
                     }
-                    case "interface" -> {}
-                    case "dynamic" -> {}
+                    case "interface" -> {
+                        JSONObject classref = invoke_method.getJSONObject("ref");
+                        int stack_size = invoke_method.getInt("stack_size");
+
+                        yield resolveMethod(classref, methodname, args, returns);
+                    }
+                    case "dynamic" -> throw new RuntimeException("Dynamic invoke not yet implemented");
+                    default -> throw new IllegalArgumentException("Illegal invoke access: " + instruction.getString("access"));
+                };
+
+                if(m.sigma().size() < args.length()) throw new RuntimeException("Not enough elements in stack for invocation of method!");
+
+                JSONObject[] lambda = new JSONObject[resolvedMethod.getJSONObject("code").getInt("max_locals")];
+                lambda[0] = m.sigma().pop(); // TODO: Check if it this is always needed or not
+                for(int i = 1; i < args.length(); i++) {
+                    JSONObject arg = m.sigma().pop();
+
+                    String type_expected = args.get(i) instanceof String ? args.getString(i) : (args.getJSONObject(i).has("kind") ? "ref" : args.getJSONObject(i).getString("type"));
+                    String type_actual = arg.getString("type");
+
+                    if(!type_actual.equals(type_expected)) {
+                        System.out.println("Type mismatch: Expected " + type_expected + " but was " + type_actual);
+                    }
+
+                    lambda[i] = arg;
                 }
+
+                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Method(lambda, new ArrayDeque<>(), new Pair<>(resolvedMethod, 0)));
             }
             case "new" -> {
                 String classname = instruction.getString("class");
@@ -671,6 +723,11 @@ public class ConcreteInterpreter {
                 m.sigma().push(result);
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+            }
+            case "throw" -> {
+                JSONObject objectref = m.sigma().pop();
+                if(objectref == null) throw new NullPointerException("Cannot throw because \"objectref\" is null");
+                System.out.println(objectref);
             }
             case "return" -> {
                 if(instruction.isNull("type")) break;

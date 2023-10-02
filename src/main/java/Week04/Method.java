@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
  * sigma:   Operand Stack
  * iota:    Program Counter
  */
-public record Method(JSONObject[] lambda, Deque<JSONObject> sigma, Pair<String, Integer> iota) {
+public record Method(JSONObject[] lambda, Deque<JSONObject> sigma, Pair<JSONObject, Integer> iota) {
     @Override
     public String toString() {
         return "(λ" + Arrays.stream(lambda).map(Main::toFormattedString).toList() + ", σ" + sigma.stream().map(Main::toFormattedString).toList() + ", ι" + iota.toString() + ")";
@@ -23,7 +23,7 @@ public record Method(JSONObject[] lambda, Deque<JSONObject> sigma, Pair<String, 
     public Method clone() {
         JSONObject[] lambda = Arrays.stream(this.lambda).map(o -> new JSONObject(o.toMap())).toArray(JSONObject[]::new);
         Deque<JSONObject> sigma = this.sigma.stream().map(o -> new JSONObject(o.toMap())).collect(Collectors.toCollection(ArrayDeque::new));
-        Pair<String, Integer> iota = this.iota.clone();
+        Pair<JSONObject, Integer> iota = this.iota.clone();
 
         return new Method(lambda, sigma, iota);
     }

@@ -118,7 +118,7 @@ public class SignInterpreter implements Interpreter {
         Deque<Method> psi = state.psi();
         Method m = psi.pop();
 
-        JSONObject instruction = getMethod(m.iota().e1()).getJSONObject("code").getJSONArray("bytecode").getJSONObject(m.iota().e2());
+        JSONObject instruction = m.iota().e1().getJSONObject("code").getJSONArray("bytecode").getJSONObject(m.iota().e2());
 
         switch(instruction.getString("opr")) {
             /*

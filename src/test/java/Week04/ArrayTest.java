@@ -18,7 +18,7 @@ class ArrayTest {
     static Map<String, String> mapper = new HashMap<>();       // Map<Filename, Classname>
     static Map<String, JSONObject> classes = new HashMap<>();  // Map<Classname, JSONObject>
 
-    static String filename = "Array.json";
+    static JSONObject cls;
 
     @BeforeAll
     static void initAll() {
@@ -33,6 +33,8 @@ class ArrayTest {
             classes.put(classname, file);
             mapper.put(filename, classname);
         }
+
+        cls = classes.get(mapper.get("Array.json"));
     }
 
     private static JSONObject createArray(int[] array) {
@@ -48,7 +50,7 @@ class ArrayTest {
     void first() {
         JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
-        Method m = new Method(new JSONObject[] {ref}, new ArrayDeque<>(), new Pair<>(mapper.get("Array.json") + "/" + "first", 0));
+        Method m = new Method(new JSONObject[] {ref}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "first"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 1, 2, 3, 4 }));
@@ -61,7 +63,7 @@ class ArrayTest {
     void firstSafe_success() {
         JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
-        Method m = new Method(new JSONObject[] {ref}, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "firstSafe", 0));
+        Method m = new Method(new JSONObject[] {ref}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "firstSafe"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 1, 2, 3, 4 }));
@@ -74,7 +76,7 @@ class ArrayTest {
     void firstSafe_fail() {
         JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
-        Method m = new Method(new JSONObject[] {ref}, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "firstSafe", 0));
+        Method m = new Method(new JSONObject[] {ref}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "firstSafe"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] {}));
@@ -89,7 +91,7 @@ class ArrayTest {
 
         JSONObject i = new JSONObject(Map.of("type", "int", "value", 2));
 
-        Method m = new Method(new JSONObject[] { i, ref }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "access", 0));
+        Method m = new Method(new JSONObject[] { i, ref }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "access"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 1, 2, 3, 4 }));
@@ -99,7 +101,7 @@ class ArrayTest {
     }
     @Test
     void newArray() {
-        Method m = new Method(new JSONObject[1], new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "newArray", 0));
+        Method m = new Method(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "newArray"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
@@ -109,7 +111,7 @@ class ArrayTest {
 
     @Test
     void newArrayOutOfBounds() {
-        Method m = new Method(new JSONObject[1], new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "newArrayOutOfBounds", 0));
+        Method m = new Method(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "newArrayOutOfBounds"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
@@ -123,7 +125,7 @@ class ArrayTest {
 
         JSONObject i = new JSONObject(Map.of("type", "int", "value", 2));
 
-        Method m = new Method(new JSONObject[] { i, ref }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "accessSafe", 0));
+        Method m = new Method(new JSONObject[] { i, ref }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "accessSafe"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 1, 2, 3, 4 }));
@@ -140,7 +142,7 @@ class ArrayTest {
         JSONObject[] lambda = new JSONObject[5];
         lambda[0] = ref;
 
-        Method m = new Method(lambda, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "bubbleSort", 0));
+        Method m = new Method(lambda, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "bubbleSort"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 4, 3, 2, 1 }));
@@ -151,7 +153,7 @@ class ArrayTest {
 
     @Test
     void aWierdOneOutOfBounds() {
-        Method m = new Method(new JSONObject[1], new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "aWierdOneOutOfBounds", 0));
+        Method m = new Method(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "aWierdOneOutOfBounds"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
@@ -161,7 +163,7 @@ class ArrayTest {
 
     @Test
     void aWierdOneWithinBounds() {
-        Method m = new Method(new JSONObject[1], new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "aWierdOneWithinBounds", 0));
+        Method m = new Method(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "aWierdOneWithinBounds"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
