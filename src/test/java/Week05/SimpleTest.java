@@ -101,13 +101,25 @@ class SimpleTest {
     }
 
 
-    @Test
-    void min() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "min", 0));
-        Map<Integer, JSONObject> mu = new HashMap<>();
+    @Nested
+    @DisplayName("min tests")
+    class Min {
+        @Test
+        void min_int_input() {
+            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "min", 0));
+            Map<Integer, JSONObject> mu = new HashMap<>();
 
-        SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-        in.run(m, mu);
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
+            in.run(m, mu);
+        }
+        @Test
+        void min_full_sets_input() {
+            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 2, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(mapper.get(filename) + "/" + "add", 0));
+            Map<Integer, JSONObject> mu = new HashMap<>();
+
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
+            in.run(m, mu);
+        }
     }
 
     @Test
