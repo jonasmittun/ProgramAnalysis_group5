@@ -54,7 +54,9 @@ public class Main {
         if(o == null) {
             return "(null)";
         } else if(o.has("kind")) {
-            return "(" + o.getString("kind") + "ref" + " r)";
+            String kind = o.getString("kind") + "ref";
+            String value = (o.has("name") ? o.getString("name").substring(o.getString("name").lastIndexOf("/") + 1) : "r");
+            return "(" + kind + " " + value + ")";
         } else {
             if(o.has("sign")) {
                 StringJoiner sj = new StringJoiner(", ");
@@ -67,7 +69,7 @@ public class Main {
                 }
                 return "{" + sj + "}";
             } else {
-                String inner = switch(o.getString("type")) {
+                String type = switch(o.getString("type")) {
                     case "int", "integer" -> "int";
                     default -> o.getString("type");
                 };
@@ -77,7 +79,7 @@ public class Main {
                     value = "\"" + value.replace("\n", "\\n") + "\"";
                 }
 
-                return "(" + inner + " " + value + ")";
+                return "(" + type + " " + value + ")";
             }
         }
     }
