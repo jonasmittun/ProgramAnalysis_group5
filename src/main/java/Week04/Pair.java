@@ -8,9 +8,4 @@ public record Pair<T1, T2>(T1 e1, T2 e2) {
         String fst = (e1 instanceof JSONObject method) ? method.getString("name") : e1.toString();
         return "(" + fst + ", " + e2.toString() + ")";
     }
-
-    @Override
-    public Pair<T1, T2> clone() {
-        return new Pair<>(e1(), e2());
-    }
 }

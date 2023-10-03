@@ -1,62 +1,26 @@
-package Week06;
+package Week05;
 
+import Week04.Main;
 import Week04.Method;
 import Week04.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
-public class SignInterpreter implements Interpreter {
+import static Week04.ConcreteInterpreter.createSimpleType;
+import static Week05.Sign.*;
+import static Week05.SignInterpreter.clone_state;
+import static Week05.SignInterpreter.toAbstract;
 
-    private final Map<String, JSONObject> classes; // Map<Classname, JSONObject>
+public class SignStepper implements AbstractStepper {
 
-    private final Map<String, Map<String, JSONObject>> class_methods;
+    private final Map<String, JSONObject> classes;
 
-    private final SignStepper stepper;
-
-    private final int depthLimit;
-
-    public SignInterpreter(Map<String, JSONObject> classes, int depthLimit){
+    public SignStepper(Map<String, JSONObject> classes) {
         this.classes = classes;
-        this.depthLimit = depthLimit;
-
-        // Map methods for all classes
-        class_methods = new HashMap<>();
-        for(Map.Entry<String, JSONObject> entry : classes.entrySet()) {
-            Map<String, JSONObject> methods = new HashMap<>();
-
-            JSONArray ms = entry.getValue().getJSONArray("methods");
-            for(int i = 0; i < ms.length(); i++) {
-                JSONObject m = ms.getJSONObject(i);
-                methods.put(m.getString("name"), m);
-            }
-
-            class_methods.put(entry.getKey(), methods);
-        }
-
-        this.stepper = new SignStepper(classes);
-    }
-
-    @Override
-    public void run(Method method, Map<Integer, JSONObject> mu){
-        Deque<Method> psi = new ArrayDeque<>();  // Method Stack
-        Week05.SignInterpreter.addSigns(method);
-        System.out.println(method);
-        psi.push(method);
-
-        Queue<State> queue = new LinkedList<>();
-        queue.add(new State(psi, mu));
-
-        while(!queue.isEmpty()) {
-            State current = queue.poll();
-
-            Set<State> next = stepper.step(current);
-
-            System.out.println("Generated: " + next.size());
-
-            queue.addAll(next);
-        }
     }
 
     @Override
@@ -99,7 +63,7 @@ public class SignInterpreter implements Interpreter {
                 if(value.getString("type").equals("class")) { // Value is a <SimpleReferenceType>
                     m.sigma().push(value);
                 } else {
-                    m.sigma().push(toAbstract(value));
+                    m.sigma().push(toAbstract(new JSONObject(value.toMap())));
                 }
 
                 state.psi().push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
@@ -112,7 +76,7 @@ public class SignInterpreter implements Interpreter {
                 if(value.has("kind")) { // Check if it's a reference type
                     m.sigma().push(value);
                 } else {
-                    m.sigma().push(toAbstract(value));
+                    m.sigma().push(toAbstract(new JSONObject(value.toMap())));
                 }
 
                 state.psi().push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
@@ -156,13 +120,15 @@ public class SignInterpreter implements Interpreter {
                 for(Object sign : value.getJSONArray("sign")) {
                     Set<Sign> signs = f.apply((Sign) sign, amount);
 
-                    JSONObject result = new JSONObject(Map.of("sign", signs));
+                    Triple<Method, Deque<Method>, Map<Integer, JSONObject>> t = clone_state(m, psi, mu);
 
-                    Deque<Method> _psi = psi.stream().map(Method::clone).collect(Collectors.toCollection(ArrayDeque::new));
-                    Map<Integer, JSONObject> _mu = mu.entrySet().stream().map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), new JSONObject(e.getValue().toMap()))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                    Method _m = m.clone();
+                    Method _m = t.e1();
+                    Deque<Method> _psi = t.e2();
+                    Map<Integer, JSONObject> _mu = t.e3();
 
-                    _m.sigma().push(result);
+                    JSONObject value_new = new JSONObject(value.toMap());
+                    value_new.put("sign", signs);
+                    _m.lambda()[index] = value_new;
 
                     _psi.push(new Method(_m.lambda(), _m.sigma(), new Pair<>(_m.iota().e1(), _m.iota().e2() + 1)));
 
@@ -257,9 +223,11 @@ public class SignInterpreter implements Interpreter {
 
                         JSONObject result = new JSONObject(Map.of("sign", signs));
 
-                        Deque<Method> _psi = psi.stream().map(Method::clone).collect(Collectors.toCollection(ArrayDeque::new));
-                        Map<Integer, JSONObject> _mu = mu.entrySet().stream().map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), new JSONObject(e.getValue().toMap()))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                        Method _m = m.clone();
+                        Triple<Method, Deque<Method>, Map<Integer, JSONObject>> t = clone_state(m, psi, mu);
+
+                        Method _m = t.e1();
+                        Deque<Method> _psi = t.e2();
+                        Map<Integer, JSONObject> _mu = t.e3();
 
                         _m.sigma().push(result);
 
@@ -556,9 +524,11 @@ public class SignInterpreter implements Interpreter {
 
                 List<Boolean> if_results = bools.stream().toList();
                 if(bools.size() > 1) {
-                    Deque<Method> _psi = psi.stream().map(Method::clone).collect(Collectors.toCollection(ArrayDeque::new));
-                    Map<Integer, JSONObject> _mu = mu.entrySet().stream().map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), new JSONObject(e.getValue().toMap()))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                    Method _m = m.clone();
+                    Triple<Method, Deque<Method>, Map<Integer, JSONObject>> t = clone_state(m, psi, mu);
+
+                    Method _m = t.e1();
+                    Deque<Method> _psi = t.e2();
+                    Map<Integer, JSONObject> _mu = t.e3();
 
                     _psi.push(new Method(_m.lambda(), _m.sigma(), new Pair<>(_m.iota().e1(), if_results.get(1) ? target : _m.iota().e2() + 1)));
                     results.add(new State(_psi, _mu));
@@ -632,9 +602,11 @@ public class SignInterpreter implements Interpreter {
                 }
 
                 if(ifz_results.size() > 1) {
-                    Deque<Method> _psi = psi.stream().map(Method::clone).collect(Collectors.toCollection(ArrayDeque::new));
-                    Map<Integer, JSONObject> _mu = mu.entrySet().stream().map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), new JSONObject(e.getValue().toMap()))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                    Method _m = m.clone();
+                    Triple<Method, Deque<Method>, Map<Integer, JSONObject>> t = clone_state(m, psi, mu);
+
+                    Method _m = t.e1();
+                    Deque<Method> _psi = t.e2();
+                    Map<Integer, JSONObject> _mu = t.e3();
 
                     _psi.push(new Method(_m.lambda(), _m.sigma(), new Pair<>(_m.iota().e1(), ifz_results.get(1) ? target : _m.iota().e2() + 1)));
                     results.add(new State(_psi, _mu));
@@ -868,16 +840,6 @@ public class SignInterpreter implements Interpreter {
                 JSONObject value = m.sigma().pop();
 
                 JSONObject result = new JSONObject(value.toMap());
-                /*
-                result.put("type", type);
-                switch(type) {
-                    case "int"      -> result.put("value", value.getInt("value"));
-                    case "long"     -> result.put("value", value.getLong("value"));
-                    case "float"    -> result.put("value", value.getFloat("value"));
-                    case "double"   -> result.put("value", value.getDouble("value"));
-                    case "ref"      -> result.put("value", value);
-                }
-                */
 
                 if(!psi.isEmpty()) {
                     Method m2 = psi.peek();
@@ -888,9 +850,9 @@ public class SignInterpreter implements Interpreter {
                     System.out.println(String.format("%-12s", "return") + Main.toFormattedString(result));
                 }
             }
-            /*
             case "nop" -> {
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                results.add(state);
             }
             case "pop" -> {
                 int words = instruction.getInt("words");
@@ -901,6 +863,7 @@ public class SignInterpreter implements Interpreter {
                 }
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                results.add(state);
             }
             case "dup" -> {
                 int words = instruction.getInt("words");
@@ -912,12 +875,13 @@ public class SignInterpreter implements Interpreter {
                 }
 
                 for(int i = 0; i < words+1; i++) {
-                    for(JSONObject jsonObject : local) {
-                        m.sigma().push(jsonObject);
+                    for(JSONObject value : local) {
+                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                results.add(state);
             }
             case "dup_x1" -> {
                 int words = instruction.getInt("words");
@@ -931,20 +895,21 @@ public class SignInterpreter implements Interpreter {
                 JSONObject word = m.sigma().pop();
 
                 for(int i = 0; i < words; i++) {
-                    for(JSONObject jsonObject : local) {
-                        m.sigma().push(jsonObject);
+                    for(JSONObject value : local) {
+                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
                 m.sigma().push(word);
 
                 for(int i = 0; i < words; i++) {
-                    for(JSONObject jsonObject : local) {
-                        m.sigma().push(jsonObject);
+                    for(JSONObject value : local) {
+                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                results.add(state);
             }
             case "dup_x2" -> {
                 int words = instruction.getInt("words");
@@ -959,8 +924,8 @@ public class SignInterpreter implements Interpreter {
                 JSONObject word2 = m.sigma().pop();
 
                 for(int i = 0; i < words; i++) {
-                    for(JSONObject jsonObject : local) {
-                        m.sigma().push(jsonObject);
+                    for(JSONObject value : local) {
+                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
@@ -968,12 +933,13 @@ public class SignInterpreter implements Interpreter {
                 m.sigma().push(word1);
 
                 for(int i = 0; i < words; i++) {
-                    for(JSONObject jsonObject : local) {
-                        m.sigma().push(jsonObject);
+                    for(JSONObject value : local) {
+                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                results.add(state);
             }
             case "swap" -> {
                 JSONObject value2 = m.sigma().pop();
@@ -983,8 +949,8 @@ public class SignInterpreter implements Interpreter {
                 m.sigma().push(value1);
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                results.add(state);
             }
-            */
             default -> {
                 System.out.println("Unsupported operation \"" + instruction.getString("opr") + "\"");
             }

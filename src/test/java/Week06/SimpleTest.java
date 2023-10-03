@@ -52,7 +52,7 @@ class SimpleTest {
         Method m = new Method(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "noop"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Week05.SignInterpreter in = new Week05.SignInterpreter(new HashMap<>(classes), depthLimit);
+        SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
@@ -61,7 +61,7 @@ class SimpleTest {
         Method m = new Method(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "zero"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Week05.SignInterpreter in = new Week05.SignInterpreter(new HashMap<>(classes), depthLimit);
+        SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
@@ -70,7 +70,7 @@ class SimpleTest {
         Method m = new Method(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "hundredAndTwo"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Week05.SignInterpreter in = new Week05.SignInterpreter(new HashMap<>(classes), depthLimit);
+        SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
@@ -79,7 +79,7 @@ class SimpleTest {
         Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 7)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "identity"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
-        Week05.SignInterpreter in = new Week05.SignInterpreter(new HashMap<>(classes), depthLimit);
+        SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
         in.run(m, mu);
     }
 
@@ -91,7 +91,7 @@ class SimpleTest {
             Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", -1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "add"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
-            Week05.SignInterpreter in = new Week05.SignInterpreter(new HashMap<>(classes), depthLimit);
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
             in.run(m, mu);
         }
         @Test
@@ -99,7 +99,7 @@ class SimpleTest {
             Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 2, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "add"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
-            Week05.SignInterpreter in = new Week05.SignInterpreter(new HashMap<>(classes), depthLimit);
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
             in.run(m, mu);
         }
     }
@@ -113,7 +113,7 @@ class SimpleTest {
             Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "min"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
-            Week05.SignInterpreter in = new Week05.SignInterpreter(new HashMap<>(classes), depthLimit);
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
             in.run(m, mu);
         }
         @Test
@@ -121,7 +121,7 @@ class SimpleTest {
             Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 2, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "min"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
-            Week05.SignInterpreter in = new Week05.SignInterpreter(new HashMap<>(classes), depthLimit);
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
             in.run(m, mu);
         }
     }
@@ -134,7 +134,7 @@ class SimpleTest {
             Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
-            Week05.SignInterpreter in = new Week05.SignInterpreter(new HashMap<>(classes), depthLimit);
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
             in.run(m, mu);
         }
 
@@ -143,8 +143,8 @@ class SimpleTest {
             Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
-            Week05.SignInterpreter in = new Week05.SignInterpreter(new HashMap<>(classes), depthLimit);
-            Exception exception = assertThrows(ArithmeticException.class, () -> in.run(m, mu));
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
+            Exception exception = assertThrows(java.lang.ArithmeticException.class, () -> in.run(m, mu));
 
             assertTrue(exception.getMessage().contains("Illegal divide by zero"));
         }
@@ -154,7 +154,7 @@ class SimpleTest {
             Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 2, "sign", new JSONArray(Set.of(NEGATIVE, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
-            Week05.SignInterpreter in = new Week05.SignInterpreter(new HashMap<>(classes), depthLimit);
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
             in.run(m, mu);
         }
 
@@ -163,8 +163,8 @@ class SimpleTest {
             Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 0, "sign", new JSONArray(Set.of(ZERO)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
-            Week05.SignInterpreter in = new Week05.SignInterpreter(new HashMap<>(classes), depthLimit);
-            Exception exception = assertThrows(ArithmeticException.class, () -> in.run(m, mu));
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
+            Exception exception = assertThrows(java.lang.ArithmeticException.class, () -> in.run(m, mu));
 
             assertTrue(exception.getMessage().contains("Illegal divide by zero"));
         }
@@ -174,8 +174,8 @@ class SimpleTest {
             Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 0, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
-            Week05.SignInterpreter in = new Week05.SignInterpreter(new HashMap<>(classes), depthLimit);
-            Exception exception = assertThrows(ArithmeticException.class, () -> in.run(m, mu));
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
+            Exception exception = assertThrows(java.lang.ArithmeticException.class, () -> in.run(m, mu));
 
             assertTrue(exception.getMessage().contains("Illegal divide by zero"));
         }
@@ -190,7 +190,7 @@ class SimpleTest {
             Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "factorial"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
-            Week05.SignInterpreter in = new Week05.SignInterpreter(new HashMap<>(classes), depthLimit);
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
             in.run(m, mu);
         }
 

@@ -4,7 +4,6 @@ import Week04.Method;
 import org.json.JSONObject;
 
 import java.util.Map;
-import java.util.Set;
 
 public interface Interpreter {
 
@@ -21,5 +20,5 @@ public interface Interpreter {
      * mu:              The memory
      * psi:             The method stack
      */
-    Set<State> step(State state);
+    //Set<State> step(State state);
 }
