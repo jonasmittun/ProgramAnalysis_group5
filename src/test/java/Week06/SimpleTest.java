@@ -3,7 +3,7 @@ package Week06;
 import Week04.Main;
 import Week04.Method;
 import Week04.Pair;
-import Week05.SignInterpreter;
+import Week06.SignInterpreter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
@@ -27,8 +27,6 @@ class SimpleTest {
     static Map<String, JSONObject> classes = new HashMap<>();  // Map<Classname, JSONObject>
 
     static JSONObject cls;
-
-    static int depthLimit = 20;
 
     @BeforeAll
     static void initAll() {
@@ -84,7 +82,7 @@ class SimpleTest {
     }
 
     @Nested
-    @DisplayName("add tests")
+    @DisplayName("add Tests")
     class Add {
         @Test
         void add_int_input() {
@@ -106,7 +104,7 @@ class SimpleTest {
 
 
     @Nested
-    @DisplayName("min tests")
+    @DisplayName("min Tests")
     class Min {
         @Test
         void min_int_input() {
@@ -127,7 +125,7 @@ class SimpleTest {
     }
 
     @Nested
-    @DisplayName("div tests")
+    @DisplayName("div Tests")
     class div {
         @Test
         void div_int_input() {
@@ -183,7 +181,7 @@ class SimpleTest {
 
 
     @Nested
-    @DisplayName("factorial tests")
+    @DisplayName("Factorial tests")
     class Factorial {
         @Test
         void factorial_int() {
@@ -199,7 +197,7 @@ class SimpleTest {
             Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 0, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "factorial"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
-            Week05.SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
+            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
             in.run(m, mu);
         }
     }
