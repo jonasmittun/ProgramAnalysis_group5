@@ -12,7 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static Week04.ConcreteInterpreter.createSimpleType;
-import static Week05.Sign.*;
+import static Week06.Sign.*;
 
 public class SignInterpreter implements Interpreter {
 
