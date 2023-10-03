@@ -626,12 +626,13 @@ public class ConcreteInterpreter {
             }
             case "invoke" -> {
                 JSONObject invoke_method = instruction.getJSONObject("method");
+                String invoke_access = instruction.getString("access");
 
                 String methodname = invoke_method.getString("name");
                 JSONArray args = invoke_method.getJSONArray("args");
                 Object returns = invoke_method.isNull("returns") ? null : invoke_method.get("returns");
 
-                JSONObject resolvedMethod = switch(instruction.getString("access")) {
+                JSONObject resolvedMethod = switch(invoke_access) {
                     case "virtual" -> {
                         JSONObject classref = invoke_method.getJSONObject("ref");
 
@@ -649,15 +650,19 @@ public class ConcreteInterpreter {
 
                         yield resolveMethod(classref, methodname, args, returns);
                     }
-                    case "dynamic" -> throw new RuntimeException("Dynamic invoke not yet implemented");
+                    case "dynamic" -> throw new RuntimeException("Dynamic invoke is not implemented");
                     default -> throw new IllegalArgumentException("Illegal invoke access: " + instruction.getString("access"));
                 };
 
                 if(m.sigma().size() < args.length()) throw new RuntimeException("Not enough elements in stack for invocation of method!");
 
+                if(resolvedMethod.isNull("code")) {
+                    throw new RuntimeException("Runtime method identification is not implemented");
+                    // TODO: Find method in subclass / "Implement class" at runtime
+                }
+
                 JSONObject[] lambda = new JSONObject[resolvedMethod.getJSONObject("code").getInt("max_locals")];
-                lambda[0] = m.sigma().pop(); // TODO: Check if it this is always needed or not
-                for(int i = 1; i < args.length(); i++) {
+                for(int i = 0; i < args.length(); i++) {
                     JSONObject arg = m.sigma().pop();
 
                     String type_expected = args.get(i) instanceof String ? args.getString(i) : (args.getJSONObject(i).has("kind") ? "ref" : args.getJSONObject(i).getString("type"));
@@ -668,6 +673,16 @@ public class ConcreteInterpreter {
                     }
 
                     lambda[i] = arg;
+                }
+
+                switch(invoke_access) {
+                    case "virtual", "special", "interface" -> {
+                        // Shift elements in lambda right
+                        System.arraycopy(lambda, 0, lambda, 1, lambda.length - 1);
+                        // Objectref
+                        lambda[0] = m.sigma().pop();
+                    }
+                    default -> {}
                 }
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
