@@ -1600,6 +1600,108 @@
       "annotations": [],
       "exceptions": [],
       "default": null
+    },
+    {
+      "name": "<clinit>",
+      "access": [
+        "static"
+      ],
+      "typeparams": [],
+      "params": [],
+      "returns": {
+        "type": null,
+        "annotations": []
+      },
+      "code": {
+        "max_stack": 1,
+        "max_locals": 0,
+        "exceptions": [],
+        "stack_map": [
+          {
+            "index": 5,
+            "type": "same"
+          },
+          {
+            "index": 6,
+            "type": "same_locals_1_stack_item_frame",
+            "info": {
+              "type": "integer"
+            }
+          }
+        ],
+        "bytecode": [
+          {
+            "offset": 0,
+            "opr": "push",
+            "value": {
+              "type": "class",
+              "value": {
+                "kind": "class",
+                "name": "dtu/compute/exec/Simple"
+              }
+            }
+          },
+          {
+            "offset": 2,
+            "opr": "invoke",
+            "access": "virtual",
+            "method": {
+              "ref": {
+                "kind": "class",
+                "name": "java/lang/Class"
+              },
+              "name": "desiredAssertionStatus",
+              "args": [],
+              "returns": "boolean"
+            }
+          },
+          {
+            "offset": 5,
+            "opr": "ifz",
+            "condition": "ne",
+            "target": 5
+          },
+          {
+            "offset": 8,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 1
+            }
+          },
+          {
+            "offset": 9,
+            "opr": "goto",
+            "target": 6
+          },
+          {
+            "offset": 12,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 0
+            }
+          },
+          {
+            "offset": 13,
+            "opr": "put",
+            "static": true,
+            "field": {
+              "class": "dtu/compute/exec/Simple",
+              "name": "$assertionsDisabled",
+              "type": "boolean"
+            }
+          },
+          {
+            "offset": 16,
+            "opr": "return",
+            "type": null
+          }
+        ]
+      },
+      "annotations": [],
+      "exceptions": [],
+      "default": null
     }
   ],
   "bootstrapmethods": [
