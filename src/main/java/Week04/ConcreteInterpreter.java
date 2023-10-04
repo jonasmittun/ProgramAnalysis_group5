@@ -478,10 +478,7 @@ public class ConcreteInterpreter {
                     result = switch(condition) {
                         case "is"       -> v == null;
                         case "isnot"    -> v != null;
-                        default         -> {
-                            System.out.println("Unsupported ifz condition in \"ref\": " + condition);
-                            yield false;
-                        }
+                        default         -> throw new IllegalArgumentException("Unsupported ifz condition in \"ref\": " + condition);
                     };
                 } else {
                     switch(value.getString("type")) {
@@ -495,16 +492,10 @@ public class ConcreteInterpreter {
                                 case "lt" -> v < 0;
                                 case "ge" -> v >= 0;
                                 case "gt" -> v > 0;
-                                default -> {
-                                    System.out.println("Unsupported ifz condition in \"int\": " + condition);
-                                    yield false;
-                                }
+                                default -> throw new IllegalArgumentException("Unsupported ifz condition in \"int\": " + condition);
                             };
                         }
-                        default -> {
-                            System.out.println("Unsupported ifz value type: " + value.get("type"));
-                            result = false;
-                        }
+                        default -> throw new IllegalArgumentException("Unsupported ifz value type: " + value.get("type"));
                     }
                 }
 
