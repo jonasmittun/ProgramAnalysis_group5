@@ -473,37 +473,38 @@ public class ConcreteInterpreter {
                 JSONObject value = m.sigma().pop();
 
                 boolean result;
-                switch(value.getString("type")) {
-                    case "boolean" -> result = value.getBoolean("value");
-                    case "int" -> {
-                        int v = value.getInt("value");
-                        result = switch(condition) {
-                            case "eq"       -> v == 0;
-                            case "ne"       -> v != 0;
-                            case "le"       -> v <= 0;
-                            case "lt"       -> v < 0;
-                            case "ge"       -> v >= 0;
-                            case "gt"       -> v > 0;
-                            default         -> {
-                                System.out.println("Unsupported condition in \"int\"");
-                                yield false;
-                            }
-                        };
-                    }
-                    case "ref" -> {
-                        JSONObject v = mu.get(System.identityHashCode(value));
-                        result = switch(condition) {
-                            case "is"       -> v == null;
-                            case "isnot"    -> v != null;
-                            default         -> {
-                                System.out.println("Unsupported condition in \"ref\"");
-                                yield false;
-                            }
-                        };
-                    }
-                    default -> {
-                        System.out.println("Unsupported type: " + value.get("type"));
-                        result = false;
+                if(value.has("kind")) {
+                    JSONObject v = mu.get(System.identityHashCode(value));
+                    result = switch(condition) {
+                        case "is"       -> v == null;
+                        case "isnot"    -> v != null;
+                        default         -> {
+                            System.out.println("Unsupported ifz condition in \"ref\": " + condition);
+                            yield false;
+                        }
+                    };
+                } else {
+                    switch(value.getString("type")) {
+                        case "boolean" -> result = value.getBoolean("value");
+                        case "int" -> {
+                            int v = value.getInt("value");
+                            result = switch(condition) {
+                                case "eq" -> v == 0;
+                                case "ne" -> v != 0;
+                                case "le" -> v <= 0;
+                                case "lt" -> v < 0;
+                                case "ge" -> v >= 0;
+                                case "gt" -> v > 0;
+                                default -> {
+                                    System.out.println("Unsupported ifz condition in \"int\": " + condition);
+                                    yield false;
+                                }
+                            };
+                        }
+                        default -> {
+                            System.out.println("Unsupported ifz value type: " + value.get("type"));
+                            result = false;
+                        }
                     }
                 }
 
