@@ -143,7 +143,10 @@ public class ConcreteInterpreter {
         }
 
         if(!mu.isEmpty()) {
-            System.out.println(String.format("%-12s", "memory") + "µ" + mu);
+            System.out.println("\nMemory (µ):");
+            for(Map.Entry<Integer, JSONObject> entry : mu.entrySet()) {
+                System.out.println(entry.getKey() + "\t" + entry.getValue());
+            }
         }
     }
 
