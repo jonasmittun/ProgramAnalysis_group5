@@ -55,7 +55,7 @@ public class Main {
             return "(null)";
         } else if(o.has("kind")) {
             String kind = o.getString("kind") + "ref";
-            String value = (o.has("name") ? o.getString("name").substring(o.getString("name").lastIndexOf("/") + 1) : "r");
+            String value = (o.has("name") ? o.getString("name").substring(o.getString("name").lastIndexOf("/") + 1) : (o.get("type") instanceof String type ? type + "[]" : "ref[]"));
             return "(" + kind + " " + value + ")";
         } else {
             if(o.has("sign")) {
