@@ -665,11 +665,13 @@ public class ConcreteInterpreter {
                         System.out.println("Type mismatch: Expected " + type_expected + " but was " + type_actual);
                     }
 
-                    lambda[lambda.length - 1 - i] = arg;
+                    lambda[i] = arg;
                 }
 
                 switch(invoke_access) {
                     case "virtual", "special", "interface" -> {
+                        // Shift elements in lambda right
+                        System.arraycopy(lambda, 0, lambda, 1, lambda.length - 1);
                         // Objectref
                         lambda[0] = m.sigma().pop();
                     }
