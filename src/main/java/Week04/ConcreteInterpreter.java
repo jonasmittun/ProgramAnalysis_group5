@@ -732,7 +732,36 @@ public class ConcreteInterpreter {
             case "throw" -> {
                 JSONObject objectref = m.sigma().pop();
                 if(objectref == null) throw new NullPointerException("Cannot throw because \"objectref\" is null");
-                System.out.println(objectref);
+
+                JSONObject exceptionhandler = null;
+                while(exceptionhandler == null && !psi.isEmpty()) {
+                    int cl = m.iota().e1().getJSONObject("code").getJSONArray("bytecode").length();
+
+                    JSONArray exceptionhandlers = m.iota().e1().getJSONArray("exceptions");
+                    for(int i = 0; i < exceptionhandlers.length(); i++) {
+                        JSONObject eh = exceptionhandlers.getJSONObject(i);
+
+                        Object catchtype = eh.get("catchType");
+                        if(!catchtype.equals(objectref.get("name"))) continue;
+
+                        int handler = eh.getInt("handler");
+                        if(handler > cl) continue;
+
+                        int start = eh.getInt("start");
+                        int end = eh.getInt("end");
+                        if(start > cl || end >= cl) continue;
+
+                        exceptionhandler = eh;
+                        break;
+                    }
+
+                    if(exceptionhandler == null) m = psi.pop();
+                }
+
+                if(exceptionhandler != null) {
+                    m.sigma().push(objectref);
+                    psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), exceptionhandler.getInt("handler"))));
+                }
             }
             case "return" -> {
                 if(instruction.isNull("type")) break;
