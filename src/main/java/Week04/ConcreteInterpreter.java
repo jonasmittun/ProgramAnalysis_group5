@@ -135,7 +135,7 @@ public class ConcreteInterpreter {
         Deque<Method> psi = new ArrayDeque<>();  // Method Stack
         psi.push(method);
 
-        System.out.println(String.format("%-12s", "entry") + "Ψ" + psi);
+        System.out.println("Initial:\nΨ00\t" + method + "\n");
         while(!psi.isEmpty()) {
             Method m = psi.pop();
 
@@ -149,6 +149,7 @@ public class ConcreteInterpreter {
 
     public void step(Method m, Map<Integer, JSONObject> mu, Deque<Method> psi) {
         JSONObject instruction = m.iota().e1().getJSONObject("code").getJSONArray("bytecode").getJSONObject(m.iota().e2());
+        System.out.println("Instruction: " + instruction);
 
         switch(instruction.getString("opr")) {
             case "array_load" -> {
@@ -879,6 +880,11 @@ public class ConcreteInterpreter {
             }
         }
 
-        System.out.println(String.format("%-12s", instruction.getString("opr")) + "Ψ" + psi);
+        int index = 0;
+        for(Method mp : psi) {
+            System.out.println("Ψ" + String.format("%02d", index) + "\t" + mp);
+            index++;
+        }
+        System.out.println();
     }
 }
