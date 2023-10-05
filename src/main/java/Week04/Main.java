@@ -49,14 +49,40 @@ public class Main {
 
     }
 
+    /** Converts the SimpleType object into a formatted string.
+     * @param o     The &lt;SimpleType&gt; object.
+     * @param full  When o is an array reference type, it determines if the formatter should recursively determine the subtypes - giving the full type name.
+     */
+    public static String formatSimpleType(Object o, boolean full) {
+        if(o == null) {
+            return "null";
+        } else if(o instanceof String BaseType) {
+            return switch(BaseType) {
+                case "integer" -> "int";
+                default -> BaseType;
+            };
+        } else if(o instanceof JSONObject SimpleReferenceType) {
+            String kind = SimpleReferenceType.getString("kind");
+            if(kind.equals("class")) {
+                return "classref " + SimpleReferenceType.getString("name");
+            } else {
+                if(full) {
+                    return "arrayref (" + formatSimpleType(SimpleReferenceType.get("type"), true) + ")[]";
+                } else {
+                    return "arrayref " + ((SimpleReferenceType.get("type") instanceof String type) ? type + "[]" : "ref[]");
+                }
+            }
+        } else {
+            return "unknown";
+        }
+    }
+
     /** Converts a JSONObject into a formatted value string. */
     public static String toFormattedString(JSONObject o) {
         if(o == null) {
             return "(null)";
         } else if(o.has("kind")) {
-            String kind = o.getString("kind") + "ref";
-            String value = (o.has("name") ? o.getString("name").substring(o.getString("name").lastIndexOf("/") + 1) : (o.get("type") instanceof String type ? type + "[]" : "ref[]"));
-            return "(" + kind + " " + value + ")";
+            return "(" + formatSimpleType(o, false) + ")";
         } else {
             if(o.has("sign")) {
                 StringJoiner sj = new StringJoiner(", ");
@@ -70,7 +96,7 @@ public class Main {
                 return "{" + sj + "}";
             } else {
                 String type = switch(o.getString("type")) {
-                    case "int", "integer" -> "int";
+                    case "integer" -> "int";
                     default -> o.getString("type");
                 };
 
