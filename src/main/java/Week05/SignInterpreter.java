@@ -77,7 +77,7 @@ public class SignInterpreter implements Interpreter {
             JSONObject[] lambda = new JSONObject[m.lambda().length];
             for(int i = 0; i < lambda.length; i++) {
                 JSONObject e_old = m.lambda()[i];
-                JSONObject e_new = new JSONObject(e_old.toMap());
+                JSONObject e_new = (e_old == null) ? null : new JSONObject(e_old.toMap());
 
                 clone_helper(e_old, e_new, mu, mu_new);
 
@@ -87,7 +87,7 @@ public class SignInterpreter implements Interpreter {
             // Clone elements in sigma
             Deque<JSONObject> sigma = new ArrayDeque<>();
             for(JSONObject e_old : m.sigma()) {
-                JSONObject e_new = new JSONObject(e_old.toMap());
+                JSONObject e_new = (e_old == null) ? null : new JSONObject(e_old.toMap());
 
                 clone_helper(e_old, e_new, mu, mu_new);
 
@@ -102,7 +102,7 @@ public class SignInterpreter implements Interpreter {
         JSONObject[] lambda_new = new JSONObject[method.lambda().length];
         for(int i = 0; i < lambda_new.length; i++) {
             JSONObject e_old = method.lambda()[i];
-            JSONObject e_new = new JSONObject(e_old.toMap());
+            JSONObject e_new = (e_old == null) ? null : new JSONObject(e_old.toMap());
 
             clone_helper(e_old, e_new, mu, mu_new);
 
@@ -112,7 +112,7 @@ public class SignInterpreter implements Interpreter {
         // Clone elements in sigma
         Deque<JSONObject> sigma_new = new ArrayDeque<>();
         for(JSONObject e_old : method.sigma()) {
-            JSONObject e_new = new JSONObject(e_old.toMap());
+            JSONObject e_new = (e_old == null) ? null : new JSONObject(e_old.toMap());
 
             clone_helper(e_old, e_new, mu, mu_new);
 
@@ -126,6 +126,8 @@ public class SignInterpreter implements Interpreter {
 
     /** Copies any object e_old that exists in mu_old to mu_new, but with e_new as the new reference */
     private static void clone_helper(JSONObject e_old, JSONObject e_new, Map<Integer, JSONObject> mu_old, Map<Integer, JSONObject> mu_new) {
+        if(e_old == null) return;
+
         if(mu_old.containsKey(System.identityHashCode(e_old))) {
             Object v = mu_old.get(System.identityHashCode(e_old));
             if(v instanceof JSONObject o) {
