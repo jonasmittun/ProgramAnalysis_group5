@@ -165,11 +165,36 @@ public class ConcreteInterpreter {
             }
             case "push" -> {
                 JSONObject value = instruction.getJSONObject("value");
-                if(value.getString("type").equals("class")) { // Value is a <SimpleReferenceType>
-                    m.sigma().push(value);
-                } else {
-                    m.sigma().push(new JSONObject(value.toMap()));
+                String type = value.getString("type");
+
+                switch(type) {
+                    case "class" -> {
+                        m.sigma().push(value);
+                    }
+                    case "string" -> {
+                        // Create array reference for string value
+                        JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "byte"));
+                        // Create array to hold string value as a byte[]
+                        JSONObject array = new JSONObject(Map.of("type", "byte", "value", new JSONArray(value.getString("value").getBytes(StandardCharsets.UTF_8))));
+                        mu.put(System.identityHashCode(arrayref), array);
+
+                        // Create a new String object
+                        JSONObject object = new JSONObject(classes.get("java/lang/String").toMap());
+                        // Update "value" field in this String object to the array reference
+                        object.getJSONArray("fields").getJSONObject(0).put("value", arrayref);
+
+                        // Create String object reference
+                        JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
+                        mu.put(System.identityHashCode(objectref), object);
+
+                        // Push object reference
+                        m.sigma().push(objectref);
+                    }
+                    default -> {
+                        m.sigma().push(new JSONObject(value.toMap()));
+                    }
                 }
+
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
             }
             case "load" -> {
