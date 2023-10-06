@@ -52,48 +52,43 @@ public class ExceptionalArraysTest extends TestSuperclass {
     @Nested
     @DisplayName("dependsOnLattice Tests")
     class dependsOnLattice {
-        /*@Test
-        void itDependsOnLattice1() {
-            Method m = new Method(new JSONObject[]{}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "itDependsOnLattice1"), 0));
-            Map<Integer, JSONObject> mu = new HashMap<>();
-
-            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
-            Exception exception = assertThrows(ArithmeticException.class, () -> in.run(m, mu));
-
-            assertTrue(exception.getMessage().contains("Illegal divide by zero"));
+        @Test
+        void dependsOnLattice1() {
+            test("dependsOnLattice1", new JSONObject[]{new JSONObject(Map.of("type", "int[]", "value", new int[]{0, 1})), new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(POSITIVE)))}, IndexOutOfBoundsException.class, "Index out of bound");
         }
 
         @Test
-        void itDependsOnLattice2() {
-            Method m = new Method(new JSONObject[]{}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "itDependsOnLattice2"), 0));
-            Map<Integer, JSONObject> mu = new HashMap<>();
-
-            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
-            Exception exception = assertThrows(ArithmeticException.class, () -> in.run(m, mu));
-
-            assertTrue(exception.getMessage().contains("Illegal divide by zero"));
+        void dependsOnLattice2() {
+            test("dependsOnLattice2", new JSONObject[]{new JSONObject(Map.of("type", "int[]", "value", new int[]{0, 1}))}, IndexOutOfBoundsException.class, "Index out of bound");
         }
 
         @Test
-        void itDependsOnLattice3() {
-            Method m = new Method(new JSONObject[]{new JSONObject(Map.of("type", "int", "value", 6, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 0, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE))))}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "itDependsOnLattice3"), 0));
-            Map<Integer, JSONObject> mu = new HashMap<>();
-
-            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
-            Exception exception = assertThrows(ArithmeticException.class, () -> in.run(m, mu));
-
-            assertTrue(exception.getMessage().contains("Illegal divide by zero"));
+        void dependsOnLattice3() {
+            test("dependsOnLattice3", new JSONObject[]{new JSONObject(Map.of("type", "float[]", "value", new float[]{5.2f}))}, IndexOutOfBoundsException.class, "Index out of bound");
         }
 
         @Test
-        void itDependsOnLattice4() {
-            Method m = new Method(new JSONObject[]{}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "itDependsOnLattice4"), 0));
-            Map<Integer, JSONObject> mu = new HashMap<>();
+        void dependsOnLattice4() {
+            test("dependsOnLattice4", new JSONObject[]{new JSONObject(Map.of("type", "int[]", "value", new int[]{4, 3, 2, 1, 0}))}, IndexOutOfBoundsException.class, "Index out of bound");
+        }
+    }
 
-            SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
-            Exception exception = assertThrows(ArithmeticException.class, () -> in.run(m, mu));
+    @Nested
+    @DisplayName("neverThrows Tests")
+    class neverThrows {
+        @Test
+        void neverThrows1() {
+            test("neverThrows1", new JSONObject[]{}, null, null);
+        }
 
-            assertTrue(exception.getMessage().contains("Illegal divide by zero"));
-        }*/
+        @Test
+        void neverThrows2() {
+            test("neverThrows2", new JSONObject[]{}, null, null);
+        }
+
+        @Test
+        void neverThrows3() {
+            test("neverThrows3", new JSONObject[]{}, null, null);
+        }
     }
 }
