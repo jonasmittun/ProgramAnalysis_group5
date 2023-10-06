@@ -690,7 +690,7 @@ public class SignStepper implements AbstractStepper {
                     JSONObject f = fields.getJSONObject(i);
                     if(f.getString("name").equals(field.getString("name"))) {
                         if(f.isNull("value")) {
-                            value = SimpleType.create(field.get("type"), mu);
+                            value = SimpleType.createDefault(field.get("type"), mu);
                         } else {
                             value = new JSONObject(f.getJSONObject("value").toMap());
                         }

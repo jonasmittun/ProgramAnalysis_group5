@@ -4,6 +4,13 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
+/**
+ * <pre>
+ * BaseType: "byte", "char", "double", "float", "int", "long", "short" or "boolean"<br>
+ * or<br>
+ * SimpleReferenceType: { "kind": "class", "name": &lt;ClassName&gt; } or { "kind": "array", "name": &lt;SimpleType&gt; }
+ * </pre>
+ */
 public class SimpleType {
 
     /** Returns a new JSONObject of the specified type with the default value for that type.
@@ -13,7 +20,7 @@ public class SimpleType {
      *  SimpleReferenceType: { "kind": "class", "name": &lt;ClassName&gt; } or { "kind": "array", "name": &lt;SimpleType&gt; }
      *  </pre>
      */
-    public static JSONObject create(Object SimpleType, Map<Integer, JSONObject> mu) {
+    public static JSONObject createDefault(Object SimpleType, Map<Integer, JSONObject> mu) {
         if(SimpleType instanceof String BaseType) {
             JSONObject result = new JSONObject();
             result.put("type", BaseType);

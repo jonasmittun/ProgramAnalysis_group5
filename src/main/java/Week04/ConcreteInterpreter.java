@@ -138,7 +138,7 @@ public class ConcreteInterpreter {
             JSONObject f = fields.getJSONObject(i);
             if(f.getString("name").equals(fieldname)) {
                 if(f.isNull("value")) {
-                    return Optional.of(SimpleType.create(fieldtype, mu));
+                    return Optional.of(SimpleType.createDefault(fieldtype, mu));
                 } else {
                     return Optional.of(new JSONObject(f.getJSONObject("value").toMap()));
                 }
@@ -784,7 +784,7 @@ public class ConcreteInterpreter {
                 // Create value
                 JSONArray value = new JSONArray(length);
                 for(int i = 0; i < length; i++) {
-                    value.put(i, SimpleType.create(type, mu));
+                    value.put(i, SimpleType.createDefault(type, mu));
                 }
                 JSONObject result = new JSONObject(Map.of("type", type, "value", value));
 
