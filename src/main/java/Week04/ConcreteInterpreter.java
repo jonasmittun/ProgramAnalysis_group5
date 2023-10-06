@@ -102,6 +102,92 @@ public class ConcreteInterpreter {
         }
     }
 
+    /** Initializes a new object of some class
+     * <pre>If class extends some superclass, then that can be fetched from memory by using this object as objectref.</pre>
+     * @param classname The name of the class to be instantiated.
+     * @param mu        The memory.
+     * @return          A reference to the initialized class object
+     */
+    public JSONObject initialize(String classname, Map<Integer, JSONObject> mu) {
+        if(!classes.containsKey(classname)) throw new InstantiationError(classname + " does not exist.");
+        JSONObject cls = new JSONObject(classes.get(classname).toMap());
+
+        // Initialize super class if it exists
+        if(!cls.isNull("super")) {
+            String superclassname = cls.getJSONObject("super").getString("name");
+
+            mu.put(System.identityHashCode(cls), initialize(superclassname, mu));
+        }
+
+        return cls;
+    }
+
+    /** Tries to get field from the object
+     * <pre>If the field is <code>null</code>, then the default value will be returned.</pre>
+     * @param object    The object which "may" contain the field.
+     * @param fieldname The name of the field.
+     * @param fieldtype The type of the field (a &lt;SimpleType&gt;)
+     * @param mu        The memory.
+     * @return          An Optional&lt;JSONObject&gt; containing the value of the field if found, else an Optional.empty()
+     */
+    public static Optional<JSONObject> getField(JSONObject object, String fieldname, Object fieldtype, Map<Integer, JSONObject> mu) {
+        if(!object.has("fields")) return Optional.empty();
+
+        JSONArray fields = object.getJSONArray("fields");
+        for(int i = 0; i < fields.length(); i++) {
+            JSONObject f = fields.getJSONObject(i);
+            if(f.getString("name").equals(fieldname)) {
+                if(f.isNull("value")) {
+                    return Optional.of(SimpleType.create(fieldtype, mu));
+                } else {
+                    return Optional.of(new JSONObject(f.getJSONObject("value").toMap()));
+                }
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    /** Tries to put a value into a field of the object.
+     * @param object    The object which contains the field.
+     * @param fieldname The name of the field.
+     * @param fieldtype The type of the field (a &lt;SimpleType&gt;).
+     * @return          True when the field has been correctly put and false when not.
+     */
+    public static boolean putField(JSONObject object, String fieldname, Object fieldtype, JSONObject value) {
+        if(!object.has("fields")) return false;
+
+        JSONArray fields = object.getJSONArray("fields");
+        for(int i = 0; i < fields.length(); i++) {
+            JSONObject f = fields.getJSONObject(i);
+            if(f.getString("name").equals(fieldname)) {
+                if(SimpleType.equals(f.get("type"), fieldtype)) {
+
+                    // TODO: Check if value-type is the same as the field
+                    if(value.has("kind")) {
+                        f.put("value", value);
+
+                        return true;
+                    } else if(value.has("type")) {
+                        switch(value.getString("type")) {
+                            case "boolean"                  -> f.put("value", value.getBoolean("value"));
+                            case "int", "integer"           -> f.put("value", value.getInt("value"));
+                            case "long"                     -> f.put("value", value.getLong("value"));
+                            case "float"                    -> f.put("value", value.getFloat("value"));
+                            case "double"                   -> f.put("value", value.getDouble("value"));
+                            case "short", "byte", "char"    -> f.put("value", value.get("value"));
+                            default -> throw new IllegalArgumentException("Unsupported type " + f.get("type") + " in \"put\"");
+                        }
+
+                        return true;
+                    } else return false;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public void run(Method method, Map<Integer, JSONObject> mu) {
         Deque<Method> psi = new ArrayDeque<>();  // Method Stack
         psi.push(method);
@@ -556,8 +642,8 @@ public class ConcreteInterpreter {
             }
             case "get" -> {
                 JSONObject field = instruction.getJSONObject("field");
-
-                JSONObject value = null;
+                String fieldname = field.getString("name");
+                Object fieldtype = field.get("type");
 
                 JSONObject object;
                 if(instruction.getBoolean("static")) {
@@ -567,24 +653,27 @@ public class ConcreteInterpreter {
                     object = mu.get(System.identityHashCode(ref));
                 }
 
-                JSONArray fields = object.getJSONArray("fields");
-                for(int i = 0; i < fields.length(); i++) {
-                    JSONObject f = fields.getJSONObject(i);
-                    if(f.getString("name").equals(field.getString("name"))) {
-                        if(f.isNull("value")) {
-                            value = SimpleType.create(field.get("type"), mu);
-                        } else {
-                            value = new JSONObject(f.getJSONObject("value").toMap());
-                        }
-                        break;
+                Optional<JSONObject> value = Optional.empty();
+                while(value.isEmpty()) {
+                    value = getField(object, fieldname, fieldtype, mu);
+
+                    if(value.isEmpty()) {
+                        // Get superclass if exists
+                        if(mu.containsKey(System.identityHashCode(object))) {
+                            object = mu.get(System.identityHashCode(object));
+                        } else break;
                     }
                 }
 
-                m.sigma().push(value);
+                if(value.isEmpty()) throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist.");
+
+                m.sigma().push(value.get());
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
             }
             case "put" -> {
                 JSONObject field = instruction.getJSONObject("field");
+                String fieldname = field.getString("name");
+                Object fieldtype = field.get("type");
 
                 JSONObject value = m.sigma().pop();
 
@@ -596,20 +685,11 @@ public class ConcreteInterpreter {
                     object = mu.get(System.identityHashCode(ref));
                 }
 
-                JSONArray fields = object.getJSONArray("fields");
-                for(int i = 0; i < fields.length(); i++) {
-                    JSONObject f = fields.getJSONObject(i);
-                    if(f.getString("name").equals(field.getString("name"))) {
-                        switch(f.getString("type")) {
-                            case "integer"  -> f.put("value", value.getInt("value"));
-                            case "long"     -> f.put("value", value.getLong("value"));
-                            case "float"    -> f.put("value", value.getFloat("value"));
-                            case "double"   -> f.put("value", value.getDouble("value"));
-                            case "string"   -> f.put("value", value.getString("value"));
-                            case "class"    -> f.put("value", value.getJSONObject("value"));
-                            default         -> System.out.println("Unsupported type " + f.get("type") + " in \"put\"");
-                        }
-                    }
+                while(!putField(object, fieldname, fieldtype, value)) {
+                    // Get superclass if exists
+                    if(mu.containsKey(System.identityHashCode(object))) {
+                        object = mu.get(System.identityHashCode(object));
+                    } else throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist.");
                 }
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
@@ -687,9 +767,9 @@ public class ConcreteInterpreter {
                 if(access.contains("interface")) throw new InstantiationError(classname + " is an interface.");
 
                 JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", classname));
-                JSONObject value = new JSONObject(classes.get(classname).toMap());
+                JSONObject object = initialize(classname, mu);
 
-                mu.put(System.identityHashCode(objectref), value);
+                mu.put(System.identityHashCode(objectref), object);
 
                 m.sigma().push(objectref);
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
