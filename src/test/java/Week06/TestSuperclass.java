@@ -43,7 +43,9 @@ public class TestSuperclass {
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
         if (exceptionClass != null) {
             Exception exception = (Exception) assertThrows(exceptionClass, () -> in.run(m, mu));
-            assertTrue(exception.getMessage().contains(exceptionMessage));
+            if (exceptionMessage != null) {
+                assertTrue(exception.getMessage().contains(exceptionMessage));
+            }
         } else {
             in.run(m, mu);
         }
