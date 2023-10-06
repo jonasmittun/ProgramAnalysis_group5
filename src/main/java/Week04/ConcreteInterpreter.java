@@ -957,9 +957,7 @@ public class ConcreteInterpreter {
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
             }
-            default -> {
-                System.out.println("Unsupported operation \"" + instruction.getString("opr") + "\"");
-            }
+            default -> throw new UnsupportedOperationException("Unsupported instruction \"" + instruction.getString("opr") + "\"");
         }
 
         int index = 0;
