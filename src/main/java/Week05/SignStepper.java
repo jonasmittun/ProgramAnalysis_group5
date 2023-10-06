@@ -3,6 +3,7 @@ package Week05;
 import Week04.Main;
 import Week04.Method;
 import Week04.Pair;
+import Week04.SimpleType;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -10,7 +11,6 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static Week04.ConcreteInterpreter.createSimpleType;
 import static Week05.Sign.*;
 import static Week05.SignInterpreter.clone_state;
 import static Week05.SignInterpreter.toAbstract;
@@ -690,7 +690,7 @@ public class SignStepper implements AbstractStepper {
                     JSONObject f = fields.getJSONObject(i);
                     if(f.getString("name").equals(field.getString("name"))) {
                         if(f.isNull("value")) {
-                            value = createSimpleType(field.get("type"), mu);
+                            value = SimpleType.create(field.get("type"), mu);
                         } else {
                             value = new JSONObject(f.getJSONObject("value").toMap());
                         }
