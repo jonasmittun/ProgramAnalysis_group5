@@ -5,6 +5,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.module.ResolutionException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class ConcreteInterpreter {
@@ -631,11 +632,11 @@ public class ConcreteInterpreter {
                 for(int i = 0; i < args.length(); i++) {
                     JSONObject arg = m.sigma().pop();
 
-                    String type_expected = args.get(i) instanceof String ? args.getString(i) : (args.getJSONObject(i).has("kind") ? "ref" : args.getJSONObject(i).getString("type"));
-                    String type_actual = arg.getString("type");
+                    Object type_expected = args.get(i);
+                    Object type_actual = arg.has("kind") ? arg : arg.getString("type");
 
-                    if(!type_actual.equals(type_expected)) {
-                        System.out.println("Type mismatch: Expected " + type_expected + " but was " + type_actual);
+                    if(!SimpleType.equals(type_expected, type_actual)) {
+                        throw new IllegalArgumentException("Type mismatch: Expected " + type_expected + " but was " + type_actual);
                     }
 
                     lambda[i] = arg;
