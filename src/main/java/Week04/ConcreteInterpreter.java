@@ -478,25 +478,23 @@ public class ConcreteInterpreter {
                     result = switch(condition) {
                         case "is"       -> v == null;
                         case "isnot"    -> v != null;
-                        default         -> throw new IllegalArgumentException("Unsupported ifz condition in \"ref\": " + condition);
+                        default  -> throw new IllegalArgumentException("Unsupported ifz condition in \"ref\": " + condition);
                     };
                 } else {
-                    switch(value.getString("type")) {
-                        case "boolean" -> result = value.getBoolean("value");
-                        case "int" -> {
-                            int v = value.getInt("value");
-                            result = switch(condition) {
-                                case "eq" -> v == 0;
-                                case "ne" -> v != 0;
-                                case "le" -> v <= 0;
-                                case "lt" -> v < 0;
-                                case "ge" -> v >= 0;
-                                case "gt" -> v > 0;
-                                default -> throw new IllegalArgumentException("Unsupported ifz condition in \"int\": " + condition);
-                            };
-                        }
+                    int v = switch(value.getString("type")) {
+                        case "boolean"  -> value.getBoolean("value") ? 1 : 0;
+                        case "int"      -> value.getInt("value");
                         default -> throw new IllegalArgumentException("Unsupported ifz value type: " + value.get("type"));
-                    }
+                    };
+                    result = switch(condition) {
+                        case "eq" -> v == 0;
+                        case "ne" -> v != 0;
+                        case "le" -> v <= 0;
+                        case "lt" -> v < 0;
+                        case "ge" -> v >= 0;
+                        case "gt" -> v > 0;
+                        default -> throw new IllegalArgumentException("Unsupported ifz condition in \"int\": " + condition);
+                    };
                 }
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), result ? target : m.iota().e2() + 1)));
