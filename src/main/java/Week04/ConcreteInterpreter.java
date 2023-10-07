@@ -814,7 +814,7 @@ public class ConcreteInterpreter {
                 if(objectref == null) throw new NullPointerException("Cannot throw because \"objectref\" is null");
 
                 JSONObject exceptionhandler = null;
-                while(exceptionhandler == null && !psi.isEmpty()) {
+                while(exceptionhandler == null) {
                     int cl = m.iota().e1().getJSONObject("code").getJSONArray("bytecode").length();
 
                     JSONArray exceptionhandlers = m.iota().e1().getJSONArray("exceptions");
@@ -835,7 +835,10 @@ public class ConcreteInterpreter {
                         break;
                     }
 
-                    if(exceptionhandler == null) m = psi.pop();
+                    if(exceptionhandler == null) {
+                        if(!psi.isEmpty()) m = psi.pop();
+                        else break;
+                    }
                 }
 
                 if(exceptionhandler != null) {
@@ -954,9 +957,7 @@ public class ConcreteInterpreter {
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
             }
-            default -> {
-                System.out.println("Unsupported operation \"" + instruction.getString("opr") + "\"");
-            }
+            default -> throw new UnsupportedOperationException("Unsupported instruction \"" + instruction.getString("opr") + "\"");
         }
 
         int index = 0;
