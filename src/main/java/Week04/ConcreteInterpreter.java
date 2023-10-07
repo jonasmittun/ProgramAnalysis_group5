@@ -188,6 +188,37 @@ public class ConcreteInterpreter {
         return false;
     }
 
+    /** Creates an array of specified <code>dimension</code>, <code>length</code> and <code>type</code>.
+     * @param type      A &lt;SimpleType&gt;
+     * @param length    The length of the array.
+     * @param dimension Number of array dimensions, ex. int[][] has 2 dimensions.
+     * @param sigma     The operand stack.
+     * @param mu        The memory.
+     */
+    public static JSONObject initializeArray(Object type, int length, int dimension, Deque<JSONObject> sigma, Map<Integer, JSONObject> mu) {
+        if(length < 0) throw new NegativeArraySizeException(Integer.toString(length));
+
+        JSONArray array = new JSONArray(length);
+        if(dimension > 1) {
+            JSONObject count = sigma.pop();
+            int innerlength = count.getInt("value");
+
+            for(int i = 0; i < length; i++) {
+                JSONObject valueref = initializeArray(type, innerlength, dimension - 1, sigma, mu);
+                array.put(i, valueref);
+            }
+        } else {
+            for(int i = 0; i < length; i++) {
+                array.put(i, SimpleType.createDefault(type, mu));
+            }
+        }
+
+        JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", type));
+        mu.put(System.identityHashCode(arrayref), new JSONObject(Map.of("type", type, "value", array)));
+
+        return arrayref;
+    }
+
     public void run(Method method, Map<Integer, JSONObject> mu) {
         Deque<Method> psi = new ArrayDeque<>();  // Method Stack
         psi.push(method);
@@ -775,24 +806,15 @@ public class ConcreteInterpreter {
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
             }
             case "newarray" -> {
-                int dim = instruction.getInt("dim"); // Recurse / While-loop magic
+                int dim = instruction.getInt("dim");
                 Object type = instruction.get("type"); // SimpleType
 
-                JSONObject value_length = m.sigma().pop();
-                int length = value_length.getInt("value");
+                JSONObject count = m.sigma().pop();
+                int length = count.getInt("value");
 
-                // Create value
-                JSONArray value = new JSONArray(length);
-                for(int i = 0; i < length; i++) {
-                    value.put(i, SimpleType.createDefault(type, mu));
-                }
-                JSONObject result = new JSONObject(Map.of("type", type, "value", value));
+                JSONObject arrayref = initializeArray(type, length, dim, m.sigma(), mu);
 
-                // Create reference to value
-                JSONObject ref = new JSONObject(Map.of("kind", "array", "type", type));
-
-                mu.put(System.identityHashCode(ref), result);
-                m.sigma().push(ref);
+                m.sigma().push(arrayref);
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
             }
