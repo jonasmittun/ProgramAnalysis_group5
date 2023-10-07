@@ -948,6 +948,17 @@ public class ConcreteInterpreter {
                     psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), exceptionhandler.getInt("handler"))));
                 }
             }
+            case "checkcast" -> {
+                JSONObject type = instruction.getJSONObject("type");
+
+                JSONObject objectref = m.sigma().peek();
+
+                if(objectref != null && !isInstanceOf(objectref, type)) {
+                    throw new ClassCastException(objectref + " cannot be cast to " + type);
+                }
+
+                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+            }
             case "instanceof" -> {
                 JSONObject type = instruction.getJSONObject("type");
 
