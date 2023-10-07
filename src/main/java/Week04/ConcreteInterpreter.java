@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import java.lang.module.ResolutionException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.IntStream;
 
 public class ConcreteInterpreter {
 
@@ -217,6 +218,85 @@ public class ConcreteInterpreter {
         mu.put(System.identityHashCode(arrayref), new JSONObject(Map.of("type", type, "value", array)));
 
         return arrayref;
+    }
+
+    /** Determines if the class is an interface.
+     * @param classname The name of the class.
+     * @return          True when the class has the "interface" access modifier and false otherwise.
+     */
+    public boolean isInterface(String classname) {
+        if(!classes.containsKey(classname)) throw new RuntimeException("Class " + classname + " could not be found.");
+
+        JSONArray access = classes.get(classname).getJSONArray("access");
+        return IntStream.range(0, access.length()).anyMatch(i -> access.getString(i).equals("interface"));
+    }
+
+    /** Determines if an object is of a given type.
+     * @param objectref The reference to the object.
+     * @param type      A &lt;SimpleReferenceType&gt;
+     * @return          True when the object is an instance of the type and false otherwise.
+     */
+    public boolean isInstanceOf(JSONObject objectref, JSONObject type) {
+        if(objectref == null) return false;
+
+        switch(objectref.getString("kind")) {
+            case "array" -> {
+                if(type.getString("kind").equals("class")) {
+                    String typename = type.getString("name");
+                    // If Type is a class type, then it must be of type Object
+                    if(!isInterface(typename)) return typename.equals("java/lang/Object");
+                    else {
+                        throw new UnsupportedOperationException("instanceof on arrays when type is an interface has not been implemented!");
+                    }
+                } else {
+                    // TODO: If they are reference-types, it should check if objectref-type can be cast to type-type
+                    return SimpleType.equals(objectref.get("type"), type.get("type"));
+                }
+            }
+            case "class" -> {
+                if(!type.has("name")) throw new IllegalArgumentException("Type was not of kind \"class\"");
+
+                String classname = objectref.getString("name");
+                String typename = type.getString("name");
+
+                boolean is_interface = isInterface(typename);
+
+                if(!isInterface(classname)) { // It's an ordinary (nonarray) class
+                    JSONObject o = classes.get(classname);
+                    if(is_interface) { // Object should implement the type
+                        while(o != null) {
+                            JSONArray access = o.getJSONArray("interfaces");
+                            for(int j = 0; j < access.length(); j++) {
+                                JSONObject i = access.getJSONObject(j);
+                                if(i.getString("name").equals(typename)) return true;
+                            }
+
+                            o = !o.isNull("super") ? classes.get(o.getJSONObject("super").getString("name")) : null;
+                        }
+                    } else { // Object should be of type or be a subclass of the type
+                        while(o != null) {
+                            if(o.getString("name").equals(typename)) return true;
+
+                            o = !o.isNull("super") ? classes.get(o.getJSONObject("super").getString("name")) : null;
+                        }
+                    }
+                } else { // It's an interface type
+                    if(!is_interface) { // When Type is not an interface it must be of type Object
+                        return typename.equals("java/lang/Object");
+                    } else { // Type must be the same interface as S or a superinterface of S
+                        JSONObject o = classes.get(typename);
+                        while(o != null) {
+                            if(o.getString("name").equals(typename)) return true;
+
+                            o = !o.isNull("super") ? classes.get(o.getJSONObject("super").getString("name")) : null;
+                        }
+                    }
+                }
+            }
+            default -> throw new RuntimeException("Unexpected kind: " + objectref.getString("kind"));
+        }
+
+        return false;
     }
 
     public void run(Method method, Map<Integer, JSONObject> mu) {
@@ -867,6 +947,16 @@ public class ConcreteInterpreter {
                     m.sigma().push(objectref);
                     psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), exceptionhandler.getInt("handler"))));
                 }
+            }
+            case "instanceof" -> {
+                JSONObject type = instruction.getJSONObject("type");
+
+                JSONObject objectref = m.sigma().pop();
+
+                boolean result = isInstanceOf(objectref, type);
+
+                m.sigma().push(new JSONObject(Map.of("type", "int", "value", result ? 1 : 0)));
+                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
             }
             case "return" -> {
                 if(instruction.isNull("type")) break;
