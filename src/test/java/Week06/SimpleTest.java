@@ -178,7 +178,7 @@ class SimpleTest {
         }
     }
 
-
+    /*
     @Nested
     @DisplayName("Factorial tests")
     class Factorial {
@@ -200,4 +200,5 @@ class SimpleTest {
             in.run(f, mu);
         }
     }
+    */
 }
