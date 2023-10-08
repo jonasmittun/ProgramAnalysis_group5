@@ -39,7 +39,7 @@ public class SignInterpreter implements Interpreter {
 
     public static JSONObject toAbstract(JSONObject o) {
         if(o != null && !o.has("sign")) {
-            if (!o.has("kind") && o.has("type") && o.has("value")) {
+            if(!o.has("kind") && o.has("type") && o.has("value")) {
                 Optional<Integer> r = switch (o.getString("type")) {
                     case "int", "integer" -> Optional.of(Integer.compare(o.getInt("value"), 0));
                     case "long" -> Optional.of(Long.compare(o.getLong("value"), 0));

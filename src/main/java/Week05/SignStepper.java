@@ -3,7 +3,6 @@ package Week05;
 import Week04.Main;
 import Week04.Frame;
 import Week04.Pair;
-import Week04.SimpleType;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -11,7 +10,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static Week04.ConcreteInterpreter.initializeArray;
+import static Week04.ConcreteInterpreter.*;
 import static Week05.Sign.*;
 import static Week05.SignInterpreter.clone_state;
 import static Week05.SignInterpreter.toAbstract;
@@ -645,69 +644,63 @@ public class SignStepper implements AbstractStepper {
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), location)));
             }*/
             case "get" -> {
-                JSONObject field_info = instruction.getJSONObject("field");
-
-                JSONObject value = null;
-
-                JSONObject object;
-                if(instruction.getBoolean("static")) {
-                    object = classes.get(field_info.getString("class"));
-                } else {
-                    JSONObject ref = f.sigma().pop();
-                    object = mu.get(System.identityHashCode(ref));
-                }
-
-                JSONArray fields = object.getJSONArray("fields");
-                for(int i = 0; i < fields.length(); i++) {
-                    JSONObject field = fields.getJSONObject(i);
-                    if(field.getString("name").equals(field_info.getString("name"))) {
-                        if(field.isNull("value")) {
-                            value = SimpleType.createDefault(field_info.get("type"), mu);
-                        } else {
-                            value = new JSONObject(field.getJSONObject("value").toMap());
-                        }
-
-                        value = toAbstract(value);
-                        break;
-                    }
-                }
-
-                f.sigma().push(value);
-                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-
-                results.add(state);
-            }/*
-            case "put" -> {
                 JSONObject field = instruction.getJSONObject("field");
-
-                JSONObject value = m.sigma().pop();
+                String fieldname = field.getString("name");
+                Object fieldtype = field.get("type");
 
                 JSONObject object;
                 if(instruction.getBoolean("static")) {
                     object = classes.get(field.getString("class"));
                 } else {
-                    JSONObject ref = m.sigma().pop();
+                    JSONObject ref = f.sigma().pop();
                     object = mu.get(System.identityHashCode(ref));
                 }
 
-                JSONArray fields = object.getJSONArray("fields");
-                for(int i = 0; i < fields.length(); i++) {
-                    JSONObject f = fields.getJSONObject(i);
-                    if(f.getString("name").equals(field.getString("name"))) {
-                        switch(f.getString("type")) {
-                            case "integer"  -> f.put("value", value.getInt("value"));
-                            case "long"     -> f.put("value", value.getLong("value"));
-                            case "float"    -> f.put("value", value.getFloat("value"));
-                            case "double"   -> f.put("value", value.getDouble("value"));
-                            case "string"   -> f.put("value", value.getString("value"));
-                            case "class"    -> f.put("value", value.getJSONObject("value"));
-                            default         -> System.out.println("Unsupported type");
-                        }
+                Optional<JSONObject> value = Optional.empty();
+                while(value.isEmpty()) {
+                    value = getField(object, fieldname, fieldtype, mu);
+
+                    if(value.isEmpty()) {
+                        // Get superclass if exists
+                        if(mu.containsKey(System.identityHashCode(object))) {
+                            object = mu.get(System.identityHashCode(object));
+                        } else break;
                     }
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                if(value.isEmpty()) throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist.");
+
+                f.sigma().push(toAbstract(value.get()));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+
+                results.add(state);
             }
+            case "put" -> {
+                JSONObject field = instruction.getJSONObject("field");
+                String fieldname = field.getString("name");
+                Object fieldtype = field.get("type");
+
+                JSONObject value = f.sigma().pop();
+
+                JSONObject object;
+                if(instruction.getBoolean("static")) {
+                    object = classes.get(field.getString("class"));
+                } else {
+                    JSONObject ref = f.sigma().pop();
+                    object = mu.get(System.identityHashCode(ref));
+                }
+
+                while(!putField(object, fieldname, fieldtype, value)) {
+                    // Get superclass if exists
+                    if(mu.containsKey(System.identityHashCode(object))) {
+                        object = mu.get(System.identityHashCode(object));
+                    } else throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist.");
+                }
+
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+
+                results.add(state);
+            }/*
             case "invoke" -> {
                 JSONObject method = instruction.getJSONObject("method");
 
