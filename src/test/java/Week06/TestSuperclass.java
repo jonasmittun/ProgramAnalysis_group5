@@ -36,9 +36,9 @@ public class TestSuperclass {
         cls = classes.get(mapper.get(decompiledFileName));
     }
 
-    protected <T extends Throwable> void test(String methodName, JSONObject[] parameter, Class<T> exceptionClass, String exceptionMessage) {
+    protected <T extends Throwable> void test(String methodName, JSONObject[] parameter, Map<Integer, JSONObject> memory, Class<T> exceptionClass, String exceptionMessage) {
         Frame f = new Frame(parameter, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, methodName), 0));
-        Map<Integer, JSONObject> mu = new HashMap<>();
+        Map<Integer, JSONObject> mu = memory != null ? memory : new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
         if (exceptionClass != null) {

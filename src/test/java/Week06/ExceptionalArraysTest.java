@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,27 +26,57 @@ public class ExceptionalArraysTest extends TestSuperclass {
     class alwaysThrows {
         @Test
         void alwaysThrows1() {
-            test("alwaysThrows1", new JSONObject[]{}, IndexOutOfBoundsException.class, "Index out of bound");
+            test("alwaysThrows1", new JSONObject[1], null, ArithmeticException.class, "Illegal divide by zero");
         }
 
         @Test
         void alwaysThrows2() {
-            test("alwaysThrows2", new JSONObject[]{new JSONObject(Map.of("type", "int[]"))}, IndexOutOfBoundsException.class, "Index out of bound");
+            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "int"));
+
+            JSONArray array = new JSONArray(3);
+            for(int i = 0; i < array.length(); i++) {
+                array.put(i, new JSONObject(Map.of("type", "int", "value", i, "sign", Set.of(toSign(i)))));
+            }
+
+            Map<Integer, JSONObject> mu = new HashMap<>();
+            mu.put(System.identityHashCode(arrayref), new JSONObject(Map.of("type", "int", "value", array)));
+
+            JSONObject[] lambda = new JSONObject[1];
+            lambda[0] = arrayref;
+
+            test("alwaysThrows2", lambda, mu, ArithmeticException.class, "Illegal divide by zero");
         }
 
         @Test
         void alwaysThrows3() {
-            test("alwaysThrows3", new JSONObject[]{}, IndexOutOfBoundsException.class, "Index out of bound");
+            test("alwaysThrows3", new JSONObject[2], null, ArithmeticException.class, "Illegal divide by zero");
         }
 
         @Test
         void alwaysThrows4() {
-            test("alwaysThrows4", new JSONObject[]{new JSONObject(Map.of("type", "float[]"))}, IndexOutOfBoundsException.class, "Index out of bound");
+            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "float"));
+
+            JSONArray array = new JSONArray(3);
+            for(int i = 0; i < array.length(); i++) {
+                array.put(i, new JSONObject(Map.of("type", "float", "value", (float) i, "sign", Set.of(toSign(i)))));
+            }
+
+            Map<Integer, JSONObject> mu = new HashMap<>();
+            mu.put(System.identityHashCode(arrayref), new JSONObject(Map.of("type", "float", "value", array)));
+
+            JSONObject[] lambda = new JSONObject[1];
+            lambda[0] = arrayref;
+
+            test("alwaysThrows4", lambda, mu, ArithmeticException.class, "Illegal divide by zero");
         }
 
         @Test
         void alwaysThrows5() {
-            test("alwaysThrows5", new JSONObject[]{new JSONObject(Map.of("type", "int", "value", 0, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE))))}, IndexOutOfBoundsException.class, "Index out of bound");
+            JSONObject[] lambda = new JSONObject[3];
+            lambda[0] = new JSONObject(Map.of("type", "int", "value", 6, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
+            lambda[1] = new JSONObject(Map.of("type", "int", "value", 0, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
+
+            test("alwaysThrows5", lambda, null, ArithmeticException.class, "Illegal divide by zero");
         }
     }
 
@@ -54,22 +85,83 @@ public class ExceptionalArraysTest extends TestSuperclass {
     class dependsOnLattice {
         @Test
         void dependsOnLattice1() {
-            test("dependsOnLattice1", new JSONObject[]{new JSONObject(Map.of("type", "int[]", "value", new int[]{0, 1})), new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(POSITIVE)))}, IndexOutOfBoundsException.class, "Index out of bound");
+            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "int"));
+
+            JSONArray array = new JSONArray(3);
+            for(int i = 0; i < array.length(); i++) {
+                array.put(i, new JSONObject(Map.of("type", "int", "value", i, "sign", Set.of(toSign(i)))));
+            }
+
+            Map<Integer, JSONObject> mu = new HashMap<>();
+            mu.put(System.identityHashCode(arrayref), new JSONObject(Map.of("type", "int", "value", array)));
+
+            JSONObject[] lambda = new JSONObject[2];
+            lambda[0] = arrayref;
+            lambda[1] = new JSONObject(Map.of("type", "int", "value", "1", "sign", Set.of(POSITIVE)));
+
+            test("dependsOnLattice1", lambda, mu, IndexOutOfBoundsException.class, "Index out of bound");
         }
 
         @Test
         void dependsOnLattice2() {
-            test("dependsOnLattice2", new JSONObject[]{new JSONObject(Map.of("type", "int[]", "value", new int[]{0, 1}))}, IndexOutOfBoundsException.class, "Index out of bound");
+            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "int"));
+
+            JSONArray array = new JSONArray(3);
+            for(int i = 0; i < array.length(); i++) {
+                array.put(i, new JSONObject(Map.of("type", "int", "value", i, "sign", Set.of(toSign(i)))));
+            }
+
+            Map<Integer, JSONObject> mu = new HashMap<>();
+            mu.put(System.identityHashCode(arrayref), new JSONObject(Map.of("type", "int", "value", array)));
+
+            JSONObject[] lambda = new JSONObject[2];
+            lambda[0] = arrayref;
+
+            test("dependsOnLattice2", lambda, mu, IndexOutOfBoundsException.class, "Index out of bound");
         }
 
         @Test
         void dependsOnLattice3() {
-            test("dependsOnLattice3", new JSONObject[]{new JSONObject(Map.of("type", "float[]", "value", new float[]{5.2f}))}, IndexOutOfBoundsException.class, "Index out of bound");
+            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "float"));
+
+            JSONArray array = new JSONArray(3);
+            for(int i = 0; i < array.length(); i++) {
+                array.put(i, new JSONObject(Map.of("type", "float", "value", (float) i, "sign", Set.of(toSign(i)))));
+            }
+
+            Map<Integer, JSONObject> mu = new HashMap<>();
+            mu.put(System.identityHashCode(arrayref), new JSONObject(Map.of("type", "float", "value", array)));
+
+            JSONObject[] lambda = new JSONObject[1];
+            lambda[0] = arrayref;
+
+            test("dependsOnLattice3", lambda, mu, IndexOutOfBoundsException.class, "Index out of bound");
         }
 
         @Test
         void dependsOnLattice4() {
-            test("dependsOnLattice4", new JSONObject[]{new JSONObject(Map.of("type", "int[]", "value", new int[]{4, 3, 2, 1, 0}))}, IndexOutOfBoundsException.class, "Index out of bound");
+            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "int"));
+
+            JSONArray array = new JSONArray(3);
+            for(int i = 0; i < array.length(); i++) {
+                array.put(i, new JSONObject(Map.of("type", "int", "value", i, "sign", Set.of(toSign(i)))));
+            }
+
+            Map<Integer, JSONObject> mu = new HashMap<>();
+            mu.put(System.identityHashCode(arrayref), new JSONObject(Map.of("type", "int", "value", array)));
+
+            JSONObject[] lambda = new JSONObject[1];
+            lambda[0] = arrayref;
+
+            test("dependsOnLattice4", lambda, mu, IndexOutOfBoundsException.class, "Index out of bound");
+        }
+
+        @Test
+        void dependsOnLattice5() {
+            JSONObject[] lambda = new JSONObject[2];
+            lambda[0] = new JSONObject(Map.of("type", "int", "value", 1, "sign", Set.of(POSITIVE)));
+
+            test("dependsOnLattice5", lambda, null, IndexOutOfBoundsException.class, "Index out of bound");
         }
     }
 
@@ -78,17 +170,17 @@ public class ExceptionalArraysTest extends TestSuperclass {
     class neverThrows {
         @Test
         void neverThrows1() {
-            test("neverThrows1", new JSONObject[1], null, null);
+            test("neverThrows1", new JSONObject[1], null, null, null);
         }
 
         @Test
         void neverThrows2() {
-            test("neverThrows2", new JSONObject[1], null, null);
+            test("neverThrows2", new JSONObject[1], null, null, null);
         }
 
         @Test
         void neverThrows3() {
-            test("neverThrows3", new JSONObject[3], null, null);
+            test("neverThrows3", new JSONObject[3], null, null, null);
         }
     }
 }
