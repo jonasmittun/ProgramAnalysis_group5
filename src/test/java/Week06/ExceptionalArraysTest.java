@@ -88,7 +88,7 @@ public class ExceptionalArraysTest extends TestSuperclass {
 
         @Test
         void neverThrows3() {
-            test("neverThrows3", new JSONObject[1], null, null);
+            test("neverThrows3", new JSONObject[3], null, null);
         }
     }
 }
