@@ -824,6 +824,121 @@ public class SignStepper implements AbstractStepper {
 
                 results.add(state);
             }
+            case "throw" -> {
+                JSONObject objectref = f.sigma().pop();
+                if(objectref == null) throw new NullPointerException("Cannot throw because \"objectref\" is null");
+
+                JSONObject exceptionhandler = null;
+                while(exceptionhandler == null) {
+                    int cl = f.iota().e1().method().getJSONObject("code").getJSONArray("bytecode").length();
+
+                    JSONArray exceptionhandlers = f.iota().e1().method().getJSONArray("exceptions");
+                    for(int i = 0; i < exceptionhandlers.length(); i++) {
+                        JSONObject eh = exceptionhandlers.getJSONObject(i);
+
+                        Object catchtype = eh.get("catchType");
+                        if(!catchtype.equals(objectref.get("name"))) continue;
+
+                        int handler = eh.getInt("handler");
+                        if(handler > cl) continue;
+
+                        int start = eh.getInt("start");
+                        int end = eh.getInt("end");
+                        if(start > cl || end >= cl) continue;
+
+                        exceptionhandler = eh;
+                        break;
+                    }
+
+                    if(exceptionhandler == null) {
+                        if(!psi.isEmpty()) f = psi.pop();
+                        else break;
+                    }
+                }
+
+                if(exceptionhandler != null) {
+                    f.sigma().push(objectref);
+                    psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), exceptionhandler.getInt("handler"))));
+                    results.add(state);
+                } else {
+                    // Get Throwable object
+                    JSONObject o = mu.get(System.identityHashCode(objectref));
+                    while(!(o.has("name") && o.getString("name").equals("java/lang/Throwable"))) {
+                        if(mu.containsKey(System.identityHashCode(o))) {
+                            o = mu.get(System.identityHashCode(o));
+                        } else {
+                            o = null;
+                            break;
+                        }
+                    }
+
+                    if(o == null) throw new RuntimeException("\"object\" was not an instance of Throwable");
+                    else {
+                        System.err.println(objectref.getString("name").replace("/", "."));
+
+                        // Print the stack trace
+                        Optional<JSONObject> stacktraceref = getField(o, "stackTrace", new JSONObject(Map.of("kind", "array", "type", new JSONObject(Map.of("kind", "class", "name", "java/lang/StackTraceElement")))), mu);
+                        if(stacktraceref.isPresent()) {
+                            JSONObject stacktrace = mu.get(System.identityHashCode(stacktraceref.get()));
+                            if(stacktrace != null) {
+                                JSONArray array = stacktrace.getJSONArray("value");
+                                for(int i = 0; i < array.length(); i++) {
+                                    JSONObject stacktraceelementref = array.getJSONObject(i);
+                                    JSONObject stacktraceelement = mu.get(System.identityHashCode(stacktraceelementref));
+                                    if(stacktraceelement != null) {
+                                        System.err.println("\tat " + stacktraceelement);
+                                        // TODO: Format output (Extract fields)
+                                    }
+                                }
+                            }
+                        }
+
+                        /*
+                        // TODO: Add java/util/List
+                        // Print suppressed exceptions, if any
+                        Optional<JSONObject> suppressedexceptionsref = getField(o, "suppressedExceptions", new JSONObject(Map.of("kind", "class", "name", "java/util/List")), mu);
+                        if(suppressedexceptionsref.isPresent()) {
+                            JSONObject suppressedexceptions = mu.get(System.identityHashCode(suppressedexceptionsref));
+                            if(suppressedexceptions != null) {
+
+                            }
+                        }
+                        */
+
+                        // Print the cause, if any
+                        Optional<JSONObject> causeref = getField(o, "cause", new JSONObject(Map.of("kind", "class", "name", "java/lang/Throwable")), mu);
+                        if(causeref.isPresent()) {
+                            JSONObject cause = mu.get(System.identityHashCode(causeref));
+                            if(cause != null) {
+                                System.err.println("Caused by: " + cause.getString("name").replace("/", "."));
+                            }
+                        }
+                    }
+                }
+            }
+            case "checkcast" -> {
+                JSONObject type = instruction.getJSONObject("type");
+
+                JSONObject objectref = f.sigma().peek();
+
+                if(objectref != null && !isInstanceOf(classes, objectref, type)) {
+                    throw new ClassCastException(objectref + " cannot be cast to " + type);
+                }
+
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+                results.add(state);
+            }
+            case "instanceof" -> {
+                JSONObject type = instruction.getJSONObject("type");
+
+                JSONObject objectref = f.sigma().pop();
+
+                boolean result = isInstanceOf(classes, objectref, type);
+
+                f.sigma().push(new JSONObject(Map.of("type", "int", "value", result ? 1 : 0)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+                results.add(state);
+            }
             case "return" -> {
                 if(instruction.isNull("type")) break;
 

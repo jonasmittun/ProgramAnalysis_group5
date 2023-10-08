@@ -224,7 +224,7 @@ public class ConcreteInterpreter {
      * @param classname The name of the class.
      * @return          True when the class has the "interface" access modifier and false otherwise.
      */
-    public boolean isInterface(String classname) {
+    public static boolean isInterface(Map<String, JSONObject> classes, String classname) {
         if(!classes.containsKey(classname)) throw new RuntimeException("Class " + classname + " could not be found.");
 
         JSONArray access = classes.get(classname).getJSONArray("access");
@@ -236,7 +236,7 @@ public class ConcreteInterpreter {
      * @param type      A &lt;SimpleReferenceType&gt;
      * @return          True when the object is an instance of the type and false otherwise.
      */
-    public boolean isInstanceOf(JSONObject objectref, JSONObject type) {
+    public static boolean isInstanceOf(Map<String, JSONObject> classes, JSONObject objectref, JSONObject type) {
         if(objectref == null) return false;
 
         switch(objectref.getString("kind")) {
@@ -244,7 +244,7 @@ public class ConcreteInterpreter {
                 if(type.getString("kind").equals("class")) {
                     String typename = type.getString("name");
                     // If Type is a class type, then it must be of type Object
-                    if(!isInterface(typename)) return typename.equals("java/lang/Object");
+                    if(!isInterface(classes, typename)) return typename.equals("java/lang/Object");
                     else {
                         throw new UnsupportedOperationException("instanceof on arrays when type is an interface has not been implemented!");
                     }
@@ -259,9 +259,9 @@ public class ConcreteInterpreter {
                 String classname = objectref.getString("name");
                 String typename = type.getString("name");
 
-                boolean is_interface = isInterface(typename);
+                boolean is_interface = isInterface(classes, typename);
 
-                if(!isInterface(classname)) { // It's an ordinary (nonarray) class
+                if(!isInterface(classes, classname)) { // It's an ordinary (nonarray) class
                     JSONObject o = classes.get(classname);
                     if(is_interface) { // Object should implement the type
                         while(o != null) {
@@ -1007,7 +1007,7 @@ public class ConcreteInterpreter {
 
                 JSONObject objectref = f.sigma().peek();
 
-                if(objectref != null && !isInstanceOf(objectref, type)) {
+                if(objectref != null && !isInstanceOf(classes, objectref, type)) {
                     throw new ClassCastException(objectref + " cannot be cast to " + type);
                 }
 
@@ -1018,7 +1018,7 @@ public class ConcreteInterpreter {
 
                 JSONObject objectref = f.sigma().pop();
 
-                boolean result = isInstanceOf(objectref, type);
+                boolean result = isInstanceOf(classes, objectref, type);
 
                 f.sigma().push(new JSONObject(Map.of("type", "int", "value", result ? 1 : 0)));
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
