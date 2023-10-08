@@ -587,7 +587,7 @@ public class SignStepper implements AbstractStepper {
                 results.add(state);
             }
             case "goto" -> {
-                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), instruction.getInt("target"))));
                 results.add(new State(psi, mu));
             }/*
             case "jsr" -> {
