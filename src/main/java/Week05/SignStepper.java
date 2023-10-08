@@ -342,57 +342,12 @@ public class SignStepper implements AbstractStepper {
 
                 m.sigma().push(result);
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
-            }
+            }*/
             case "cast" -> {
-                String from = instruction.getString("from");    // "int" | Arithmetic Type
-                String to = instruction.getString("to");        // Small types | Arithmetic Type
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
-                JSONObject value = m.sigma().pop();
-
-                JSONObject result = new JSONObject();
-                result.put("type", to);
-
-                switch (from) {
-                    case "int" -> {
-                        switch (to) {
-                            case "byte"     -> result.put("value", (byte) value.getInt("value"));
-                            case "char"     -> result.put("value", (char) value.getInt("value"));
-                            case "short"    -> result.put("value", (short) value.getInt("value"));
-                            case "long"     -> result.put("value", (long) value.getInt("value"));
-                            case "float"    -> result.put("value", (float) value.getInt("value"));
-                            case "double"   -> result.put("value", (double) value.getInt("value"));
-                        }
-                    }
-                    case "long" -> {
-                        switch (to) {
-                            case "int"      -> result.put("value", (int) value.getLong("value"));
-                            case "float"    -> result.put("value", (float) value.getLong("value"));
-                            case "double"   -> result.put("value", (double) value.getLong("value"));
-                            default         -> System.out.println("Unsupported cast target for long type");
-                        }
-                    }
-                    case "float" -> {
-                        switch (to) {
-                            case "int"      -> result.put("value", (int) value.getFloat("value"));
-                            case "long"     -> result.put("value", (long) value.getFloat("value"));
-                            case "double"   -> result.put("value", (double) value.getFloat("value"));
-                            default         -> System.out.println("Unsupported cast target for float type");
-                        }
-                    }
-                    case "double" -> {
-                        switch (to) {
-                            case "int"      -> result.put("value", (int) value.getDouble("value"));
-                            case "long"     -> result.put("value", (long) value.getDouble("value"));
-                            case "float"    -> result.put("value", (float) value.getDouble("value"));
-                            default         -> System.out.println("Unsupported cast target for double type");
-                        }
-                    }
-                    default -> System.out.println("Casting from this type is unsupported");
-                }
-
-                m.sigma().push(result);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
-            }
+                results.add(state);
+            }/*
             case "comparelongs" -> {
                 JSONObject value2 = m.sigma().pop();
                 JSONObject value1 = m.sigma().pop();
