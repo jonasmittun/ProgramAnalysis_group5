@@ -1,8 +1,7 @@
 package Week05;
 
+import Week04.*;
 import Week04.Main;
-import Week04.Frame;
-import Week04.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -700,42 +699,73 @@ public class SignStepper implements AbstractStepper {
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
                 results.add(state);
-            }/*
+            }
             case "invoke" -> {
-                JSONObject method = instruction.getJSONObject("method");
+                JSONObject invoke_method = instruction.getJSONObject("method");
+                String invoke_access = instruction.getString("access");
 
-                switch(instruction.getString("access")) {
-                    case "special" -> {}
-                    case "virtual" -> {}
-                    case "static" -> {
-                        JSONObject m_ref = method.getJSONObject("ref");
-                        String classname = m_ref.getString("name");
-                        String methodname = method.getString("name");
-                        JSONArray args = method.getJSONArray("args");
+                String methodname = invoke_method.getString("name");
+                JSONArray args = invoke_method.getJSONArray("args");
+                Object returns = invoke_method.isNull("returns") ? null : invoke_method.get("returns");
 
-                        if(m.sigma().size() < args.length()) System.out.println("Not enough elements in stack for invocation of method!");
+                Method resolvedMethod = switch(invoke_access) {
+                    case "virtual" -> {
+                        JSONObject classref = invoke_method.getJSONObject("ref");
 
-                        JSONObject[] lambda = new JSONObject[args.length()];
-                        for(int i = 0; i < args.length(); i++) {
-                            JSONObject arg = m.sigma().pop();
-
-                            String type_expected = args.get(i) instanceof String ? args.getString(i) : (args.getJSONObject(i).has("kind") ? "ref" : args.getJSONObject(i).getString("type"));
-                            String type_actual = arg.getString("type");
-
-                            if(!type_actual.equals(type_expected)) {
-                                System.out.println("Type mismatch: Expected " + type_expected + " but was " + type_actual);
-                            }
-
-                            lambda[i] = arg;
-                        }
-
-                        psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
-                        psi.push(new Method(lambda, new ArrayDeque<>(), new Pair<>(classname + "/" + methodname, 0)));
+                        yield resolveMethod(classes, classref, methodname, args, returns);
                     }
-                    case "interface" -> {}
-                    case "dynamic" -> {}
+                    case "special", "static" -> {
+                        JSONObject classref = invoke_method.getJSONObject("ref");
+                        boolean is_interface = invoke_method.getBoolean("is_interface");
+
+                        yield resolveMethod(classes, classref, methodname, args, returns);
+                    }
+                    case "interface" -> {
+                        JSONObject classref = invoke_method.getJSONObject("ref");
+                        int stack_size = invoke_method.getInt("stack_size");
+
+                        yield resolveMethod(classes, classref, methodname, args, returns);
+                    }
+                    case "dynamic" -> throw new RuntimeException("Dynamic invoke is not implemented");
+                    default -> throw new IllegalArgumentException("Illegal invoke access: " + instruction.getString("access"));
+                };
+
+                if(f.sigma().size() < args.length()) throw new RuntimeException("Not enough elements in stack for invocation of method!");
+
+                if(resolvedMethod.method().isNull("code")) {
+                    throw new RuntimeException("Runtime method identification is not implemented");
+                    // TODO: Find method in subclass / "Implement class" at runtime
                 }
-            }*/
+
+                JSONObject[] lambda = new JSONObject[resolvedMethod.method().getJSONObject("code").getInt("max_locals")];
+                for(int i = 0; i < args.length(); i++) {
+                    JSONObject arg = f.sigma().pop();
+
+                    Object type_expected = args.get(i);
+                    Object type_actual = arg.has("kind") ? arg : arg.getString("type");
+
+                    if(!SimpleType.equals(type_expected, type_actual)) {
+                        throw new IllegalArgumentException("Type mismatch: Expected " + type_expected + " but was " + type_actual);
+                    }
+
+                    lambda[i] = arg;
+                }
+
+                switch(invoke_access) {
+                    case "virtual", "special", "interface" -> {
+                        // Shift elements in lambda right
+                        System.arraycopy(lambda, 0, lambda, 1, lambda.length - 1);
+                        // Objectref
+                        lambda[0] = f.sigma().pop();
+                    }
+                    default -> {}
+                }
+
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+                psi.push(new Frame(lambda, new ArrayDeque<>(), new Pair<>(resolvedMethod, 0)));
+
+                results.add(state);
+            }
             case "new" -> {
                 String classname = instruction.getString("class");
 

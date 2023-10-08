@@ -39,7 +39,7 @@ public class ConcreteInterpreter {
      * @param return_type   nullable SimpleType
      * @return              The method - if correctly resolved
      */
-    public Method resolveMethod(JSONObject ref, String name, JSONArray args, Object return_type) {
+    public static Method resolveMethod(Map<String, JSONObject> classes, JSONObject ref, String name, JSONArray args, Object return_type) {
         if(!ref.has("name")) throw new IllegalArgumentException("Incorrect reference type!");
         if(!classes.containsKey(ref.getString("name"))) throw new ResolutionException("Class " + ref.getString("name") + " not found!");
         JSONObject cls = classes.get(ref.getString("name"));
@@ -76,7 +76,7 @@ public class ConcreteInterpreter {
     }
 
     /** Checks if the &lt;Type&gt; is equal to the &lt;SimpleType&gt; */
-    public boolean typeIsEqual(JSONObject Type, Object SimpleType) {
+    public static boolean typeIsEqual(JSONObject Type, Object SimpleType) {
         if(Type == null && SimpleType == null) {
             return true;
         } else if(Type != null && SimpleType != null) {
@@ -817,19 +817,19 @@ public class ConcreteInterpreter {
                     case "virtual" -> {
                         JSONObject classref = invoke_method.getJSONObject("ref");
 
-                        yield resolveMethod(classref, methodname, args, returns);
+                        yield resolveMethod(classes, classref, methodname, args, returns);
                     }
                     case "special", "static" -> {
                         JSONObject classref = invoke_method.getJSONObject("ref");
                         boolean is_interface = invoke_method.getBoolean("is_interface");
 
-                        yield resolveMethod(classref, methodname, args, returns);
+                        yield resolveMethod(classes, classref, methodname, args, returns);
                     }
                     case "interface" -> {
                         JSONObject classref = invoke_method.getJSONObject("ref");
                         int stack_size = invoke_method.getInt("stack_size");
 
-                        yield resolveMethod(classref, methodname, args, returns);
+                        yield resolveMethod(classes, classref, methodname, args, returns);
                     }
                     case "dynamic" -> throw new RuntimeException("Dynamic invoke is not implemented");
                     default -> throw new IllegalArgumentException("Illegal invoke access: " + instruction.getString("access"));
