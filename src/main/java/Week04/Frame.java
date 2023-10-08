@@ -10,7 +10,7 @@ import java.util.Deque;
  * @param sigma     Operand Stack
  * @param iota      Program Counter
  */
-public record Frame(JSONObject[] lambda, Deque<JSONObject> sigma, Pair<JSONObject, Integer> iota) {
+public record Frame(JSONObject[] lambda, Deque<JSONObject> sigma, Pair<Method, Integer> iota) {
     @Override
     public String toString() {
         return "(λ" + Arrays.stream(lambda).map(Main::toFormattedString).toList() + ", σ" + sigma.stream().map(Main::toFormattedString).toList() + ", ι" + iota.toString() + ")";

@@ -31,7 +31,7 @@ public class SignStepper implements AbstractStepper {
         Deque<Frame> psi = state.psi();
         Frame f = psi.pop();
 
-        JSONObject instruction = f.iota().e1().getJSONObject("code").getJSONArray("bytecode").getJSONObject(f.iota().e2());
+        JSONObject instruction = f.iota().e1().method().getJSONObject("code").getJSONArray("bytecode").getJSONObject(f.iota().e2());
 
         switch(instruction.getString("opr")) {
             /*

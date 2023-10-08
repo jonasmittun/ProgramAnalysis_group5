@@ -39,7 +39,7 @@ public class ConcreteInterpreter {
      * @param return_type   nullable SimpleType
      * @return              The method - if correctly resolved
      */
-    public JSONObject resolveMethod(JSONObject ref, String name, JSONArray args, Object return_type) {
+    public Method resolveMethod(JSONObject ref, String name, JSONArray args, Object return_type) {
         if(!ref.has("name")) throw new IllegalArgumentException("Incorrect reference type!");
         if(!classes.containsKey(ref.getString("name"))) throw new ResolutionException("Class " + ref.getString("name") + " not found!");
         JSONObject cls = classes.get(ref.getString("name"));
@@ -69,7 +69,7 @@ public class ConcreteInterpreter {
                 // TODO: Verify that the order of elements is the same
             }
 
-            return method;
+            return new Method(cls.getString("name"), method);
         }
 
         throw new ResolutionException(ref.getString("name") + "." + name + " " + args + " → " + return_type + " not found!");
@@ -319,7 +319,7 @@ public class ConcreteInterpreter {
     }
 
     public void step(Frame f, Map<Integer, JSONObject> mu, Deque<Frame> psi) {
-        JSONObject instruction = f.iota().e1().getJSONObject("code").getJSONArray("bytecode").getJSONObject(f.iota().e2());
+        JSONObject instruction = f.iota().e1().method().getJSONObject("code").getJSONArray("bytecode").getJSONObject(f.iota().e2());
         System.out.println("Instruction: " + instruction);
 
         switch(instruction.getString("opr")) {
@@ -813,7 +813,7 @@ public class ConcreteInterpreter {
                 JSONArray args = invoke_method.getJSONArray("args");
                 Object returns = invoke_method.isNull("returns") ? null : invoke_method.get("returns");
 
-                JSONObject resolvedMethod = switch(invoke_access) {
+                Method resolvedMethod = switch(invoke_access) {
                     case "virtual" -> {
                         JSONObject classref = invoke_method.getJSONObject("ref");
 
@@ -837,12 +837,12 @@ public class ConcreteInterpreter {
 
                 if(f.sigma().size() < args.length()) throw new RuntimeException("Not enough elements in stack for invocation of method!");
 
-                if(resolvedMethod.isNull("code")) {
+                if(resolvedMethod.method().isNull("code")) {
                     throw new RuntimeException("Runtime method identification is not implemented");
                     // TODO: Find method in subclass / "Implement class" at runtime
                 }
 
-                JSONObject[] lambda = new JSONObject[resolvedMethod.getJSONObject("code").getInt("max_locals")];
+                JSONObject[] lambda = new JSONObject[resolvedMethod.method().getJSONObject("code").getInt("max_locals")];
                 for(int i = 0; i < args.length(); i++) {
                     JSONObject arg = f.sigma().pop();
 
@@ -917,9 +917,9 @@ public class ConcreteInterpreter {
 
                 JSONObject exceptionhandler = null;
                 while(exceptionhandler == null) {
-                    int cl = f.iota().e1().getJSONObject("code").getJSONArray("bytecode").length();
+                    int cl = f.iota().e1().method().getJSONObject("code").getJSONArray("bytecode").length();
 
-                    JSONArray exceptionhandlers = f.iota().e1().getJSONArray("exceptions");
+                    JSONArray exceptionhandlers = f.iota().e1().method().getJSONArray("exceptions");
                     for(int i = 0; i < exceptionhandlers.length(); i++) {
                         JSONObject eh = exceptionhandlers.getJSONObject(i);
 
