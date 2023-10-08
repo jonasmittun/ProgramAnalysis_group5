@@ -299,15 +299,15 @@ public class ConcreteInterpreter {
         return false;
     }
 
-    public void run(Method method, Map<Integer, JSONObject> mu) {
-        Deque<Method> psi = new ArrayDeque<>();  // Method Stack
-        psi.push(method);
+    public void run(Frame frame, Map<Integer, JSONObject> mu) {
+        Deque<Frame> psi = new ArrayDeque<>();  // Method Stack
+        psi.push(frame);
 
-        System.out.println("Initial:\nΨ00\t" + method + "\n");
+        System.out.println("Initial:\nΨ00\t" + frame + "\n");
         while(!psi.isEmpty()) {
-            Method m = psi.pop();
+            Frame f = psi.pop();
 
-            step(m, mu, psi);
+            step(f, mu, psi);
         }
 
         if(!mu.isEmpty()) {
@@ -318,14 +318,14 @@ public class ConcreteInterpreter {
         }
     }
 
-    public void step(Method m, Map<Integer, JSONObject> mu, Deque<Method> psi) {
-        JSONObject instruction = m.iota().e1().getJSONObject("code").getJSONArray("bytecode").getJSONObject(m.iota().e2());
+    public void step(Frame f, Map<Integer, JSONObject> mu, Deque<Frame> psi) {
+        JSONObject instruction = f.iota().e1().getJSONObject("code").getJSONArray("bytecode").getJSONObject(f.iota().e2());
         System.out.println("Instruction: " + instruction);
 
         switch(instruction.getString("opr")) {
             case "array_load" -> {
-                JSONObject index = m.sigma().pop();
-                JSONObject arrayref = m.sigma().pop();
+                JSONObject index = f.sigma().pop();
+                JSONObject arrayref = f.sigma().pop();
 
                 if(arrayref == null) throw new NullPointerException("Cannot load from array because \"arrayref\" is null");
 
@@ -339,13 +339,13 @@ public class ConcreteInterpreter {
 
                 JSONObject value = array.getJSONObject(index_value);
 
-                m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "array_store" -> {
-                JSONObject value = m.sigma().pop();
-                JSONObject index = m.sigma().pop();
-                JSONObject arrayref = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
+                JSONObject index = f.sigma().pop();
+                JSONObject arrayref = f.sigma().pop();
 
                 if(arrayref == null) throw new NullPointerException("Cannot store to array because \"arrayref\" is null");
 
@@ -358,7 +358,7 @@ public class ConcreteInterpreter {
                 if(array.length() < index_value) throw new ArrayIndexOutOfBoundsException("Index " + index_value + " out of bounds for length " + array.length());
 
                 array.put(index_value, value);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "push" -> {
                 JSONObject value = instruction.getJSONObject("value");
@@ -366,7 +366,7 @@ public class ConcreteInterpreter {
 
                 switch(type) {
                     case "class" -> {
-                        m.sigma().push(value);
+                        f.sigma().push(value);
                     }
                     case "string" -> {
                         // Create array reference for string value
@@ -385,34 +385,34 @@ public class ConcreteInterpreter {
                         mu.put(System.identityHashCode(objectref), object);
 
                         // Push object reference
-                        m.sigma().push(objectref);
+                        f.sigma().push(objectref);
                     }
                     default -> {
-                        m.sigma().push(new JSONObject(value.toMap()));
+                        f.sigma().push(new JSONObject(value.toMap()));
                     }
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "load" -> {
                 int index = instruction.getInt("index");
-                JSONObject value = m.lambda()[index];
+                JSONObject value = f.lambda()[index];
                 if(value.has("kind")) { // Check if it's a reference type
-                   m.sigma().push(value);
+                   f.sigma().push(value);
                 } else {
-                    m.sigma().push(new JSONObject(value.toMap()));
+                    f.sigma().push(new JSONObject(value.toMap()));
                 }
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "store" -> {
                 int index = instruction.getInt("index");
-                JSONObject value = m.sigma().pop();
-                m.lambda()[index] = value;
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                JSONObject value = f.sigma().pop();
+                f.lambda()[index] = value;
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "incr" -> {
                 int index = instruction.getInt("index");
-                JSONObject value = m.lambda()[index];
+                JSONObject value = f.lambda()[index];
                 String type = value.getString("type");
                 switch(type) {
                     case "int", "integer"   -> value.put("value", value.getInt("value") + instruction.getInt("amount"));
@@ -422,12 +422,12 @@ public class ConcreteInterpreter {
                     default                 -> System.out.println("Unsupported \"incr\" type: " + type);
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "binary" -> {
                 String type = instruction.getString("type"); // Arithmetic Type
-                JSONObject value2 = m.sigma().pop();
-                JSONObject value1 = m.sigma().pop();
+                JSONObject value2 = f.sigma().pop();
+                JSONObject value1 = f.sigma().pop();
 
                 JSONObject result = new JSONObject();
                 result.put("type", type);
@@ -466,12 +466,12 @@ public class ConcreteInterpreter {
                         }
                     }
                 }
-                m.sigma().push(result);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                f.sigma().push(result);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "negate" -> {
                 String type = instruction.getString("type"); // Arithmetic Type
-                JSONObject value1 = m.sigma().pop();
+                JSONObject value1 = f.sigma().pop();
                 JSONObject result = new JSONObject();
                 result.put("type", type);
                 switch(type) {
@@ -480,12 +480,12 @@ public class ConcreteInterpreter {
                     case "float"    -> result.put("value", value1.getFloat("value") * -1.f);
                     case "double"   -> result.put("value", value1.getDouble("value") * -1.d);
                 }
-                m.sigma().push(result);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                f.sigma().push(result);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "bitopr" -> {
                 String type = instruction.getString("type"); // "int" | "long"
-                JSONObject value = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
 
                 JSONObject result = new JSONObject();
                 result.put("type", type);
@@ -546,14 +546,14 @@ public class ConcreteInterpreter {
                         }
                     }
                 }
-                m.sigma().push(result);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                f.sigma().push(result);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "cast" -> {
                 String from = instruction.getString("from");    // "int" | Arithmetic Type
                 String to = instruction.getString("to");        // Small types | Arithmetic Type
 
-                JSONObject value = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
 
                 JSONObject result = new JSONObject();
                 result.put("type", to);
@@ -596,23 +596,23 @@ public class ConcreteInterpreter {
                     default -> System.out.println("Casting from this type is unsupported");
                 }
 
-                m.sigma().push(result);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                f.sigma().push(result);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "comparelongs" -> {
-                JSONObject value2 = m.sigma().pop();
-                JSONObject value1 = m.sigma().pop();
+                JSONObject value2 = f.sigma().pop();
+                JSONObject value1 = f.sigma().pop();
 
                 JSONObject result = new JSONObject();
                 result.put("type", "int");
                 result.put("value", (Long.compare(value1.getLong("value"), value2.getLong("value"))));
 
-                m.sigma().push(result);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                f.sigma().push(result);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "comparefloating" -> {
-                JSONObject value2 = m.sigma().pop();
-                JSONObject value1 = m.sigma().pop();
+                JSONObject value2 = f.sigma().pop();
+                JSONObject value1 = f.sigma().pop();
 
                 JSONObject result = new JSONObject();
                 result.put("type", "int");
@@ -637,14 +637,14 @@ public class ConcreteInterpreter {
                     }
                 }
 
-                m.sigma().push(result);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                f.sigma().push(result);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "if" -> {
                 int target = instruction.getInt("target");
 
-                JSONObject value2 = m.sigma().pop();
-                JSONObject value1 = m.sigma().pop();
+                JSONObject value2 = f.sigma().pop();
+                JSONObject value1 = f.sigma().pop();
 
                 boolean result = switch(instruction.getString("condition")) {
                     case "eq"       -> value1.getInt("value") == value2.getInt("value");
@@ -661,13 +661,13 @@ public class ConcreteInterpreter {
                     }
                 };
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), result ? target : m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), result ? target : f.iota().e2() + 1)));
             }
             case "ifz" -> {
                 String condition = instruction.getString("condition");
                 int target = instruction.getInt("target");
 
-                JSONObject value = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
 
                 boolean result;
                 if(value.has("kind")) {
@@ -694,33 +694,33 @@ public class ConcreteInterpreter {
                     };
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), result ? target : m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), result ? target : f.iota().e2() + 1)));
             }
             case "goto" -> {
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), instruction.getInt("target"))));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), instruction.getInt("target"))));
             }
             case "jsr" -> {
                 int target = instruction.getInt("target");
 
-                Method next = psi.peek();
+                Frame next = psi.peek();
                 JSONObject value = new JSONObject();
                 value.put("type", "int");
                 value.put("value", next.iota().e2());
-                m.sigma().push(value);
+                f.sigma().push(value);
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), target)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), target)));
             }
             case "ret" -> {
-                JSONObject value = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
                 int address = value.getInt("value");
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), address)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), address)));
             }
             case "tableswitch" -> {
                 int location = instruction.getInt("default");
                 int low = instruction.getInt("low");
 
-                JSONObject value = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
                 int index = value.getInt("index");
 
                 JSONArray targets = instruction.getJSONArray("targets");
@@ -732,12 +732,12 @@ public class ConcreteInterpreter {
                     }
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), location)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), location)));
             }
             case "lookupswitch" -> {
                 int location = instruction.getInt("default");
 
-                JSONObject value = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
                 int index = value.getInt("index");
 
                 JSONArray targets = instruction.getJSONArray("targets");
@@ -749,7 +749,7 @@ public class ConcreteInterpreter {
                     }
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), location)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), location)));
             }
             case "get" -> {
                 JSONObject field = instruction.getJSONObject("field");
@@ -760,7 +760,7 @@ public class ConcreteInterpreter {
                 if(instruction.getBoolean("static")) {
                     object = classes.get(field.getString("class"));
                 } else {
-                    JSONObject ref = m.sigma().pop();
+                    JSONObject ref = f.sigma().pop();
                     object = mu.get(System.identityHashCode(ref));
                 }
 
@@ -778,21 +778,21 @@ public class ConcreteInterpreter {
 
                 if(value.isEmpty()) throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist.");
 
-                m.sigma().push(value.get());
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                f.sigma().push(value.get());
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "put" -> {
                 JSONObject field = instruction.getJSONObject("field");
                 String fieldname = field.getString("name");
                 Object fieldtype = field.get("type");
 
-                JSONObject value = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
 
                 JSONObject object;
                 if(instruction.getBoolean("static")) {
                     object = classes.get(field.getString("class"));
                 } else {
-                    JSONObject ref = m.sigma().pop();
+                    JSONObject ref = f.sigma().pop();
                     object = mu.get(System.identityHashCode(ref));
                 }
 
@@ -803,7 +803,7 @@ public class ConcreteInterpreter {
                     } else throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist.");
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "invoke" -> {
                 JSONObject invoke_method = instruction.getJSONObject("method");
@@ -835,7 +835,7 @@ public class ConcreteInterpreter {
                     default -> throw new IllegalArgumentException("Illegal invoke access: " + instruction.getString("access"));
                 };
 
-                if(m.sigma().size() < args.length()) throw new RuntimeException("Not enough elements in stack for invocation of method!");
+                if(f.sigma().size() < args.length()) throw new RuntimeException("Not enough elements in stack for invocation of method!");
 
                 if(resolvedMethod.isNull("code")) {
                     throw new RuntimeException("Runtime method identification is not implemented");
@@ -844,7 +844,7 @@ public class ConcreteInterpreter {
 
                 JSONObject[] lambda = new JSONObject[resolvedMethod.getJSONObject("code").getInt("max_locals")];
                 for(int i = 0; i < args.length(); i++) {
-                    JSONObject arg = m.sigma().pop();
+                    JSONObject arg = f.sigma().pop();
 
                     Object type_expected = args.get(i);
                     Object type_actual = arg.has("kind") ? arg : arg.getString("type");
@@ -861,13 +861,13 @@ public class ConcreteInterpreter {
                         // Shift elements in lambda right
                         System.arraycopy(lambda, 0, lambda, 1, lambda.length - 1);
                         // Objectref
-                        lambda[0] = m.sigma().pop();
+                        lambda[0] = f.sigma().pop();
                     }
                     default -> {}
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
-                psi.push(new Method(lambda, new ArrayDeque<>(), new Pair<>(resolvedMethod, 0)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+                psi.push(new Frame(lambda, new ArrayDeque<>(), new Pair<>(resolvedMethod, 0)));
             }
             case "new" -> {
                 String classname = instruction.getString("class");
@@ -882,24 +882,24 @@ public class ConcreteInterpreter {
 
                 mu.put(System.identityHashCode(objectref), object);
 
-                m.sigma().push(objectref);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                f.sigma().push(objectref);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "newarray" -> {
                 int dim = instruction.getInt("dim");
                 Object type = instruction.get("type"); // SimpleType
 
-                JSONObject count = m.sigma().pop();
+                JSONObject count = f.sigma().pop();
                 int length = count.getInt("value");
 
-                JSONObject arrayref = initializeArray(type, length, dim, m.sigma(), mu);
+                JSONObject arrayref = initializeArray(type, length, dim, f.sigma(), mu);
 
-                m.sigma().push(arrayref);
+                f.sigma().push(arrayref);
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "arraylength" -> {
-                JSONObject ref = m.sigma().pop();
+                JSONObject ref = f.sigma().pop();
 
                 JSONObject array = mu.get(System.identityHashCode(ref));
 
@@ -907,19 +907,19 @@ public class ConcreteInterpreter {
                 result.put("type", "int");
                 result.put("value", array.getJSONArray("value").length());
 
-                m.sigma().push(result);
+                f.sigma().push(result);
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "throw" -> {
-                JSONObject objectref = m.sigma().pop();
+                JSONObject objectref = f.sigma().pop();
                 if(objectref == null) throw new NullPointerException("Cannot throw because \"objectref\" is null");
 
                 JSONObject exceptionhandler = null;
                 while(exceptionhandler == null) {
-                    int cl = m.iota().e1().getJSONObject("code").getJSONArray("bytecode").length();
+                    int cl = f.iota().e1().getJSONObject("code").getJSONArray("bytecode").length();
 
-                    JSONArray exceptionhandlers = m.iota().e1().getJSONArray("exceptions");
+                    JSONArray exceptionhandlers = f.iota().e1().getJSONArray("exceptions");
                     for(int i = 0; i < exceptionhandlers.length(); i++) {
                         JSONObject eh = exceptionhandlers.getJSONObject(i);
 
@@ -938,14 +938,14 @@ public class ConcreteInterpreter {
                     }
 
                     if(exceptionhandler == null) {
-                        if(!psi.isEmpty()) m = psi.pop();
+                        if(!psi.isEmpty()) f = psi.pop();
                         else break;
                     }
                 }
 
                 if(exceptionhandler != null) {
-                    m.sigma().push(objectref);
-                    psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), exceptionhandler.getInt("handler"))));
+                    f.sigma().push(objectref);
+                    psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), exceptionhandler.getInt("handler"))));
                 } else {
                     // Get Throwable object
                     JSONObject o = mu.get(System.identityHashCode(objectref));
@@ -1005,141 +1005,141 @@ public class ConcreteInterpreter {
             case "checkcast" -> {
                 JSONObject type = instruction.getJSONObject("type");
 
-                JSONObject objectref = m.sigma().peek();
+                JSONObject objectref = f.sigma().peek();
 
                 if(objectref != null && !isInstanceOf(objectref, type)) {
                     throw new ClassCastException(objectref + " cannot be cast to " + type);
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "instanceof" -> {
                 JSONObject type = instruction.getJSONObject("type");
 
-                JSONObject objectref = m.sigma().pop();
+                JSONObject objectref = f.sigma().pop();
 
                 boolean result = isInstanceOf(objectref, type);
 
-                m.sigma().push(new JSONObject(Map.of("type", "int", "value", result ? 1 : 0)));
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                f.sigma().push(new JSONObject(Map.of("type", "int", "value", result ? 1 : 0)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "return" -> {
                 if(instruction.isNull("type")) break;
 
                 String type = instruction.getString("type"); // LocalType
-                JSONObject value = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
 
                 JSONObject result = type.equals("ref") ? value : new JSONObject(value.toMap());
 
                 if(!psi.isEmpty()) {
-                    Method m2 = psi.peek();
-                    m2.sigma().push(result);
+                    Frame f2 = psi.peek();
+                    f2.sigma().push(result);
                 } else {
                     System.out.println(String.format("%-12s", "return") + Main.toFormattedString(result));
                     return;
                 }
             }
             case "nop" -> {
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "pop" -> {
                 int words = instruction.getInt("words");
 
-                while(!m.sigma().isEmpty() && words > 0) {
-                    m.sigma().pop();
+                while(!f.sigma().isEmpty() && words > 0) {
+                    f.sigma().pop();
                     words--;
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "dup" -> {
                 int words = instruction.getInt("words");
-                if(m.sigma().size() < words) System.out.println("Not enough elements in stack for duplication");
+                if(f.sigma().size() < words) System.out.println("Not enough elements in stack for duplication");
 
                 List<JSONObject> local = new ArrayList<>();
                 for(int i = 0; i < words; i++) {
-                    local.add(m.sigma().pop());
+                    local.add(f.sigma().pop());
                 }
 
                 for(int i = 0; i < words+1; i++) {
                     for(JSONObject value : local) {
-                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "dup_x1" -> {
                 int words = instruction.getInt("words");
-                if(m.sigma().size() < words + 1) System.out.println("Not enough elements in stack for duplication");
+                if(f.sigma().size() < words + 1) System.out.println("Not enough elements in stack for duplication");
 
                 List<JSONObject> local = new ArrayList<>();
                 for(int i = 0; i < words; i++) {
-                    local.add(m.sigma().pop());
+                    local.add(f.sigma().pop());
                 }
 
-                JSONObject word = m.sigma().pop();
+                JSONObject word = f.sigma().pop();
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
-                m.sigma().push(word);
+                f.sigma().push(word);
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "dup_x2" -> {
                 int words = instruction.getInt("words");
-                if(m.sigma().size() < words + 2) System.out.println("Not enough elements in stack for duplication");
+                if(f.sigma().size() < words + 2) System.out.println("Not enough elements in stack for duplication");
 
                 List<JSONObject> local = new ArrayList<>();
                 for(int i = 0; i < words; i++) {
-                    local.add(m.sigma().pop());
+                    local.add(f.sigma().pop());
                 }
 
-                JSONObject word1 = m.sigma().pop();
-                JSONObject word2 = m.sigma().pop();
+                JSONObject word1 = f.sigma().pop();
+                JSONObject word2 = f.sigma().pop();
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
-                m.sigma().push(word2);
-                m.sigma().push(word1);
+                f.sigma().push(word2);
+                f.sigma().push(word1);
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        m.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                     }
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "swap" -> {
-                JSONObject value2 = m.sigma().pop();
-                JSONObject value1 = m.sigma().pop();
+                JSONObject value2 = f.sigma().pop();
+                JSONObject value1 = f.sigma().pop();
 
-                m.sigma().push(value2);
-                m.sigma().push(value1);
+                f.sigma().push(value2);
+                f.sigma().push(value1);
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             default -> throw new UnsupportedOperationException("Unsupported instruction \"" + instruction.getString("opr") + "\"");
         }
 
         int index = 0;
-        for(Method mp : psi) {
-            System.out.println("Ψ" + String.format("%02d", index) + "\t" + mp);
+        for(Frame fp : psi) {
+            System.out.println("Ψ" + String.format("%02d", index) + "\t" + fp);
             index++;
         }
         System.out.println();

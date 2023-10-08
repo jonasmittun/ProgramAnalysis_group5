@@ -36,20 +36,20 @@ class CallsTest {
 
     @Test
     void helloWorld() {
-        Method m = new Method(new JSONObject[0], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "helloWorld"), 0));
+        Frame f = new Frame(new JSONObject[0], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "helloWorld"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void fib() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "fib"), 0));
+        Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "fib"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
 }

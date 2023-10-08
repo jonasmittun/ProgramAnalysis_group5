@@ -1,7 +1,7 @@
 package Week05;
 
 import Week04.Main;
-import Week04.Method;
+import Week04.Frame;
 import Week04.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -48,38 +48,38 @@ class SimpleTest {
 
     @Test
     void noop() {
-        Method m = new Method(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "noop"), 0));
+        Frame f = new Frame(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "noop"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void zero() {
-        Method m = new Method(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "zero"), 0));
+        Frame f = new Frame(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "zero"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void hundredAndTwo() {
-        Method m = new Method(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "hundredAndTwo"), 0));
+        Frame f = new Frame(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "hundredAndTwo"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void identity() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 7)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "identity"), 0));
+        Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 7)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "identity"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Nested
@@ -87,19 +87,19 @@ class SimpleTest {
     class Add {
         @Test
         void add_int_input() {
-            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", -1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "add"), 0));
+            Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", -1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "add"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
             SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-            in.run(m, mu);
+            in.run(f, mu);
         }
         @Test
         void add_full_sets_input() {
-            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 2, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "add"), 0));
+            Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 2, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "add"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
             SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-            in.run(m, mu);
+            in.run(f, mu);
         }
     }
 
@@ -109,19 +109,19 @@ class SimpleTest {
     class Min {
         @Test
         void min_int_input() {
-            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "min"), 0));
+            Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "min"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
             SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-            in.run(m, mu);
+            in.run(f, mu);
         }
         @Test
         void min_full_sets_input() {
-            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 2, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "min"), 0));
+            Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 2, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "min"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
             SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-            in.run(m, mu);
+            in.run(f, mu);
         }
     }
 
@@ -130,51 +130,51 @@ class SimpleTest {
     class div {
         @Test
         void div_int_input() {
-            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
+            Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
             SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-            in.run(m, mu);
+            in.run(f, mu);
         }
 
         @Test
         void div_int_input_fail() {
-            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
+            Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
             SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-            Exception exception = assertThrows(java.lang.ArithmeticException.class, () -> in.run(m, mu));
+            Exception exception = assertThrows(java.lang.ArithmeticException.class, () -> in.run(f, mu));
 
             assertTrue(exception.getMessage().contains("Illegal divide by zero"));
         }
 
         @Test
         void div_sets_input() {
-            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 2, "sign", new JSONArray(Set.of(NEGATIVE, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
+            Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 2, "sign", new JSONArray(Set.of(NEGATIVE, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
             SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-            in.run(m, mu);
+            in.run(f, mu);
         }
 
         @Test
         void div_sets_input_fail() {
-            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 0, "sign", new JSONArray(Set.of(ZERO)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
+            Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 0, "sign", new JSONArray(Set.of(ZERO)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
             SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-            Exception exception = assertThrows(java.lang.ArithmeticException.class, () -> in.run(m, mu));
+            Exception exception = assertThrows(java.lang.ArithmeticException.class, () -> in.run(f, mu));
 
             assertTrue(exception.getMessage().contains("Illegal divide by zero"));
         }
 
         @Test
         void div_full_sets_input_fail() {
-            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 0, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
+            Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 0, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
             SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-            Exception exception = assertThrows(java.lang.ArithmeticException.class, () -> in.run(m, mu));
+            Exception exception = assertThrows(java.lang.ArithmeticException.class, () -> in.run(f, mu));
 
             assertTrue(exception.getMessage().contains("Illegal divide by zero"));
         }
@@ -186,20 +186,20 @@ class SimpleTest {
     class Factorial {
         @Test
         void factorial_int() {
-            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "factorial"), 0));
+            Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "factorial"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
             SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-            in.run(m, mu);
+            in.run(f, mu);
         }
 
         @Test
         void factorial_sets() {
-            Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 0, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "factorial"), 0));
+            Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))), new JSONObject(Map.of("type", "int", "value", 0, "sign", new JSONArray(Set.of(NEGATIVE, ZERO, POSITIVE)))) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "factorial"), 0));
             Map<Integer, JSONObject> mu = new HashMap<>();
 
             SignInterpreter in = new SignInterpreter(new HashMap<>(classes), depthLimit);
-            in.run(m, mu);
+            in.run(f, mu);
         }
     }
 }

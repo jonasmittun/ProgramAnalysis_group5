@@ -50,39 +50,39 @@ class ArrayTest {
     void first() {
         JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
-        Method m = new Method(new JSONObject[] {ref}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "first"), 0));
+        Frame f = new Frame(new JSONObject[] {ref}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "first"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 1, 2, 3, 4 }));
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void firstSafe_success() {
         JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
-        Method m = new Method(new JSONObject[] {ref}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "firstSafe"), 0));
+        Frame f = new Frame(new JSONObject[] {ref}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "firstSafe"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 1, 2, 3, 4 }));
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void firstSafe_fail() {
         JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
-        Method m = new Method(new JSONObject[] {ref}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "firstSafe"), 0));
+        Frame f = new Frame(new JSONObject[] {ref}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "firstSafe"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] {}));
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
@@ -91,32 +91,32 @@ class ArrayTest {
 
         JSONObject i = new JSONObject(Map.of("type", "int", "value", 2));
 
-        Method m = new Method(new JSONObject[] { i, ref }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "access"), 0));
+        Frame f = new Frame(new JSONObject[] { i, ref }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "access"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 1, 2, 3, 4 }));
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
     @Test
     void newArray() {
-        Method m = new Method(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "newArray"), 0));
+        Frame f = new Frame(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "newArray"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void newArrayOutOfBounds() {
-        Method m = new Method(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "newArrayOutOfBounds"), 0));
+        Frame f = new Frame(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "newArrayOutOfBounds"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
@@ -125,13 +125,13 @@ class ArrayTest {
 
         JSONObject i = new JSONObject(Map.of("type", "int", "value", 2));
 
-        Method m = new Method(new JSONObject[] { i, ref }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "accessSafe"), 0));
+        Frame f = new Frame(new JSONObject[] { i, ref }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "accessSafe"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 1, 2, 3, 4 }));
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
@@ -142,32 +142,32 @@ class ArrayTest {
         JSONObject[] lambda = new JSONObject[5];
         lambda[0] = ref;
 
-        Method m = new Method(lambda, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "bubbleSort"), 0));
+        Frame f = new Frame(lambda, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "bubbleSort"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(ref), createArray(new int[] { 4, 3, 2, 1 }));
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void aWierdOneOutOfBounds() {
-        Method m = new Method(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "aWierdOneOutOfBounds"), 0));
+        Frame f = new Frame(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "aWierdOneOutOfBounds"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void aWierdOneWithinBounds() {
-        Method m = new Method(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "aWierdOneWithinBounds"), 0));
+        Frame f = new Frame(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "aWierdOneWithinBounds"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 }

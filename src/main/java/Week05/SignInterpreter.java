@@ -1,6 +1,6 @@
 package Week05;
 
-import Week04.Method;
+import Week04.Frame;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -56,27 +56,27 @@ public class SignInterpreter implements Interpreter {
         return o;
     }
 
-    public static void addSigns(Method m) {
-        for(JSONObject o : m.lambda()) {
+    public static void addSigns(Frame f) {
+        for(JSONObject o : f.lambda()) {
             toAbstract(o);
         }
 
-        for(JSONObject o : m.sigma()) {
+        for(JSONObject o : f.sigma()) {
             toAbstract(o);
         }
     }
 
     /** Clones everything from a triple of a method, psi and mu to a new triple */
-    public static Triple<Method, Deque<Method>, Map<Integer, JSONObject>> clone_state(Method method, Deque<Method> psi, Map<Integer, JSONObject> mu) {
+    public static Triple<Frame, Deque<Frame>, Map<Integer, JSONObject>> clone_state(Frame frame, Deque<Frame> psi, Map<Integer, JSONObject> mu) {
         Map<Integer, JSONObject> mu_new = new HashMap<>();
-        Deque<Method> psi_new = new ArrayDeque<>();
+        Deque<Frame> psi_new = new ArrayDeque<>();
 
         // Clone all elements in psi
-        for(Method m : psi) {
+        for(Frame f : psi) {
             // Clone elements in lambda
-            JSONObject[] lambda = new JSONObject[m.lambda().length];
+            JSONObject[] lambda = new JSONObject[f.lambda().length];
             for(int i = 0; i < lambda.length; i++) {
-                JSONObject e_old = m.lambda()[i];
+                JSONObject e_old = f.lambda()[i];
                 JSONObject e_new = (e_old == null) ? null : new JSONObject(e_old.toMap());
 
                 clone_helper(e_old, e_new, mu, mu_new);
@@ -86,7 +86,7 @@ public class SignInterpreter implements Interpreter {
 
             // Clone elements in sigma
             Deque<JSONObject> sigma = new ArrayDeque<>();
-            for(JSONObject e_old : m.sigma()) {
+            for(JSONObject e_old : f.sigma()) {
                 JSONObject e_new = (e_old == null) ? null : new JSONObject(e_old.toMap());
 
                 clone_helper(e_old, e_new, mu, mu_new);
@@ -94,14 +94,14 @@ public class SignInterpreter implements Interpreter {
                 sigma.addLast(e_new);
             }
 
-            psi_new.addLast(new Method(lambda, sigma, m.iota()));
+            psi_new.addLast(new Frame(lambda, sigma, f.iota()));
         }
 
         // --- Clone current method ---
         // Clone elements in lambda
-        JSONObject[] lambda_new = new JSONObject[method.lambda().length];
+        JSONObject[] lambda_new = new JSONObject[frame.lambda().length];
         for(int i = 0; i < lambda_new.length; i++) {
-            JSONObject e_old = method.lambda()[i];
+            JSONObject e_old = frame.lambda()[i];
             JSONObject e_new = (e_old == null) ? null : new JSONObject(e_old.toMap());
 
             clone_helper(e_old, e_new, mu, mu_new);
@@ -111,7 +111,7 @@ public class SignInterpreter implements Interpreter {
 
         // Clone elements in sigma
         Deque<JSONObject> sigma_new = new ArrayDeque<>();
-        for(JSONObject e_old : method.sigma()) {
+        for(JSONObject e_old : frame.sigma()) {
             JSONObject e_new = (e_old == null) ? null : new JSONObject(e_old.toMap());
 
             clone_helper(e_old, e_new, mu, mu_new);
@@ -119,9 +119,9 @@ public class SignInterpreter implements Interpreter {
             sigma_new.addLast(e_new);
         }
 
-        Method method_new = new Method(lambda_new, sigma_new, method.iota());
+        Frame frame_new = new Frame(lambda_new, sigma_new, frame.iota());
 
-        return new Triple<>(method_new, psi_new, mu_new);
+        return new Triple<>(frame_new, psi_new, mu_new);
     }
 
     /** Copies any object e_old that exists in mu_old to mu_new, but with e_new as the new reference */
@@ -150,11 +150,11 @@ public class SignInterpreter implements Interpreter {
     }
 
     @Override
-    public void run(Method method, Map<Integer, JSONObject> mu){
-        Deque<Method> psi = new ArrayDeque<>();  // Method Stack
-        addSigns(method);
-        System.out.println(method);
-        psi.push(method);
+    public void run(Frame frame, Map<Integer, JSONObject> mu){
+        Deque<Frame> psi = new ArrayDeque<>();  // Method Stack
+        addSigns(frame);
+        System.out.println(frame);
+        psi.push(frame);
 
         Queue<State> queue = new LinkedList<>();
         queue.add(new State(psi, mu));

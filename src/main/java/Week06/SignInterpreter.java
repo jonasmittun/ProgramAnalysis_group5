@@ -1,6 +1,6 @@
 package Week06;
 
-import Week04.Method;
+import Week04.Frame;
 import Week05.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -36,11 +36,11 @@ public class SignInterpreter implements Interpreter {
     }
 
     @Override
-    public void run(Method method, Map<Integer, JSONObject> mu){
-        Deque<Method> psi = new ArrayDeque<>();  // Method Stack
-        Week05.SignInterpreter.addSigns(method);
-        System.out.println(method);
-        psi.push(method);
+    public void run(Frame frame, Map<Integer, JSONObject> mu){
+        Deque<Frame> psi = new ArrayDeque<>();  // Method Stack
+        Week05.SignInterpreter.addSigns(frame);
+        System.out.println(frame);
+        psi.push(frame);
 
         Queue<State> queue = new LinkedList<>();
         queue.add(new State(psi, mu));

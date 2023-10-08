@@ -36,81 +36,81 @@ class SimpleTest {
 
     @Test
     void noop() {
-        Method m = new Method(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "noop"), 0));
+        Frame f = new Frame(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "noop"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void zero() {
-        Method m = new Method(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "zero"), 0));
+        Frame f = new Frame(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "zero"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void hundredAndTwo() {
-        Method m = new Method(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "hundredAndTwo"), 0));
+        Frame f = new Frame(new JSONObject[] {}, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "hundredAndTwo"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
     @Test
     void identity() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 7)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "identity"), 0));
+        Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 7)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "identity"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void add() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "add"), 0));
+        Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "add"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void min() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "min"), 0));
+        Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 1)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "min"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void div_success() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
+        Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 2)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void div_fail() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
+        Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 4)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "div"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 
     @Test
     void factorial() {
-        Method m = new Method(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "factorial"), 0));
+        Frame f = new Frame(new JSONObject[] { new JSONObject(Map.of("type", "int", "value", 6)), new JSONObject(Map.of("type", "int", "value", 0)) }, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "factorial"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
-        in.run(m, mu);
+        in.run(f, mu);
     }
 }

@@ -1,7 +1,7 @@
 package Week06;
 
 import Week04.Main;
-import Week04.Method;
+import Week04.Frame;
 import Week04.Pair;
 import org.json.JSONObject;
 
@@ -37,17 +37,17 @@ public class TestSuperclass {
     }
 
     protected <T extends Throwable> void test(String methodName, JSONObject[] parameter, Class<T> exceptionClass, String exceptionMessage) {
-        Method m = new Method(parameter, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, methodName), 0));
+        Frame f = new Frame(parameter, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, methodName), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
         if (exceptionClass != null) {
-            Exception exception = (Exception) assertThrows(exceptionClass, () -> in.run(m, mu));
+            Exception exception = (Exception) assertThrows(exceptionClass, () -> in.run(f, mu));
             if (exceptionMessage != null) {
                 assertTrue(exception.getMessage().contains(exceptionMessage));
             }
         } else {
-            in.run(m, mu);
+            in.run(f, mu);
         }
     }
 }

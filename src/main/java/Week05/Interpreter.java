@@ -1,6 +1,6 @@
 package Week05;
 
-import Week04.Method;
+import Week04.Frame;
 import org.json.JSONObject;
 
 import java.util.Map;
@@ -8,10 +8,10 @@ import java.util.Map;
 public interface Interpreter {
 
     /** Runs the method
-     * @param method:   Method
-     * @param mu:       Memory
+     * @param frame Frame
+     * @param mu    Memory
      */
-    void run(Method method, Map<Integer, JSONObject> mu);
+    void run(Frame frame, Map<Integer, JSONObject> mu);
 
     /**
      * Execute a single bytecode instruction in the method
