@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static Week04.ConcreteInterpreter.initializeArray;
 import static Week05.Sign.*;
 import static Week05.SignInterpreter.clone_state;
 import static Week05.SignInterpreter.toAbstract;
@@ -34,30 +35,47 @@ public class SignStepper implements AbstractStepper {
         JSONObject instruction = f.iota().e1().method().getJSONObject("code").getJSONArray("bytecode").getJSONObject(f.iota().e2());
 
         switch(instruction.getString("opr")) {
-            /*
             case "array_load" -> {
-                JSONObject index = m.sigma().pop();
-                JSONObject ref = m.sigma().pop();
+                JSONObject index = f.sigma().pop();
+                JSONObject arrayref = f.sigma().pop();
 
-                JSONObject actual = mu.get(System.identityHashCode(ref));
+                if(arrayref == null) throw new NullPointerException("Cannot load from array because \"arrayref\" is null");
+
+                JSONObject actual = mu.get(System.identityHashCode(arrayref));
                 JSONArray array = actual.getJSONArray("value");
-                JSONObject value = array.getJSONObject(index.getInt("value"));
 
-                // TODO: Unfinished
-                m.sigma().push(value);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
-                results.add(new State(psi, mu));
+                if(array == null) throw new NullPointerException("Cannot load from array because \"array\" is null");
+
+                int index_value = index.getInt("value");
+                if(array.length() < index_value) throw new ArrayIndexOutOfBoundsException("Index " + index_value + " out of bounds for length " + array.length());
+
+                JSONObject value = array.getJSONObject(index_value);
+
+                f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+
+                results.add(state);
             }
             case "array_store" -> {
-                JSONObject value = m.sigma().pop();
-                JSONObject index = m.sigma().pop();
-                JSONObject ref = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
+                JSONObject index = f.sigma().pop();
+                JSONObject arrayref = f.sigma().pop();
 
-                JSONObject actual = mu.get(System.identityHashCode(ref));
+                if(arrayref == null) throw new NullPointerException("Cannot store to array because \"arrayref\" is null");
+
+                JSONObject actual = mu.get(System.identityHashCode(arrayref));
                 JSONArray array = actual.getJSONArray("value");
-                array.put(index.getInt("value"), value);
+
+                if(array == null) throw new NullPointerException("Cannot store to array because \"array\" is null");
+
+                int index_value = index.getInt("value");
+                if(array.length() < index_value) throw new ArrayIndexOutOfBoundsException("Index " + index_value + " out of bounds for length " + array.length());
+
+                array.put(index_value, value);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+
+                results.add(state);
             }
-            */
             case "push" -> {
                 JSONObject value = instruction.getJSONObject("value");
                 if(value.getString("type").equals("class")) { // Value is a <SimpleReferenceType>
@@ -66,7 +84,7 @@ public class SignStepper implements AbstractStepper {
                     f.sigma().push(toAbstract(new JSONObject(value.toMap())));
                 }
 
-                state.psi().push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
                 results.add(state);
             }
@@ -79,7 +97,7 @@ public class SignStepper implements AbstractStepper {
                     f.sigma().push(toAbstract(new JSONObject(value.toMap())));
                 }
 
-                state.psi().push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
                 results.add(state);
             }
@@ -88,7 +106,7 @@ public class SignStepper implements AbstractStepper {
                 JSONObject value = f.sigma().pop();
                 f.lambda()[index] = value;
 
-                state.psi().push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
                 results.add(state);
             }
@@ -670,8 +688,7 @@ public class SignStepper implements AbstractStepper {
                 }
 
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), location)));
-            }
-            */
+            }*/
             case "get" -> {
                 JSONObject field_info = instruction.getJSONObject("field");
 
@@ -704,8 +721,7 @@ public class SignStepper implements AbstractStepper {
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
                 results.add(state);
-            }
-            /*
+            }/*
             case "put" -> {
                 JSONObject field = instruction.getJSONObject("field");
 
@@ -771,8 +787,7 @@ public class SignStepper implements AbstractStepper {
                     case "interface" -> {}
                     case "dynamic" -> {}
                 }
-            }
-            */
+            }*/
             case "new" -> {
                 String classname = instruction.getString("class");
 
@@ -791,48 +806,46 @@ public class SignStepper implements AbstractStepper {
 
                 results.add(state);
             }
-            /*
             case "newarray" -> {
-                int dim = instruction.getInt("dim"); // Recurse / While-loop magic
-                String type = instruction.getString("type");
+                int dim = instruction.getInt("dim");
+                Object type = instruction.get("type"); // SimpleType
 
-                JSONObject value_length = m.sigma().pop();
-                int length = value_length.getInt("value");
+                JSONObject count = f.sigma().pop();
+                int length = count.getInt("value");
 
-                // Create value
-                JSONObject result = new JSONObject();
-                result.put("type", type);
-                JSONArray value = new JSONArray(length);
-                for(int i = 0; i < length; i++) {
-                    JSONObject value_inner = new JSONObject();
-                    value_inner.put("type", type);
-                    value_inner.put("value", 0); // Set default value?
-                    value.put(i, value_inner);
+                JSONObject arrayref = initializeArray(type, length, dim, f.sigma(), mu);
+
+                // If type is a BaseType, add signs
+                if(type instanceof String) {
+                    JSONArray array = mu.get(System.identityHashCode(arrayref)).getJSONArray("value");
+                    for(int i = 0; i < array.length(); i++) {
+                        JSONObject value = array.getJSONObject(i);
+                        value.put("sign", Set.of(ZERO));
+                    }
                 }
-                result.put("value", value);
 
-                // Create reference to value
-                JSONObject ref = new JSONObject(Map.of("kind", "array", "type", type));
+                f.sigma().push(arrayref);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
-                mu.put(System.identityHashCode(ref), result);
-                m.sigma().push(ref);
-
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                results.add(state);
             }
             case "arraylength" -> {
-                JSONObject ref = m.sigma().pop();
+                JSONObject ref = f.sigma().pop();
 
                 JSONObject array = mu.get(System.identityHashCode(ref));
+                int length = array.getJSONArray("value").length();
 
                 JSONObject result = new JSONObject();
                 result.put("type", "int");
-                result.put("value", array.getJSONArray("value").length());
+                result.put("value", length);
+                result.put("sign", Set.of(length > 0 ? POSITIVE : ZERO));
 
-                m.sigma().push(result);
+                f.sigma().push(result);
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+
+                results.add(state);
             }
-            */
             case "return" -> {
                 if(instruction.isNull("type")) break;
 
