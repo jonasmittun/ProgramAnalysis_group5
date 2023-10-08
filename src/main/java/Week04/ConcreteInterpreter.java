@@ -946,6 +946,60 @@ public class ConcreteInterpreter {
                 if(exceptionhandler != null) {
                     m.sigma().push(objectref);
                     psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), exceptionhandler.getInt("handler"))));
+                } else {
+                    // Get Throwable object
+                    JSONObject o = mu.get(System.identityHashCode(objectref));
+                    while(!(o.has("name") && o.getString("name").equals("java/lang/Throwable"))) {
+                        if(mu.containsKey(System.identityHashCode(o))) {
+                            o = mu.get(System.identityHashCode(o));
+                        } else {
+                            o = null;
+                            break;
+                        }
+                    }
+
+                    if(o == null) throw new RuntimeException("\"object\" was not an instance of Throwable");
+                    else {
+                        System.err.println(objectref.getString("name").replace("/", "."));
+
+                        // Print the stack trace
+                        Optional<JSONObject> stacktraceref = getField(o, "stackTrace", new JSONObject(Map.of("kind", "array", "type", new JSONObject(Map.of("kind", "class", "name", "java/lang/StackTraceElement")))), mu);
+                        if(stacktraceref.isPresent()) {
+                            JSONObject stacktrace = mu.get(System.identityHashCode(stacktraceref.get()));
+                            if(stacktrace != null) {
+                                JSONArray array = stacktrace.getJSONArray("value");
+                                for(int i = 0; i < array.length(); i++) {
+                                    JSONObject stacktraceelementref = array.getJSONObject(i);
+                                    JSONObject stacktraceelement = mu.get(System.identityHashCode(stacktraceelementref));
+                                    if(stacktraceelement != null) {
+                                        System.err.println("\tat " + stacktraceelement);
+                                        // TODO: Format output (Extract fields)
+                                    }
+                                }
+                            }
+                        }
+
+                        /*
+                        // TODO: Add java/util/List
+                        // Print suppressed exceptions, if any
+                        Optional<JSONObject> suppressedexceptionsref = getField(o, "suppressedExceptions", new JSONObject(Map.of("kind", "class", "name", "java/util/List")), mu);
+                        if(suppressedexceptionsref.isPresent()) {
+                            JSONObject suppressedexceptions = mu.get(System.identityHashCode(suppressedexceptionsref));
+                            if(suppressedexceptions != null) {
+
+                            }
+                        }
+                        */
+
+                        // Print the cause, if any
+                        Optional<JSONObject> causeref = getField(o, "cause", new JSONObject(Map.of("kind", "class", "name", "java/lang/Throwable")), mu);
+                        if(causeref.isPresent()) {
+                            JSONObject cause = mu.get(System.identityHashCode(causeref));
+                            if(cause != null) {
+                                System.err.println("Caused by: " + cause.getString("name").replace("/", "."));
+                            }
+                        }
+                    }
                 }
             }
             case "checkcast" -> {
