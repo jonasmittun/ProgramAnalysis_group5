@@ -1,5 +1,9 @@
-package Week04;
+package Week07;
 
+import Week04.Main;
+import Week04.*;
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -9,12 +13,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.IntStream;
 
-public class ConcreteInterpreter {
+import static Week04.ConcreteInterpreter.*;
+
+public class ConcolicInterpreter {
 
     private final Map<String, JSONObject> classes;                      // Map<Classname, JSONObject>
     private final Map<String, Map<String, JSONObject>> class_methods;   // Map<Classname, Map<Methodname, JSONObject>> // TODO: Fix overwrite if two methods have the same name
 
-    public ConcreteInterpreter(Map<String, JSONObject> classes) {
+    private static int counter;
+
+    public ConcolicInterpreter(Map<String, JSONObject> classes) {
         this.classes = classes;
 
         // Map methods for all classes
@@ -30,276 +38,37 @@ public class ConcreteInterpreter {
 
             class_methods.put(entry.getKey(), methods);
         }
+
+        counter = 0;
     }
 
-    /** Returns the resolved method as a JSONObject
-     * @param ref           SimpleReferenceType: { "kind": "class", "name": &lt;ClassName&gt; }
-     * @param name          String
-     * @param args          SimpleType[]
-     * @param return_type   nullable SimpleType
-     * @return              The method - if correctly resolved
-     */
-    public static Method resolveMethod(Map<String, JSONObject> classes, JSONObject ref, String name, JSONArray args, Object return_type) {
-        if(!ref.has("name")) throw new IllegalArgumentException("Incorrect reference type!");
-        if(!classes.containsKey(ref.getString("name"))) throw new ResolutionException("Class " + ref.getString("name") + " not found!");
-        JSONObject cls = classes.get(ref.getString("name"));
-
-        JSONArray methods = cls.getJSONArray("methods");
-        compare:
-        for(int i = 0; i < methods.length(); i++) {
-            JSONObject method = methods.getJSONObject(i);
-
-            //System.out.println(method.getString("name") + " " + method.getJSONArray("params") + " → " + method.getJSONObject("returns"));
-
-            // Check Name
-            String method_name = method.getString("name");
-            if(!method_name.equals(name)) continue;
-
-            // Check Return Type
-            JSONObject method_returns = method.getJSONObject("returns");
-            JSONObject method_return_type = method_returns.isNull("type") ? null : method_returns.getJSONObject("type"); // <Type>
-            if(!typeIsEqual(method_return_type, return_type)) continue;
-
-            // Check Arguments
-            JSONArray method_params = method.getJSONArray("params");
-            if(args.length() != method_params.length()) continue;
-            for(int j = 0; j < method_params.length(); j++) {
-                JSONObject method_param = method_params.getJSONObject(j);
-                if(!typeIsEqual(method_param.getJSONObject("type"), args.get(j))) continue compare;
-                // TODO: Verify that the order of elements is the same
-            }
-
-            return new Method(cls.getString("name"), method);
-        }
-
-        throw new ResolutionException(ref.getString("name") + "." + name + " " + args + " → " + return_type + " not found!");
-    }
-
-    /** Checks if the &lt;Type&gt; is equal to the &lt;SimpleType&gt; */
-    public static boolean typeIsEqual(JSONObject Type, Object SimpleType) {
-        if(Type == null && SimpleType == null) {
-            return true;
-        } else if(Type != null && SimpleType != null) {
-            if(SimpleType instanceof String BaseType) {
-                if(!Type.has("base")) return false;
-                else return BaseType.equals(Type.getString("base"));
-            } else {
-                if(!(SimpleType instanceof JSONObject SimpleReferenceType) || !Type.has("kind")) return false;
-
-                return switch(Type.getString("kind")) {
-                    case "class" -> {
-                        if(!SimpleReferenceType.getString("kind").equals("class")) yield false;
-                        else yield SimpleReferenceType.getString("name").equals(Type.getString("name"));
-                    }
-                    case "array" -> {
-                        if(!SimpleReferenceType.getString("kind").equals("array")) yield false;
-                        else yield typeIsEqual(Type.getJSONObject("type"), SimpleReferenceType.get("type"));
-                    }
-                    default -> false;
-                };
-            }
-        } else {
-            return false;
-        }
-    }
-
-    /** Initializes a new object of some class
-     * <pre>If class extends some superclass, then that can be fetched from memory by using this object as objectref.</pre>
-     * @param classname The name of the class to be instantiated.
-     * @param mu        The memory.
-     * @return          A reference to the initialized class object
-     */
-    public static JSONObject initialize(Map<String, JSONObject> classes, String classname, Map<Integer, JSONObject> mu) {
-        if(!classes.containsKey(classname)) throw new InstantiationError(classname + " does not exist.");
-        JSONObject cls = new JSONObject(classes.get(classname).toMap());
-
-        // Initialize super class if it exists
-        if(!cls.isNull("super")) {
-            String superclassname = cls.getJSONObject("super").getString("name");
-
-            mu.put(System.identityHashCode(cls), initialize(classes, superclassname, mu));
-        }
-
-        return cls;
-    }
-
-    /** Tries to get field from the object
-     * <pre>If the field is <code>null</code>, then the default value will be returned.</pre>
-     * @param object    The object which "may" contain the field.
-     * @param fieldname The name of the field.
-     * @param fieldtype The type of the field (a &lt;SimpleType&gt;)
-     * @param mu        The memory.
-     * @return          An Optional&lt;JSONObject&gt; containing the value of the field if found, else an Optional.empty()
-     */
-    public static Optional<JSONObject> getField(JSONObject object, String fieldname, Object fieldtype, Map<Integer, JSONObject> mu) {
-        if(!object.has("fields")) return Optional.empty();
-
-        JSONArray fields = object.getJSONArray("fields");
-        for(int i = 0; i < fields.length(); i++) {
-            JSONObject f = fields.getJSONObject(i);
-            if(f.getString("name").equals(fieldname)) {
-                if(f.isNull("value")) {
-                    return Optional.of(SimpleType.createDefault(fieldtype, mu));
-                } else {
-                    return Optional.of(new JSONObject(f.getJSONObject("value").toMap()));
-                }
-            }
-        }
-
-        return Optional.empty();
-    }
-
-    /** Tries to put a value into a field of the object.
-     * @param object    The object which contains the field.
-     * @param fieldname The name of the field.
-     * @param fieldtype The type of the field (a &lt;SimpleType&gt;).
-     * @return          True when the field has been correctly put and false when not.
-     */
-    public static boolean putField(JSONObject object, String fieldname, Object fieldtype, JSONObject value) {
-        if(!object.has("fields")) return false;
-
-        JSONArray fields = object.getJSONArray("fields");
-        for(int i = 0; i < fields.length(); i++) {
-            JSONObject f = fields.getJSONObject(i);
-            if(f.getString("name").equals(fieldname)) {
-                if(SimpleType.equals(f.get("type"), fieldtype)) {
-
-                    // TODO: Check if value-type is the same as the field
-                    if(value.has("kind")) {
-                        f.put("value", value);
-
-                        return true;
-                    } else if(value.has("type")) {
-                        switch(value.getString("type")) {
-                            case "boolean"                  -> f.put("value", value.getBoolean("value"));
-                            case "int", "integer"           -> f.put("value", value.getInt("value"));
-                            case "long"                     -> f.put("value", value.getLong("value"));
-                            case "float"                    -> f.put("value", value.getFloat("value"));
-                            case "double"                   -> f.put("value", value.getDouble("value"));
-                            case "short", "byte", "char"    -> f.put("value", value.get("value"));
-                            default -> throw new IllegalArgumentException("Unsupported type " + f.get("type") + " in \"put\"");
-                        }
-
-                        return true;
-                    } else return false;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /** Creates an array of specified <code>dimension</code>, <code>length</code> and <code>type</code>.
-     * @param type      A &lt;SimpleType&gt;
-     * @param length    The length of the array.
-     * @param dimension Number of array dimensions, ex. int[][] has 2 dimensions.
-     * @param sigma     The operand stack.
-     * @param mu        The memory.
-     */
-    public static JSONObject initializeArray(Object type, int length, int dimension, Deque<JSONObject> sigma, Map<Integer, JSONObject> mu) {
-        if(length < 0) throw new NegativeArraySizeException(Integer.toString(length));
-
-        JSONArray array = new JSONArray(length);
-        if(dimension > 1) {
-            JSONObject count = sigma.pop();
-            int innerlength = count.getInt("value");
-
-            for(int i = 0; i < length; i++) {
-                JSONObject valueref = initializeArray(type, innerlength, dimension - 1, sigma, mu);
-                array.put(i, valueref);
-            }
-        } else {
-            for(int i = 0; i < length; i++) {
-                array.put(i, SimpleType.createDefault(type, mu));
-            }
-        }
-
-        JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", type));
-        mu.put(System.identityHashCode(arrayref), new JSONObject(Map.of("type", type, "value", array)));
-
-        return arrayref;
-    }
-
-    /** Determines if the class is an interface.
-     * @param classname The name of the class.
-     * @return          True when the class has the "interface" access modifier and false otherwise.
-     */
-    public static boolean isInterface(Map<String, JSONObject> classes, String classname) {
-        if(!classes.containsKey(classname)) throw new RuntimeException("Class " + classname + " could not be found.");
-
-        JSONArray access = classes.get(classname).getJSONArray("access");
-        return IntStream.range(0, access.length()).anyMatch(i -> access.getString(i).equals("interface"));
-    }
-
-    /** Determines if an object is of a given type.
-     * @param objectref The reference to the object.
-     * @param type      A &lt;SimpleReferenceType&gt;
-     * @return          True when the object is an instance of the type and false otherwise.
-     */
-    public static boolean isInstanceOf(Map<String, JSONObject> classes, JSONObject objectref, JSONObject type) {
-        if(objectref == null) return false;
-
-        switch(objectref.getString("kind")) {
-            case "array" -> {
-                if(type.getString("kind").equals("class")) {
-                    String typename = type.getString("name");
-                    // If Type is a class type, then it must be of type Object
-                    if(!isInterface(classes, typename)) return typename.equals("java/lang/Object");
-                    else {
-                        throw new UnsupportedOperationException("instanceof on arrays when type is an interface has not been implemented!");
-                    }
-                } else {
-                    // TODO: If they are reference-types, it should check if objectref-type can be cast to type-type
-                    return SimpleType.equals(objectref.get("type"), type.get("type"));
-                }
-            }
-            case "class" -> {
-                if(!type.has("name")) throw new IllegalArgumentException("Type was not of kind \"class\"");
-
-                String classname = objectref.getString("name");
-                String typename = type.getString("name");
-
-                boolean is_interface = isInterface(classes, typename);
-
-                if(!isInterface(classes, classname)) { // It's an ordinary (nonarray) class
-                    JSONObject o = classes.get(classname);
-                    if(is_interface) { // Object should implement the type
-                        while(o != null) {
-                            JSONArray access = o.getJSONArray("interfaces");
-                            for(int j = 0; j < access.length(); j++) {
-                                JSONObject i = access.getJSONObject(j);
-                                if(i.getString("name").equals(typename)) return true;
-                            }
-
-                            o = !o.isNull("super") ? classes.get(o.getJSONObject("super").getString("name")) : null;
-                        }
-                    } else { // Object should be of type or be a subclass of the type
-                        while(o != null) {
-                            if(o.getString("name").equals(typename)) return true;
-
-                            o = !o.isNull("super") ? classes.get(o.getJSONObject("super").getString("name")) : null;
-                        }
-                    }
-                } else { // It's an interface type
-                    if(!is_interface) { // When Type is not an interface it must be of type Object
-                        return typename.equals("java/lang/Object");
-                    } else { // Type must be the same interface as S or a superinterface of S
-                        JSONObject o = classes.get(typename);
-                        while(o != null) {
-                            if(o.getString("name").equals(typename)) return true;
-
-                            o = !o.isNull("super") ? classes.get(o.getJSONObject("super").getString("name")) : null;
-                        }
-                    }
-                }
-            }
-            default -> throw new RuntimeException("Unexpected kind: " + objectref.getString("kind"));
-        }
-
-        return false;
+    public static int var() {
+        return counter++;
     }
 
     public void run(Frame frame, Map<Integer, JSONObject> mu) {
+        Context ctx = new Context();
+        Solver solver = ctx.mkSolver();
+
+        JSONObject[] lambda = frame.lambda();
+        for(int i = 0; i < lambda.length; i++) {
+            JSONObject value = lambda[i];
+
+            int n = var();
+
+            String name;
+            if(value.has("kind")) {
+                if(value.has("type")) name = "a" + n;
+                else name = "o" + n;
+            } else {
+                name = Character.toString(value.getString("type").charAt(0)) + n;
+            }
+            value.put("symbolic", name);
+            ctx.mkIntConst(name);
+        }
+
+        System.out.println(ctx);
+
         Deque<Frame> psi = new ArrayDeque<>();  // Method Stack
         psi.push(frame);
 
