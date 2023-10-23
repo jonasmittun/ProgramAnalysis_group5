@@ -75,11 +75,15 @@ public class SignStepper implements AbstractStepper {
                 results.add(state);
             }
             case "push" -> {
-                JSONObject value = instruction.getJSONObject("value");
-                if(value.getString("type").equals("class")) { // Value is a <SimpleReferenceType>
-                    f.sigma().push(value);
+                if(instruction.isNull("value")) {
+                    f.sigma().push(null);
                 } else {
-                    f.sigma().push(toAbstract(new JSONObject(value.toMap())));
+                    JSONObject value = instruction.getJSONObject("value");
+                    if(value.getString("type").equals("class")) { // Value is a <SimpleReferenceType>
+                        f.sigma().push(value);
+                    } else {
+                        f.sigma().push(toAbstract(new JSONObject(value.toMap())));
+                    }
                 }
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
