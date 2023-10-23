@@ -20,7 +20,7 @@ public class ExceptionalNullTest extends TestSuperclass {
     @DisplayName("alwaysThrows Tests")
     class alwaysThrows {
         @Test
-        void alwaysThrow1() {
+        void alwaysThrows1() {
             test("alwaysThrows1", new JSONObject[1], null, NullPointerException.class, null);
         }
 
