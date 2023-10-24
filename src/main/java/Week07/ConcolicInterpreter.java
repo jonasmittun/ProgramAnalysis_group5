@@ -1,36 +1,95 @@
-package Week05;
+package Week07;
 
-import Week04.*;
 import Week04.Main;
+import Week04.*;
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.module.ResolutionException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import static Week04.ConcreteInterpreter.*;
-import static Week05.Sign.*;
-import static Week05.SignInterpreter.clone_state;
-import static Week05.SignInterpreter.toAbstract;
 
-public class SignStepper implements AbstractStepper {
+public class ConcolicInterpreter {
 
-    private final Map<String, JSONObject> classes;
+    private final Map<String, JSONObject> classes;                      // Map<Classname, JSONObject>
+    private final Map<String, Map<String, JSONObject>> class_methods;   // Map<Classname, Map<Methodname, JSONObject>> // TODO: Fix overwrite if two methods have the same name
 
-    public SignStepper(Map<String, JSONObject> classes) {
+    private static int counter;
+
+    public ConcolicInterpreter(Map<String, JSONObject> classes) {
         this.classes = classes;
+
+        // Map methods for all classes
+        class_methods = new HashMap<>();
+        for(Map.Entry<String, JSONObject> entry : classes.entrySet()) {
+            Map<String, JSONObject> methods = new HashMap<>();
+
+            JSONArray ms = entry.getValue().getJSONArray("methods");
+            for(int i = 0; i < ms.length(); i++) {
+                JSONObject m = ms.getJSONObject(i);
+                methods.put(m.getString("name"), m);
+            }
+
+            class_methods.put(entry.getKey(), methods);
+        }
+
+        counter = 0;
     }
 
-    @Override
-    public Set<State> step(State state) {
-        Set<State> results = new HashSet<>();
+    public static int var() {
+        return counter++;
+    }
 
-        Map<Integer, JSONObject> mu = state.mu();
-        Deque<Frame> psi = state.psi();
-        Frame f = psi.pop();
+    public void run(Frame frame, Map<Integer, JSONObject> mu) {
+        Context ctx = new Context();
+        Solver solver = ctx.mkSolver();
 
+        JSONObject[] lambda = frame.lambda();
+        for(int i = 0; i < lambda.length; i++) {
+            JSONObject value = lambda[i];
+
+            int n = var();
+
+            String name;
+            if(value.has("kind")) {
+                if(value.has("type")) name = "a" + n;
+                else name = "o" + n;
+            } else {
+                name = Character.toString(value.getString("type").charAt(0)) + n;
+            }
+            value.put("symbolic", name);
+            ctx.mkIntConst(name);
+        }
+
+        System.out.println(ctx);
+
+        Deque<Frame> psi = new ArrayDeque<>();  // Method Stack
+        psi.push(frame);
+
+        System.out.println("Initial:\nΨ00\t" + frame + "\n");
+        while(!psi.isEmpty()) {
+            Frame f = psi.pop();
+
+            step(f, mu, psi);
+        }
+
+        if(!mu.isEmpty()) {
+            System.out.println("\nMemory (µ):");
+            for(Map.Entry<Integer, JSONObject> entry : mu.entrySet()) {
+                System.out.println(entry.getKey() + "\t" + entry.getValue());
+            }
+        }
+    }
+
+    public void step(Frame f, Map<Integer, JSONObject> mu, Deque<Frame> psi) {
         JSONObject instruction = f.iota().e1().method().getJSONObject("code").getJSONArray("bytecode").getJSONObject(f.iota().e2());
+        System.out.println("Instruction: " + instruction);
 
         switch(instruction.getString("opr")) {
             case "array_load" -> {
@@ -51,8 +110,6 @@ public class SignStepper implements AbstractStepper {
 
                 f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-
-                results.add(state);
             }
             case "array_store" -> {
                 JSONObject value = f.sigma().pop();
@@ -71,216 +128,133 @@ public class SignStepper implements AbstractStepper {
 
                 array.put(index_value, value);
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-
-                results.add(state);
             }
             case "push" -> {
-                if(instruction.isNull("value")) {
-                    f.sigma().push(null);
-                } else {
-                    JSONObject value = instruction.getJSONObject("value");
-                    if(value.getString("type").equals("class")) { // Value is a <SimpleReferenceType>
+                JSONObject value = instruction.getJSONObject("value");
+                String type = value.getString("type");
+
+                switch(type) {
+                    case "class" -> {
                         f.sigma().push(value);
-                    } else {
-                        f.sigma().push(toAbstract(new JSONObject(value.toMap())));
+                    }
+                    case "string" -> {
+                        // Create array reference for string value
+                        JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "byte"));
+                        // Create array to hold string value as a byte[]
+                        JSONObject array = new JSONObject(Map.of("type", "byte", "value", new JSONArray(value.getString("value").getBytes(StandardCharsets.UTF_8))));
+                        mu.put(System.identityHashCode(arrayref), array);
+
+                        // Create a new String object
+                        JSONObject object = new JSONObject(classes.get("java/lang/String").toMap());
+                        // Update "value" field in this String object to the array reference
+                        object.getJSONArray("fields").getJSONObject(0).put("value", arrayref);
+
+                        // Create String object reference
+                        JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
+                        mu.put(System.identityHashCode(objectref), object);
+
+                        // Push object reference
+                        f.sigma().push(objectref);
+                    }
+                    default -> {
+                        f.sigma().push(new JSONObject(value.toMap()));
                     }
                 }
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-
-                results.add(state);
             }
             case "load" -> {
                 int index = instruction.getInt("index");
                 JSONObject value = f.lambda()[index];
                 if(value.has("kind")) { // Check if it's a reference type
-                    f.sigma().push(value);
+                   f.sigma().push(value);
                 } else {
-                    f.sigma().push(toAbstract(new JSONObject(value.toMap())));
+                    f.sigma().push(new JSONObject(value.toMap()));
                 }
-
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-
-                results.add(state);
             }
             case "store" -> {
                 int index = instruction.getInt("index");
                 JSONObject value = f.sigma().pop();
                 f.lambda()[index] = value;
-
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-
-                results.add(state);
             }
-            case "incr" -> { // For now we're assuming everything is an integer :)
+            case "incr" -> {
                 int index = instruction.getInt("index");
                 JSONObject value = f.lambda()[index];
-                Sign amount = Sign.toSign(instruction.getInt("amount"));
-
-                BiFunction<Sign, Sign, Set<Sign>> fun = (s1, s2) -> {
-                    return switch(s1) {
-                        case NEGATIVE -> switch(s2) {
-                            case NEGATIVE   -> Set.of(NEGATIVE);
-                            case ZERO       -> Set.of(NEGATIVE);
-                            case POSITIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
-                        };
-                        case ZERO -> switch(s2) {
-                            case NEGATIVE   -> Set.of(NEGATIVE);
-                            case ZERO       -> Set.of(ZERO);
-                            case POSITIVE   -> Set.of(POSITIVE);
-                        };
-                        case POSITIVE -> switch(s2) {
-                            case NEGATIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
-                            case ZERO       -> Set.of(POSITIVE);
-                            case POSITIVE   -> Set.of(POSITIVE);
-                        };
-                    };
-                };
-
-                for(Object sign : value.getJSONArray("sign")) {
-                    Set<Sign> signs = fun.apply((Sign) sign, amount);
-
-                    Triple<Frame, Deque<Frame>, Map<Integer, JSONObject>> t = clone_state(f, psi, mu);
-
-                    Frame _f = t.e1();
-                    Deque<Frame> _psi = t.e2();
-                    Map<Integer, JSONObject> _mu = t.e3();
-
-                    JSONObject value_new = new JSONObject(value.toMap());
-                    value_new.put("sign", signs);
-                    _f.lambda()[index] = value_new;
-
-                    _psi.push(new Frame(_f.lambda(), _f.sigma(), new Pair<>(_f.iota().e1(), _f.iota().e2() + 1)));
-
-                    results.add(new State(_psi, _mu));
+                String type = value.getString("type");
+                switch(type) {
+                    case "int", "integer"   -> value.put("value", value.getInt("value") + instruction.getInt("amount"));
+                    case "long"             -> value.put("value", value.getLong("value") + instruction.getLong("amount"));
+                    case "float"            -> value.put("value", value.getFloat("value") + instruction.getFloat("amount"));
+                    case "double"           -> value.put("value", value.getDouble("value") + instruction.getDouble("amount"));
+                    default                 -> System.out.println("Unsupported \"incr\" type: " + type);
                 }
+
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "binary" -> {
                 String type = instruction.getString("type"); // Arithmetic Type
                 JSONObject value2 = f.sigma().pop();
                 JSONObject value1 = f.sigma().pop();
 
-                // value1 opr value2
-                BiFunction<Sign, Sign, Set<Sign>> fun = (s1, s2) -> switch(instruction.getString("operant")) {
+                JSONObject result = new JSONObject();
+                result.put("type", type);
+
+                switch(instruction.getString("operant")) {
                     case "add" -> {
-                        yield switch(s1) {
-                            case NEGATIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(NEGATIVE);
-                                case ZERO       -> Set.of(NEGATIVE);
-                                case POSITIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
-                            };
-                            case ZERO -> switch(s2) {
-                                case NEGATIVE   -> Set.of(NEGATIVE);
-                                case ZERO       -> Set.of(ZERO);
-                                case POSITIVE   -> Set.of(POSITIVE);
-                            };
-                            case POSITIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
-                                case ZERO       -> Set.of(POSITIVE);
-                                case POSITIVE   -> Set.of(POSITIVE);
-                            };
-                        };
+                        switch(type) {
+                            case "int"      -> result.put("value", value1.getInt("value") + value2.getInt("value"));
+                            case "long"     -> result.put("value", value1.getLong("value") + value2.getLong("value"));
+                            case "float"    -> result.put("value", value1.getFloat("value") + value2.getFloat("value"));
+                            case "double"   -> result.put("value", value1.getDouble("value") + value2.getDouble("value"));
+                        }
                     }
                     case "sub" -> {
-                        yield switch(s1) {
-                            case NEGATIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
-                                case ZERO       -> Set.of(NEGATIVE);
-                                case POSITIVE   -> Set.of(NEGATIVE);
-                            };
-                            case ZERO -> switch(s2) {
-                                case NEGATIVE   -> Set.of(POSITIVE);
-                                case ZERO       -> Set.of(ZERO);
-                                case POSITIVE   -> Set.of(NEGATIVE);
-                            };
-                            case POSITIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(POSITIVE);
-                                case ZERO       -> Set.of(POSITIVE);
-                                case POSITIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
-                            };
-                        };
+                        switch(type) {
+                            case "int"      -> result.put("value", value1.getInt("value") - value2.getInt("value"));
+                            case "long"     -> result.put("value", value1.getLong("value") - value2.getLong("value"));
+                            case "float"    -> result.put("value", value1.getFloat("value") - value2.getFloat("value"));
+                            case "double"   -> result.put("value", value1.getDouble("value") - value2.getDouble("value"));
+                        }
                     }
                     case "mul" -> {
-                        yield switch(s1) {
-                            case NEGATIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(POSITIVE);
-                                case ZERO       -> Set.of(ZERO);
-                                case POSITIVE   -> Set.of(NEGATIVE);
-                            };
-                            case ZERO -> Set.of(ZERO);
-                            case POSITIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(NEGATIVE);
-                                case ZERO       -> Set.of(ZERO);
-                                case POSITIVE   -> Set.of(POSITIVE);
-                            };
-                        };
+                        switch(type) {
+                            case "int"      -> result.put("value", value1.getInt("value") * value2.getInt("value"));
+                            case "long"     -> result.put("value", value1.getLong("value") * value2.getLong("value"));
+                            case "float"    -> result.put("value", value1.getFloat("value") * value2.getFloat("value"));
+                            case "double"   -> result.put("value", value1.getDouble("value") * value2.getDouble("value"));
+                        }
                     }
                     case "div" -> {
-                        yield switch(s1) {
-                            case NEGATIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(POSITIVE);
-                                case ZERO       -> throw new ArithmeticException("Illegal divide by zero");
-                                case POSITIVE   -> Set.of(NEGATIVE);
-                            };
-                            case ZERO -> switch(s2) {
-                                case NEGATIVE   -> Set.of(ZERO);
-                                case ZERO       -> throw new ArithmeticException("Illegal divide by zero");
-                                case POSITIVE   -> Set.of(ZERO);
-                            };
-                            case POSITIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(NEGATIVE);
-                                case ZERO       -> throw new ArithmeticException("Illegal divide by zero");
-                                case POSITIVE   -> Set.of(POSITIVE);
-                            };
-                        };
-                    }
-                    default -> throw new IllegalStateException("Unexpected value: " + instruction.getString("operant"));
-                };
-
-                for(Object s1 : value1.getJSONArray("sign")) {
-                    for(Object s2 : value2.getJSONArray("sign")) {
-                        Set<Sign> signs = fun.apply((Sign) s1, (Sign) s2);
-
-                        JSONObject result = new JSONObject(Map.of("sign", signs));
-
-                        Triple<Frame, Deque<Frame>, Map<Integer, JSONObject>> t = clone_state(f, psi, mu);
-
-                        Frame _f = t.e1();
-                        Deque<Frame> _psi = t.e2();
-                        Map<Integer, JSONObject> _mu = t.e3();
-
-                        _f.sigma().push(result);
-
-                        _psi.push(new Frame(_f.lambda(), _f.sigma(), new Pair<>(_f.iota().e1(), _f.iota().e2() + 1)));
-
-                        results.add(new State(_psi, _mu));
+                        switch(type) {
+                            case "int"      -> result.put("value", value1.getInt("value") / value2.getInt("value"));
+                            case "long"     -> result.put("value", value1.getLong("value") / value2.getLong("value"));
+                            case "float"    -> result.put("value", value1.getFloat("value") / value2.getFloat("value"));
+                            case "double"   -> result.put("value", value1.getDouble("value") / value2.getDouble("value"));
+                        }
                     }
                 }
+                f.sigma().push(result);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "negate" -> {
                 String type = instruction.getString("type"); // Arithmetic Type
-                JSONObject value = f.sigma().pop();
-
-                Function<Sign, Sign> negate = (sign) -> switch(sign) {
-                    case POSITIVE   -> NEGATIVE;
-                    case ZERO       -> ZERO;
-                    case NEGATIVE   -> POSITIVE;
-                };
-
-                JSONArray signs = value.getJSONArray("sign");
-                for(int i = 0; i < signs.length(); i++) {
-                    signs.put(i, negate.apply((Sign) signs.get(i)));
+                JSONObject value1 = f.sigma().pop();
+                JSONObject result = new JSONObject();
+                result.put("type", type);
+                switch(type) {
+                    case "int"      -> result.put("value", value1.getInt("value") * -1);
+                    case "long"     -> result.put("value", value1.getLong("value") * -1L);
+                    case "float"    -> result.put("value", value1.getFloat("value") * -1.f);
+                    case "double"   -> result.put("value", value1.getDouble("value") * -1.d);
                 }
-
-                f.sigma().push(value);
+                f.sigma().push(result);
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-
-                results.add(state);
             }
-            /*
             case "bitopr" -> {
                 String type = instruction.getString("type"); // "int" | "long"
-                JSONObject value = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
 
                 JSONObject result = new JSONObject();
                 result.put("type", type);
@@ -341,29 +315,73 @@ public class SignStepper implements AbstractStepper {
                         }
                     }
                 }
-
-                m.sigma().push(result);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
-            }*/
-            case "cast" -> {
+                f.sigma().push(result);
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+            }
+            case "cast" -> {
+                String from = instruction.getString("from");    // "int" | Arithmetic Type
+                String to = instruction.getString("to");        // Small types | Arithmetic Type
 
-                results.add(state);
-            }/*
+                JSONObject value = f.sigma().pop();
+
+                JSONObject result = new JSONObject();
+                result.put("type", to);
+
+                switch (from) {
+                    case "int" -> {
+                        switch (to) {
+                            case "byte"     -> result.put("value", (byte) value.getInt("value"));
+                            case "char"     -> result.put("value", (char) value.getInt("value"));
+                            case "short"    -> result.put("value", (short) value.getInt("value"));
+                            case "long"     -> result.put("value", (long) value.getInt("value"));
+                            case "float"    -> result.put("value", (float) value.getInt("value"));
+                            case "double"   -> result.put("value", (double) value.getInt("value"));
+                        }
+                    }
+                    case "long" -> {
+                        switch (to) {
+                            case "int"      -> result.put("value", (int) value.getLong("value"));
+                            case "float"    -> result.put("value", (float) value.getLong("value"));
+                            case "double"   -> result.put("value", (double) value.getLong("value"));
+                            default         -> System.out.println("Unsupported cast target for long type");
+                        }
+                    }
+                    case "float" -> {
+                        switch (to) {
+                            case "int"      -> result.put("value", (int) value.getFloat("value"));
+                            case "long"     -> result.put("value", (long) value.getFloat("value"));
+                            case "double"   -> result.put("value", (double) value.getFloat("value"));
+                            default         -> System.out.println("Unsupported cast target for float type");
+                        }
+                    }
+                    case "double" -> {
+                        switch (to) {
+                            case "int"      -> result.put("value", (int) value.getDouble("value"));
+                            case "long"     -> result.put("value", (long) value.getDouble("value"));
+                            case "float"    -> result.put("value", (float) value.getDouble("value"));
+                            default         -> System.out.println("Unsupported cast target for double type");
+                        }
+                    }
+                    default -> System.out.println("Casting from this type is unsupported");
+                }
+
+                f.sigma().push(result);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+            }
             case "comparelongs" -> {
-                JSONObject value2 = m.sigma().pop();
-                JSONObject value1 = m.sigma().pop();
+                JSONObject value2 = f.sigma().pop();
+                JSONObject value1 = f.sigma().pop();
 
                 JSONObject result = new JSONObject();
                 result.put("type", "int");
                 result.put("value", (Long.compare(value1.getLong("value"), value2.getLong("value"))));
 
-                m.sigma().push(result);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                f.sigma().push(result);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "comparefloating" -> {
-                JSONObject value2 = m.sigma().pop();
-                JSONObject value1 = m.sigma().pop();
+                JSONObject value2 = f.sigma().pop();
+                JSONObject value1 = f.sigma().pop();
 
                 JSONObject result = new JSONObject();
                 result.put("type", "int");
@@ -388,128 +406,31 @@ public class SignStepper implements AbstractStepper {
                     }
                 }
 
-                m.sigma().push(result);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
-            }*/
+                f.sigma().push(result);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+            }
             case "if" -> {
                 int target = instruction.getInt("target");
 
                 JSONObject value2 = f.sigma().pop();
                 JSONObject value1 = f.sigma().pop();
 
-                // Value1 opr Value2
-                BiFunction<Sign, Sign, Set<Boolean>> fun = (s1, s2) -> switch(instruction.getString("condition")) {
-                    case "eq"       -> {
-                        if((s1 == NEGATIVE && s2 == NEGATIVE) || (s1 == POSITIVE && s2 == POSITIVE)) yield Set.of(true, false);
-                        else if(s1 == ZERO && s2 == ZERO) yield Set.of(true);
-                        else yield Set.of(false);
+                boolean result = switch(instruction.getString("condition")) {
+                    case "eq"       -> value1.getInt("value") == value2.getInt("value");
+                    case "ne"       -> value1.getInt("value") != value2.getInt("value");
+                    case "le"       -> value1.getInt("value") <= value2.getInt("value");
+                    case "lt"       -> value1.getInt("value") < value2.getInt("value");
+                    case "ge"       -> value1.getInt("value") >= value2.getInt("value");
+                    case "gt"       -> value1.getInt("value") > value2.getInt("value");
+                    case "is"       -> mu.get(System.identityHashCode(value1)).equals(mu.get(System.identityHashCode(value2)));
+                    case "isnot"    -> !mu.get(System.identityHashCode(value1)).equals(mu.get(System.identityHashCode(value2)));
+                    default         -> {
+                        System.out.println("Unsupported condition");
+                        yield false;
                     }
-                    case "ne"       -> {
-                        if(s1 == s2) yield Set.of(false);
-                        else yield Set.of(true, false);
-                    }
-                    case "le"       -> {
-                        yield switch(s1) {
-                            case NEGATIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(true, false);
-                                case ZERO       -> Set.of(true);
-                                case POSITIVE   -> Set.of(true);
-                            };
-                            case ZERO       -> switch(s2) {
-                                case NEGATIVE   -> Set.of(false);
-                                case ZERO       -> Set.of(false);
-                                case POSITIVE   -> Set.of(true);
-                            };
-                            case POSITIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(false);
-                                case ZERO       -> Set.of(false);
-                                case POSITIVE   -> Set.of(true, false);
-                            };
-                        };
-                    }
-                    case "lt"       -> {
-                        yield switch(s1) {
-                            case NEGATIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(true, false);
-                                case ZERO       -> Set.of(true);
-                                case POSITIVE   -> Set.of(true);
-                            };
-                            case ZERO       -> switch(s2) {
-                                case NEGATIVE   -> Set.of(false);
-                                case ZERO       -> Set.of(true);
-                                case POSITIVE   -> Set.of(true);
-                            };
-                            case POSITIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(false);
-                                case ZERO       -> Set.of(false);
-                                case POSITIVE   -> Set.of(true, false);
-                            };
-                        };
-                    }
-                    case "ge"       -> {
-                        yield switch(s1) {
-                            case NEGATIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(true, false);
-                                case ZERO       -> Set.of(false);
-                                case POSITIVE   -> Set.of(false);
-                            };
-                            case ZERO       -> switch(s2) {
-                                case NEGATIVE   -> Set.of(true);
-                                case ZERO       -> Set.of(true);
-                                case POSITIVE   -> Set.of(false);
-                            };
-                            case POSITIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(true);
-                                case ZERO       -> Set.of(true);
-                                case POSITIVE   -> Set.of(true, false);
-                            };
-                        };
-                    }
-                    case "gt"       -> {
-                        yield switch(s1) {
-                            case NEGATIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(true, false);
-                                case ZERO       -> Set.of(false);
-                                case POSITIVE   -> Set.of(false);
-                            };
-                            case ZERO       -> switch(s2) {
-                                case NEGATIVE   -> Set.of(false);
-                                case ZERO       -> Set.of(false);
-                                case POSITIVE   -> Set.of(false);
-                            };
-                            case POSITIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(true);
-                                case ZERO       -> Set.of(true);
-                                case POSITIVE   -> Set.of(true, false);
-                            };
-                        };
-                    }
-                    // For object equality we assume both cases can be true/false
-                    default         -> Set.of(true, false);
                 };
 
-                Set<Boolean> bools = new HashSet<>();
-                for(Object s1 : value1.getJSONArray("sign")) {
-                    for(Object s2 : value2.getJSONArray("sign")) {
-                        bools.addAll(fun.apply((Sign) s1, (Sign) s2));
-                        if(bools.size() > 1) break;
-                    }
-                    if(bools.size() > 1) break;
-                }
-
-                List<Boolean> if_results = bools.stream().toList();
-                if(bools.size() > 1) {
-                    Triple<Frame, Deque<Frame>, Map<Integer, JSONObject>> t = clone_state(f, psi, mu);
-
-                    Frame _f = t.e1();
-                    Deque<Frame> _psi = t.e2();
-                    Map<Integer, JSONObject> _mu = t.e3();
-
-                    _psi.push(new Frame(_f.lambda(), _f.sigma(), new Pair<>(_f.iota().e1(), if_results.get(1) ? target : _f.iota().e2() + 1)));
-                    results.add(new State(_psi, _mu));
-                }
-
-                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), if_results.get(0) ? target : f.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), result ? target : f.iota().e2() + 1)));
             }
             case "ifz" -> {
                 String condition = instruction.getString("condition");
@@ -517,105 +438,58 @@ public class SignStepper implements AbstractStepper {
 
                 JSONObject value = f.sigma().pop();
 
-                Function<Sign, Boolean> fun = (s) -> switch(condition) {
-                    case "eq" -> {
-                        yield switch(s) {
-                            case NEGATIVE   -> false;
-                            case ZERO       -> true;
-                            case POSITIVE   -> false;
-                        };
-                    }
-                    case "ne" -> {
-                        yield switch (s) {
-                            case NEGATIVE   -> true;
-                            case ZERO       -> false;
-                            case POSITIVE   -> true;
-                        };
-                    }
-                    case "le" -> {
-                        yield switch (s) {
-                            case NEGATIVE   -> true;
-                            case ZERO       -> true;
-                            case POSITIVE   -> false;
-                        };
-                    }
-                    case "lt" -> {
-                        yield switch (s) {
-                            case NEGATIVE   -> true;
-                            case ZERO       -> false;
-                            case POSITIVE   -> false;
-                        };
-                    }
-                    case "ge" -> {
-                        yield switch (s) {
-                            case NEGATIVE   -> false;
-                            case ZERO       -> true;
-                            case POSITIVE   -> true;
-                        };
-                    }
-                    case "gt" -> {
-                        yield switch (s) {
-                            case NEGATIVE   -> false;
-                            case ZERO       -> false;
-                            case POSITIVE   -> true;
-                        };
-                    }
-                    default -> throw new IllegalStateException("Unexpected condition: " + condition);
-                };
-
-                List<Boolean> ifz_results = new ArrayList<>();
-                if(value.has("sign")) {
-                    Set<Boolean> local = new HashSet<>();
-                    for(Object sign : value.getJSONArray("sign")) {
-                        local.add(fun.apply((Sign) sign));
-                    }
-                    ifz_results.addAll(local);
+                boolean result;
+                if(value.has("kind")) {
+                    JSONObject v = mu.get(System.identityHashCode(value));
+                    result = switch(condition) {
+                        case "is"       -> v == null;
+                        case "isnot"    -> v != null;
+                        default  -> throw new IllegalArgumentException("Unsupported ifz condition in \"ref\": " + condition);
+                    };
                 } else {
-                    // For object equality we assume both cases can be true/false
-                    ifz_results.add(true);
-                    ifz_results.add(false);
+                    int v = switch(value.getString("type")) {
+                        case "boolean"  -> value.getBoolean("value") ? 1 : 0;
+                        case "int"      -> value.getInt("value");
+                        default -> throw new IllegalArgumentException("Unsupported ifz value type: " + value.get("type"));
+                    };
+                    result = switch(condition) {
+                        case "eq" -> v == 0;
+                        case "ne" -> v != 0;
+                        case "le" -> v <= 0;
+                        case "lt" -> v < 0;
+                        case "ge" -> v >= 0;
+                        case "gt" -> v > 0;
+                        default -> throw new IllegalArgumentException("Unsupported ifz condition in \"int\": " + condition);
+                    };
                 }
 
-                if(ifz_results.size() > 1) {
-                    Triple<Frame, Deque<Frame>, Map<Integer, JSONObject>> t = clone_state(f, psi, mu);
-
-                    Frame _m = t.e1();
-                    Deque<Frame> _psi = t.e2();
-                    Map<Integer, JSONObject> _mu = t.e3();
-
-                    _psi.push(new Frame(_m.lambda(), _m.sigma(), new Pair<>(_m.iota().e1(), ifz_results.get(1) ? target : _m.iota().e2() + 1)));
-                    results.add(new State(_psi, _mu));
-                }
-
-                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), ifz_results.get(0) ? target : f.iota().e2() + 1)));
-                results.add(state);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), result ? target : f.iota().e2() + 1)));
             }
             case "goto" -> {
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), instruction.getInt("target"))));
-                results.add(new State(psi, mu));
-            }/*
+            }
             case "jsr" -> {
                 int target = instruction.getInt("target");
 
-                Method next = psi.peek();
+                Frame next = psi.peek();
                 JSONObject value = new JSONObject();
                 value.put("type", "int");
                 value.put("value", next.iota().e2());
-                m.sigma().push(value);
+                f.sigma().push(value);
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), target)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), target)));
             }
             case "ret" -> {
-                JSONObject value = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
                 int address = value.getInt("value");
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), address)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), address)));
             }
             case "tableswitch" -> {
                 int location = instruction.getInt("default");
                 int low = instruction.getInt("low");
 
-                JSONObject value = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
                 int index = value.getInt("index");
 
                 JSONArray targets = instruction.getJSONArray("targets");
@@ -627,12 +501,12 @@ public class SignStepper implements AbstractStepper {
                     }
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), location)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), location)));
             }
             case "lookupswitch" -> {
                 int location = instruction.getInt("default");
 
-                JSONObject value = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
                 int index = value.getInt("index");
 
                 JSONArray targets = instruction.getJSONArray("targets");
@@ -644,8 +518,8 @@ public class SignStepper implements AbstractStepper {
                     }
                 }
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), location)));
-            }*/
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), location)));
+            }
             case "get" -> {
                 JSONObject field = instruction.getJSONObject("field");
                 String fieldname = field.getString("name");
@@ -673,10 +547,8 @@ public class SignStepper implements AbstractStepper {
 
                 if(value.isEmpty()) throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist.");
 
-                f.sigma().push(toAbstract(value.get()));
+                f.sigma().push(value.get());
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-
-                results.add(state);
             }
             case "put" -> {
                 JSONObject field = instruction.getJSONObject("field");
@@ -701,8 +573,6 @@ public class SignStepper implements AbstractStepper {
                 }
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-
-                results.add(state);
             }
             case "invoke" -> {
                 JSONObject invoke_method = instruction.getJSONObject("method");
@@ -767,8 +637,6 @@ public class SignStepper implements AbstractStepper {
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
                 psi.push(new Frame(lambda, new ArrayDeque<>(), new Pair<>(resolvedMethod, 0)));
-
-                results.add(state);
             }
             case "new" -> {
                 String classname = instruction.getString("class");
@@ -779,14 +647,12 @@ public class SignStepper implements AbstractStepper {
                 if(access.contains("interface")) throw new InstantiationError(classname + " is an interface.");
 
                 JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", classname));
-                JSONObject value = new JSONObject(classes.get(classname).toMap());
+                JSONObject object = initialize(classes, classname, mu);
 
-                mu.put(System.identityHashCode(objectref), value);
+                mu.put(System.identityHashCode(objectref), object);
 
                 f.sigma().push(objectref);
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-
-                results.add(state);
             }
             case "newarray" -> {
                 int dim = instruction.getInt("dim");
@@ -797,36 +663,22 @@ public class SignStepper implements AbstractStepper {
 
                 JSONObject arrayref = initializeArray(type, length, dim, f.sigma(), mu);
 
-                // If type is a BaseType, add signs
-                if(type instanceof String) {
-                    JSONArray array = mu.get(System.identityHashCode(arrayref)).getJSONArray("value");
-                    for(int i = 0; i < array.length(); i++) {
-                        JSONObject value = array.getJSONObject(i);
-                        value.put("sign", Set.of(ZERO));
-                    }
-                }
-
                 f.sigma().push(arrayref);
-                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
-                results.add(state);
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "arraylength" -> {
                 JSONObject ref = f.sigma().pop();
 
                 JSONObject array = mu.get(System.identityHashCode(ref));
-                int length = array.getJSONArray("value").length();
 
                 JSONObject result = new JSONObject();
                 result.put("type", "int");
-                result.put("value", length);
-                result.put("sign", Set.of(length > 0 ? POSITIVE : ZERO));
+                result.put("value", array.getJSONArray("value").length());
 
                 f.sigma().push(result);
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-
-                results.add(state);
             }
             case "throw" -> {
                 JSONObject objectref = f.sigma().pop();
@@ -863,7 +715,6 @@ public class SignStepper implements AbstractStepper {
                 if(exceptionhandler != null) {
                     f.sigma().push(objectref);
                     psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), exceptionhandler.getInt("handler"))));
-                    results.add(state);
                 } else {
                     // Get Throwable object
                     JSONObject o = mu.get(System.identityHashCode(objectref));
@@ -930,7 +781,6 @@ public class SignStepper implements AbstractStepper {
                 }
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-                results.add(state);
             }
             case "instanceof" -> {
                 JSONObject type = instruction.getJSONObject("type");
@@ -941,7 +791,6 @@ public class SignStepper implements AbstractStepper {
 
                 f.sigma().push(new JSONObject(Map.of("type", "int", "value", result ? 1 : 0)));
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-                results.add(state);
             }
             case "return" -> {
                 if(instruction.isNull("type")) break;
@@ -949,20 +798,18 @@ public class SignStepper implements AbstractStepper {
                 String type = instruction.getString("type"); // LocalType
                 JSONObject value = f.sigma().pop();
 
-                JSONObject result = new JSONObject(value.toMap());
+                JSONObject result = type.equals("ref") ? value : new JSONObject(value.toMap());
 
                 if(!psi.isEmpty()) {
                     Frame f2 = psi.peek();
                     f2.sigma().push(result);
-
-                    results.add(state);
                 } else {
                     System.out.println(String.format("%-12s", "return") + Main.toFormattedString(result));
+                    return;
                 }
             }
             case "nop" -> {
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-                results.add(state);
             }
             case "pop" -> {
                 int words = instruction.getInt("words");
@@ -973,7 +820,6 @@ public class SignStepper implements AbstractStepper {
                 }
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-                results.add(state);
             }
             case "dup" -> {
                 int words = instruction.getInt("words");
@@ -991,7 +837,6 @@ public class SignStepper implements AbstractStepper {
                 }
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-                results.add(state);
             }
             case "dup_x1" -> {
                 int words = instruction.getInt("words");
@@ -1019,7 +864,6 @@ public class SignStepper implements AbstractStepper {
                 }
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-                results.add(state);
             }
             case "dup_x2" -> {
                 int words = instruction.getInt("words");
@@ -1049,7 +893,6 @@ public class SignStepper implements AbstractStepper {
                 }
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-                results.add(state);
             }
             case "swap" -> {
                 JSONObject value2 = f.sigma().pop();
@@ -1059,17 +902,15 @@ public class SignStepper implements AbstractStepper {
                 f.sigma().push(value1);
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
-                results.add(state);
             }
-            default -> {
-                System.out.println("Unsupported operation \"" + instruction.getString("opr") + "\"");
-            }
+            default -> throw new UnsupportedOperationException("Unsupported instruction \"" + instruction.getString("opr") + "\"");
         }
 
-        for(State s : results) {
-            System.out.println(String.format("%-12s", instruction.getString("opr")) + "Ψ" + s.psi());
+        int index = 0;
+        for(Frame fp : psi) {
+            System.out.println("Ψ" + String.format("%02d", index) + "\t" + fp);
+            index++;
         }
-
-        return results;
+        System.out.println();
     }
 }

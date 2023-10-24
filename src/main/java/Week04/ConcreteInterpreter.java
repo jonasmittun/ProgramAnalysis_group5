@@ -109,7 +109,7 @@ public class ConcreteInterpreter {
      * @param mu        The memory.
      * @return          A reference to the initialized class object
      */
-    public JSONObject initialize(String classname, Map<Integer, JSONObject> mu) {
+    public static JSONObject initialize(Map<String, JSONObject> classes, String classname, Map<Integer, JSONObject> mu) {
         if(!classes.containsKey(classname)) throw new InstantiationError(classname + " does not exist.");
         JSONObject cls = new JSONObject(classes.get(classname).toMap());
 
@@ -117,7 +117,7 @@ public class ConcreteInterpreter {
         if(!cls.isNull("super")) {
             String superclassname = cls.getJSONObject("super").getString("name");
 
-            mu.put(System.identityHashCode(cls), initialize(superclassname, mu));
+            mu.put(System.identityHashCode(cls), initialize(classes, superclassname, mu));
         }
 
         return cls;
@@ -361,34 +361,38 @@ public class ConcreteInterpreter {
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "push" -> {
-                JSONObject value = instruction.getJSONObject("value");
-                String type = value.getString("type");
+                if(instruction.isNull("value")) {
+                    f.sigma().push(null);
+                } else {
+                    JSONObject value = instruction.getJSONObject("value");
+                    String type = value.getString("type");
 
-                switch(type) {
-                    case "class" -> {
-                        f.sigma().push(value);
-                    }
-                    case "string" -> {
-                        // Create array reference for string value
-                        JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "byte"));
-                        // Create array to hold string value as a byte[]
-                        JSONObject array = new JSONObject(Map.of("type", "byte", "value", new JSONArray(value.getString("value").getBytes(StandardCharsets.UTF_8))));
-                        mu.put(System.identityHashCode(arrayref), array);
+                    switch (type) {
+                        case "class" -> {
+                            f.sigma().push(value);
+                        }
+                        case "string" -> {
+                            // Create array reference for string value
+                            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "byte"));
+                            // Create array to hold string value as a byte[]
+                            JSONObject array = new JSONObject(Map.of("type", "byte", "value", new JSONArray(value.getString("value").getBytes(StandardCharsets.UTF_8))));
+                            mu.put(System.identityHashCode(arrayref), array);
 
-                        // Create a new String object
-                        JSONObject object = new JSONObject(classes.get("java/lang/String").toMap());
-                        // Update "value" field in this String object to the array reference
-                        object.getJSONArray("fields").getJSONObject(0).put("value", arrayref);
+                            // Create a new String object
+                            JSONObject object = new JSONObject(classes.get("java/lang/String").toMap());
+                            // Update "value" field in this String object to the array reference
+                            object.getJSONArray("fields").getJSONObject(0).put("value", arrayref);
 
-                        // Create String object reference
-                        JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
-                        mu.put(System.identityHashCode(objectref), object);
+                            // Create String object reference
+                            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
+                            mu.put(System.identityHashCode(objectref), object);
 
-                        // Push object reference
-                        f.sigma().push(objectref);
-                    }
-                    default -> {
-                        f.sigma().push(new JSONObject(value.toMap()));
+                            // Push object reference
+                            f.sigma().push(objectref);
+                        }
+                        default -> {
+                            f.sigma().push(new JSONObject(value.toMap()));
+                        }
                     }
                 }
 
@@ -878,7 +882,7 @@ public class ConcreteInterpreter {
                 if(access.contains("interface")) throw new InstantiationError(classname + " is an interface.");
 
                 JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", classname));
-                JSONObject object = initialize(classname, mu);
+                JSONObject object = initialize(classes, classname, mu);
 
                 mu.put(System.identityHashCode(objectref), object);
 

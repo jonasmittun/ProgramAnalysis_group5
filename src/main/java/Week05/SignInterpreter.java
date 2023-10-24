@@ -6,6 +6,8 @@ import org.json.JSONObject;
 
 import java.util.*;
 
+import static Week05.Sign.*;
+
 public class SignInterpreter implements Interpreter {
 
     private final Map<String, JSONObject> classes; // Map<Classname, JSONObject>
@@ -40,15 +42,19 @@ public class SignInterpreter implements Interpreter {
     public static JSONObject toAbstract(JSONObject o) {
         if(o != null && !o.has("sign")) {
             if(!o.has("kind") && o.has("type") && o.has("value")) {
-                Optional<Integer> r = switch (o.getString("type")) {
-                    case "int", "integer" -> Optional.of(Integer.compare(o.getInt("value"), 0));
-                    case "long" -> Optional.of(Long.compare(o.getLong("value"), 0));
-                    case "float" -> Optional.of(Float.compare(o.getFloat("value"), 0));
-                    case "double" -> Optional.of(Double.compare(o.getDouble("value"), 0));
-                    default -> Optional.empty();
+                Sign r = switch (o.getString("type")) {
+                    case "boolean" -> o.getBoolean("value") ? POSITIVE : ZERO;
+                    case "int", "integer" -> toSign(Integer.compare(o.getInt("value"), 0));
+                    case "long" -> toSign(Long.compare(o.getLong("value"), 0));
+                    case "float" -> toSign(Float.compare(o.getFloat("value"), 0));
+                    case "double" -> toSign(Double.compare(o.getDouble("value"), 0));
+                    default -> {
+                        System.out.println("Warning: Unsupported type: " + o.get("type"));
+                        yield ZERO;
+                    }
                 };
 
-                r.ifPresent(integer -> o.put("sign", Set.of(Sign.toSign(integer))));
+                o.put("sign", Set.of(r));
                 return o;
             }
         }
