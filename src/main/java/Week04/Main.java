@@ -59,12 +59,9 @@ public class Main {
             if(o.has("sign")) {
                 StringJoiner sj = new StringJoiner(", ");
                 for(Object sign : o.getJSONArray("sign")) {
-                    switch((Sign) sign) {
-                        case NEGATIVE   -> sj.add("-");
-                        case ZERO       -> sj.add("0");
-                        case POSITIVE   -> sj.add("+");
-                    }
+                    sj.add(sign.toString());
                 }
+
                 return "{" + sj + "}";
             } else {
                 String type = o.getString("type");

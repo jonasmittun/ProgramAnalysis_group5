@@ -13,4 +13,13 @@ public enum Sign {
             default -> throw new IllegalStateException("Unexpected value: " + i);
         };
     }
+
+    @Override
+    public String toString() {
+        return switch(this) {
+            case POSITIVE   -> "+";
+            case ZERO       -> "0";
+            case NEGATIVE   -> "-";
+        };
+    }
 }
