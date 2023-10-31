@@ -1,6 +1,5 @@
 package Week04;
 
-import Week05.Sign;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -56,13 +55,15 @@ public class Main {
         } else if(o.has("kind")) {
             return "(" + SimpleType.toFormattedString(o, false) + ")";
         } else {
-            if(o.has("sign")) {
+            if (o.has("sign")) {
                 StringJoiner sj = new StringJoiner(", ");
-                for(Object sign : o.getJSONArray("sign")) {
+                for (Object sign : o.getJSONArray("sign")) {
                     sj.add(sign.toString());
                 }
 
                 return "{" + sj + "}";
+            } else if(o.has("abstract")) {
+                return o.get("abstract").toString();
             } else {
                 String type = o.getString("type");
                 if(type.equals("integer")) type = "int";

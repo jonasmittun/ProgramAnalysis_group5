@@ -3,7 +3,6 @@ package Project;
 import Week04.Main;
 import Week04.Frame;
 import Week04.Pair;
-import Week06.SignInterpreter;
 import org.json.JSONObject;
 
 import java.util.ArrayDeque;
@@ -41,7 +40,7 @@ public class TestSuperClass {
         Frame f = new Frame(parameter, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, methodName), 0));
         Map<Integer, JSONObject> mu = memory != null ? memory : new HashMap<>();
 
-        SignInterpreter in = new SignInterpreter(new HashMap<>(classes));
+        NullInterpreter in = new NullInterpreter(new HashMap<>(classes));
         if (exceptionClass != null) {
             Exception exception = (Exception) assertThrows(exceptionClass, () -> in.run(f, mu));
             if (exceptionMessage != null) {

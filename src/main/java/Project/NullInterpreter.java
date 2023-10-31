@@ -1,7 +1,6 @@
 package Project;
 
 import Week04.Frame;
-import Week04.Pair;
 import Week05.Interpreter;
 import Week05.State;
 import org.json.JSONArray;
@@ -9,19 +8,18 @@ import org.json.JSONObject;
 
 import java.util.*;
 
+import static Project.ANull.toAbstract;
+
 public class NullInterpreter implements Interpreter {
 
     private final Map<String, JSONObject> classes; // Map<Classname, JSONObject>
 
     private final Map<String, Map<String, JSONObject>> class_methods;
 
-    private final int depthLimit;
-
     private final NullStepper stepper;
 
-    public NullInterpreter(Map<String, JSONObject> classes, int depthLimit){
+    public NullInterpreter(Map<String, JSONObject> classes) {
         this.classes = classes;
-        this.depthLimit = depthLimit;
 
         // Map methods for all classes
         class_methods = new HashMap<>();
@@ -40,25 +38,21 @@ public class NullInterpreter implements Interpreter {
         this.stepper = new NullStepper(classes);
     }
 
-    // TODO: Implement converter
-    public static Pair<Optional<JSONObject>, Abstraction> toAbstract(Optional<JSONObject> o) {
-
-        return new Pair<>(o, null);
-    }
-
     @Override
     public void run(Frame frame, Map<Integer, JSONObject> mu){
         Deque<Frame> psi = new ArrayDeque<>();  // Method Stack
-        // TODO: Add abstraction to values in frame;
+
+        // Transform values to abstract domain
+        for(JSONObject o : frame.lambda()) toAbstract(o);
+        for(JSONObject o : frame.sigma()) toAbstract(o);
+
         System.out.println(frame);
         psi.push(frame);
 
         Queue<State> queue = new LinkedList<>();
         queue.add(new State(psi, mu));
-        int depthCounter = 1;
-        int depth = 0;
 
-        while(!queue.isEmpty() && depth < depthLimit){
+        while(!queue.isEmpty()) {
             State current = queue.poll();
 
             Set<State> next = stepper.step(current);
@@ -66,12 +60,6 @@ public class NullInterpreter implements Interpreter {
             System.out.println("Generated: " + next.size());
 
             queue.addAll(next);
-
-            depthCounter--;
-            if(depthCounter == 0) {
-                depth++;
-                depthCounter = queue.size();
-            }
         }
     }
 }
