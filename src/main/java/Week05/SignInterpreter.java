@@ -159,7 +159,7 @@ public class SignInterpreter implements Interpreter {
     public void run(Frame frame, Map<Integer, JSONObject> mu){
         Deque<Frame> psi = new ArrayDeque<>();  // Method Stack
         addSigns(frame);
-        System.out.println(frame);
+        System.out.println("Initial: " + "\nΨ[" + frame + "]\n");
         psi.push(frame);
 
         Queue<State> queue = new LinkedList<>();
@@ -172,7 +172,7 @@ public class SignInterpreter implements Interpreter {
 
             Set<State> next = stepper.step(current);
 
-            System.out.println("Generated: " + next.size());
+            System.out.println("Generated: " + next.size() + "\n");
 
             queue.addAll(next);
 

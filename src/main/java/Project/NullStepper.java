@@ -648,8 +648,9 @@ public class NullStepper implements AbstractStepper {
             }
         }
 
+        System.out.println("Instruction: " + instruction);
         for(State s : results) {
-            System.out.println(String.format("%-12s", instruction.getString("opr")) + "Ψ" + s.psi());
+            System.out.println("Ψ" + s.psi());
         }
 
         return results;

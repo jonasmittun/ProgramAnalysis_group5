@@ -46,7 +46,7 @@ public class NullInterpreter implements Interpreter {
         for(JSONObject o : frame.lambda()) toAbstract(o);
         for(JSONObject o : frame.sigma()) toAbstract(o);
 
-        System.out.println(frame);
+        System.out.println("Initial: " + "\nΨ[" + frame + "]\n");
         psi.push(frame);
 
         Queue<State> queue = new LinkedList<>();
@@ -57,7 +57,7 @@ public class NullInterpreter implements Interpreter {
 
             Set<State> next = stepper.step(current);
 
-            System.out.println("Generated: " + next.size());
+            System.out.println("Generated: " + next.size() + "\n");
 
             queue.addAll(next);
         }
