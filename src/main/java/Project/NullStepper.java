@@ -166,22 +166,46 @@ public class NullStepper implements AbstractStepper {
                 _psi.push(new Frame(_f.lambda(), _f.sigma(), new Pair<>(_f.iota().e1(), target)));
                 results.add(new State(_psi, _mu));
             }
-            case "ifz" -> { // TODO: Take both branches only if necessary
+            case "ifz" -> {
+                String condition = instruction.getString("condition");
                 int target = instruction.getInt("target");
 
-                // Take first branch
-                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+                JSONObject value = f.sigma().pop();
+
+                List<Boolean> ifz_results = new ArrayList<>();
+                if(value.has("kind")) {
+                    JSONObject v = mu.get(System.identityHashCode(value));
+                    ANull a = (ANull) v.get("abstraction");
+                    ifz_results = switch(condition) {
+                        case "is"       -> switch(a) {
+                            case NULL       -> List.of(true);
+                            case NULLABLE   -> List.of(true, false);
+                            case NOTNULL    -> List.of(false);
+                        };
+                        case "isnot"    -> switch(a) {
+                            case NULL       -> List.of(false);
+                            case NULLABLE   -> List.of(true, false);
+                            case NOTNULL    -> List.of(true);
+                        };
+                        default  -> throw new IllegalArgumentException("Unsupported ifz condition in \"ref\": " + condition);
+                    };
+                } else {
+                    ifz_results = List.of(true, false);
+                }
+
+                if(ifz_results.size() > 1) {
+                    Triple<Frame, Deque<Frame>, Map<Integer, JSONObject>> t = clone_state(f, psi, mu);
+
+                    Frame _f = t.e1();
+                    Deque<Frame> _psi = t.e2();
+                    Map<Integer, JSONObject> _mu = t.e3();
+
+                    _psi.push(new Frame(_f.lambda(), _f.sigma(), new Pair<>(_f.iota().e1(), ifz_results.get(1) ? target : _f.iota().e2() + 1)));
+                    results.add(new State(_psi, _mu));
+                }
+
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), ifz_results.get(0) ? target : f.iota().e2() + 1)));
                 results.add(state);
-
-                Triple<Frame, Deque<Frame>, Map<Integer, JSONObject>> t = clone_state(f, psi, mu);
-
-                Frame _f = t.e1();
-                Deque<Frame> _psi = t.e2();
-                Map<Integer, JSONObject> _mu = t.e3();
-
-                // Take second branch
-                _psi.push(new Frame(_f.lambda(), _f.sigma(), new Pair<>(_f.iota().e1(), target)));
-                results.add(new State(_psi, _mu));
             }
             case "goto" -> {
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), instruction.getInt("target"))));
