@@ -31,6 +31,7 @@ public class SignStepper implements AbstractStepper {
         Frame f = psi.pop();
 
         JSONObject instruction = f.iota().e1().method().getJSONObject("code").getJSONArray("bytecode").getJSONObject(f.iota().e2());
+        System.out.println("Instruction: " + instruction);
 
         switch(instruction.getString("opr")) {
             case "array_load" -> {
@@ -1062,7 +1063,6 @@ public class SignStepper implements AbstractStepper {
             }
         }
 
-        System.out.println("Instruction: " + instruction);
         for(State s : results) {
             System.out.println("Ψ" + s.psi());
         }
