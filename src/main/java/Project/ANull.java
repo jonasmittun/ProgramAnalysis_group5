@@ -17,10 +17,10 @@ public enum ANull {
             o = new JSONObject(Map.of("abstract", NULL));
         } else {
             if(!o.has("abstract")) {
-                if(o.has("type")) { // BaseType
-                    o.put("abstract", NOTNULL);
-                } else if (o.has("kind")) { // SimpleReferenceType
+                if (o.has("kind")) { // SimpleReferenceType
                     o.put("abstract", NULLABLE);
+                } else if(o.has("type")) { // BaseType
+                    o.put("abstract", NOTNULL);
                 } else throw new RuntimeException(o + " is not a SimpleType!");
             }
         }
