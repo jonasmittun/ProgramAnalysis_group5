@@ -27,7 +27,7 @@ public class ExceptionalNullTest extends TestSuperClass {
         @Test
         void alwaysThrows2() {
             JSONObject object = new JSONObject(classes.get("java/lang/Object").toMap());
-            JSONObject objectref = new JSONObject("kind", "class", "name", "java/lang/Object");
+            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
 
             Map<Integer, JSONObject> mu = new HashMap<>();
             mu.put(System.identityHashCode(objectref), object);
@@ -41,7 +41,7 @@ public class ExceptionalNullTest extends TestSuperClass {
         @Test
         void alwaysThrows3() {
             JSONObject object = new JSONObject(classes.get("java/lang/Object").toMap());
-            JSONObject objectref = new JSONObject("kind", "class", "name", "java/lang/Object");
+            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
 
             Map<Integer, JSONObject> mu = new HashMap<>();
             mu.put(System.identityHashCode(objectref), object);
@@ -64,7 +64,7 @@ public class ExceptionalNullTest extends TestSuperClass {
         @Test
         void neverThrows2() {
             JSONObject object = new JSONObject(classes.get("java/lang/Object").toMap());
-            JSONObject objectref = new JSONObject("kind", "class", "name", "java/lang/Object");
+            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
 
             Map<Integer, JSONObject> mu = new HashMap<>();
             mu.put(System.identityHashCode(objectref), object);
@@ -78,10 +78,10 @@ public class ExceptionalNullTest extends TestSuperClass {
         @Test
         void neverThrows3() {
             JSONObject integer1 = new JSONObject(classes.get("java/lang/Integer").toMap());
-            JSONObject integer1ref = new JSONObject("kind", "class", "name", "java/lang/Integer");
+            JSONObject integer1ref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Integer"));
 
             JSONObject integer2 = new JSONObject(classes.get("java/lang/Integer").toMap());
-            JSONObject integer2ref = new JSONObject("kind", "class", "name", "java/lang/Integer");
+            JSONObject integer2ref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Integer"));
 
             Map<Integer, JSONObject> mu = new HashMap<>();
             mu.put(System.identityHashCode(integer1ref), integer1);
@@ -97,7 +97,7 @@ public class ExceptionalNullTest extends TestSuperClass {
         @Test
         void neverThrows4() {
             JSONObject object = new JSONObject(classes.get("eu/bogoe/dtu/exceptional/Null").toMap());
-            JSONObject objectref = new JSONObject("kind", "class", "name", "eu/bogoe/dtu/exceptional/Null");
+            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "eu/bogoe/dtu/exceptional/Null"));
 
             Map<Integer, JSONObject> mu = new HashMap<>();
             mu.put(System.identityHashCode(objectref), object);
@@ -111,10 +111,10 @@ public class ExceptionalNullTest extends TestSuperClass {
         @Test
         void neverThrows5() {
             JSONObject s = new JSONObject(classes.get("java/lang/String").toMap());
-            JSONObject sref = new JSONObject("kind", "class", "name", "java/lang/String");
+            JSONObject sref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
 
             JSONObject notYourProblem = new JSONObject(classes.get("java/lang/String").toMap());
-            JSONObject notYourProblemref = new JSONObject("kind", "class", "name", "java/lang/String");
+            JSONObject notYourProblemref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
 
             Map<Integer, JSONObject> mu = new HashMap<>();
             mu.put(System.identityHashCode(sref), s);
@@ -124,6 +124,8 @@ public class ExceptionalNullTest extends TestSuperClass {
             lambda[0] = sref;
             lambda[1] = notYourProblemref;
 
+            System.out.println(sref + "\n" + notYourProblemref);
+
             test("neverThrows5", lambda, mu, null, null);
         }
     }
@@ -131,7 +133,7 @@ public class ExceptionalNullTest extends TestSuperClass {
     @Test
     void interestingCase() {
         JSONObject object = new JSONObject(classes.get("java/lang/Object").toMap());
-        JSONObject objectref = new JSONObject("kind", "class", "name", "java/lang/Object");
+        JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
         mu.put(System.identityHashCode(objectref), object);
