@@ -569,18 +569,17 @@ public class SignStepper implements AbstractStepper {
                     ifz_results.addAll(local);
                 } else {
                     // For object equality we assume both cases can be true/false
-                    ifz_results.add(true);
-                    ifz_results.add(false);
+                    ifz_results = List.of(true, false);
                 }
 
                 if(ifz_results.size() > 1) {
                     Triple<Frame, Deque<Frame>, Map<Integer, JSONObject>> t = clone_state(f, psi, mu);
 
-                    Frame _m = t.e1();
+                    Frame _f = t.e1();
                     Deque<Frame> _psi = t.e2();
                     Map<Integer, JSONObject> _mu = t.e3();
 
-                    _psi.push(new Frame(_m.lambda(), _m.sigma(), new Pair<>(_m.iota().e1(), ifz_results.get(1) ? target : _m.iota().e2() + 1)));
+                    _psi.push(new Frame(_f.lambda(), _f.sigma(), new Pair<>(_f.iota().e1(), ifz_results.get(1) ? target : _f.iota().e2() + 1)));
                     results.add(new State(_psi, _mu));
                 }
 
