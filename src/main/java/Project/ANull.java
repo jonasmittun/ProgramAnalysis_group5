@@ -11,21 +11,22 @@ public enum ANull {
 
     /** Translates JSONObject o to an abstract type
      * @param o JSONObject
+     * @return  Returns o with another field "abstract" with value NULL/NULLABLE/NOTNULL
      */
-    public static JSONObject toAbstract(JSONObject o) {
-        if(o == null || o.isEmpty()) {
-            o = new JSONObject(Map.of("abstract", NULL));
-        } else {
-            if(!o.has("abstract")) {
-                if (o.has("kind")) { // SimpleReferenceType
-                    o.put("abstract", NULLABLE);
-                } else if(o.has("type")) { // BaseType
-                    o.put("abstract", NOTNULL);
-                } else throw new RuntimeException(o + " is not a SimpleType!");
+    public static JSONObject toAbstract(Object o) {
+        if(o == null) {
+            return new JSONObject(Map.of("abstract", NULL));
+        } else if(o instanceof JSONObject jo) {
+            if(!jo.has("abstract")) {
+                if (jo.has("kind")) { // SimpleReferenceType
+                    jo.put("abstract", NULLABLE);
+                } else if(jo.has("type")) { // BaseType
+                    jo.put("abstract", NOTNULL);
+                } else throw new RuntimeException(jo + " is not a SimpleType!");
             }
-        }
 
-        return o;
+            return jo;
+        } else throw new RuntimeException(o + " is not a JSONObject");
     }
 
     @Override

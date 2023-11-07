@@ -43,8 +43,8 @@ public class NullInterpreter implements Interpreter {
         Deque<Frame> psi = new ArrayDeque<>();  // Method Stack
 
         // Transform values to abstract domain
-        for(JSONObject o : frame.lambda()) toAbstract(o);
-        for(JSONObject o : frame.sigma()) toAbstract(o);
+        for(JSONObject o : frame.lambda()) o = toAbstract(o);
+        for(JSONObject o : frame.sigma()) o = toAbstract(o);
 
         System.out.println("Initial: " + "\nΨ[" + frame + "]\n");
         psi.push(frame);
