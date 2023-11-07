@@ -96,8 +96,8 @@ public class ExceptionalNullTest extends TestSuperClass {
 
         @Test
         void neverThrows4() {
-            JSONObject object = new JSONObject(classes.get("java/lang/Null").toMap());
-            JSONObject objectref = new JSONObject("kind", "class", "name", "java/lang/Null");
+            JSONObject object = new JSONObject(classes.get("eu/bogoe/dtu/exceptional/Null").toMap());
+            JSONObject objectref = new JSONObject("kind", "class", "name", "eu/bogoe/dtu/exceptional/Null");
 
             Map<Integer, JSONObject> mu = new HashMap<>();
             mu.put(System.identityHashCode(objectref), object);
