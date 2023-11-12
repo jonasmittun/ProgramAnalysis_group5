@@ -196,7 +196,7 @@ public class NullStepper implements AbstractStepper {
                 List<Boolean> ifz_results = new ArrayList<>();
                 if(value.has("kind")) {
                     JSONObject v = mu.get(System.identityHashCode(value));
-                    ANull a = (ANull) v.get("abstraction");
+                    ANull a = (ANull) value.get("abstract");
                     ifz_results = switch(condition) {
                         case "is"       -> switch(a) {
                             case NULL       -> List.of(true);
