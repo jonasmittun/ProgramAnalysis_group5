@@ -120,6 +120,13 @@ public class NullStepper implements AbstractStepper {
                 results.add(state);
             }
             case "binary" -> {
+                f.sigma().pop();
+                f.sigma().pop();
+
+                // Dummy result
+                JSONObject dummy = new JSONObject(Map.of("type", "int", "value", 0));
+                f.sigma().push(dummy);
+
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
                 results.add(state);
@@ -140,11 +147,25 @@ public class NullStepper implements AbstractStepper {
                 results.add(state);
             }
             case "comparelongs" -> {
+                f.sigma().pop();
+                f.sigma().pop();
+
+                // Dummy result
+                JSONObject dummy = new JSONObject(Map.of("type", "int", "value", 0));
+                f.sigma().push(dummy);
+
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
                 results.add(state);
             }
             case "comparefloating" -> {
+                f.sigma().pop();
+                f.sigma().pop();
+
+                // Dummy result
+                JSONObject dummy = new JSONObject(Map.of("type", "int", "value", 0));
+                f.sigma().push(dummy);
+
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
                 results.add(state);
