@@ -124,7 +124,7 @@ public class NullStepper implements AbstractStepper {
                 f.sigma().pop();
 
                 // Dummy result
-                JSONObject dummy = new JSONObject(Map.of("type", "int", "value", 0));
+                JSONObject dummy = toAbstract(new JSONObject(Map.of("type", "int", "value", 0)));
                 f.sigma().push(dummy);
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
@@ -151,7 +151,7 @@ public class NullStepper implements AbstractStepper {
                 f.sigma().pop();
 
                 // Dummy result
-                JSONObject dummy = new JSONObject(Map.of("type", "int", "value", 0));
+                JSONObject dummy = toAbstract(new JSONObject(Map.of("type", "int", "value", 0)));
                 f.sigma().push(dummy);
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
@@ -163,7 +163,7 @@ public class NullStepper implements AbstractStepper {
                 f.sigma().pop();
 
                 // Dummy result
-                JSONObject dummy = new JSONObject(Map.of("type", "int", "value", 0));
+                JSONObject dummy = toAbstract(new JSONObject(Map.of("type", "int", "value", 0)));
                 f.sigma().push(dummy);
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
