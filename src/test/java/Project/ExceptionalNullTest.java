@@ -124,8 +124,6 @@ public class ExceptionalNullTest extends TestSuperClass {
             lambda[0] = sref;
             lambda[1] = notYourProblemref;
 
-            System.out.println(sref + "\n" + notYourProblemref);
-
             test("neverThrows5", lambda, mu, null, null);
         }
     }
