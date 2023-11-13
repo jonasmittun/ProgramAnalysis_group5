@@ -703,9 +703,7 @@ public class ConcreteInterpreter {
                 int target = instruction.getInt("target");
 
                 Frame next = psi.peek();
-                JSONObject value = new JSONObject();
-                value.put("type", "int");
-                value.put("value", next.iota().e2());
+                JSONObject value = new JSONObject(Map.of("type", "int", "value", next.iota().e2()));
                 f.sigma().push(value);
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), target)));

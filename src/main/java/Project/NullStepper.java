@@ -231,24 +231,24 @@ public class NullStepper implements AbstractStepper {
             case "goto" -> {
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), instruction.getInt("target"))));
                 results.add(state);
-            }/*
+            }
             case "jsr" -> {
                 int target = instruction.getInt("target");
 
-                Method next = psi.peek();
-                JSONObject value = new JSONObject();
-                value.put("type", "int");
-                value.put("value", next.iota().e2());
-                m.sigma().push(value);
+                Frame next = psi.peek();
+                JSONObject value = new JSONObject(Map.of("type", "int", "value", next.iota().e2()));
+                f.sigma().push(value);
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), target)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), target)));
+                results.add(state);
             }
             case "ret" -> {
-                JSONObject value = m.sigma().pop();
+                JSONObject value = f.sigma().pop();
                 int address = value.getInt("value");
 
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), address)));
-            }
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), address)));
+                results.add(state);
+            }/*
             case "tableswitch" -> {
                 int location = instruction.getInt("default");
                 int low = instruction.getInt("low");
