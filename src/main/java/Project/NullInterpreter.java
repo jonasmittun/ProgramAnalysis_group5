@@ -14,26 +14,10 @@ public class NullInterpreter implements Interpreter {
 
     private final Map<String, JSONObject> classes; // Map<Classname, JSONObject>
 
-    private final Map<String, Map<String, JSONObject>> class_methods;
-
     private final NullStepper stepper;
 
     public NullInterpreter(Map<String, JSONObject> classes) {
         this.classes = classes;
-
-        // Map methods for all classes
-        class_methods = new HashMap<>();
-        for(Map.Entry<String, JSONObject> entry : classes.entrySet()) {
-            Map<String, JSONObject> methods = new HashMap<>();
-
-            JSONArray ms = entry.getValue().getJSONArray("methods");
-            for(int i = 0; i < ms.length(); i++) {
-                JSONObject m = ms.getJSONObject(i);
-                methods.put(m.getString("name"), m);
-            }
-
-            class_methods.put(entry.getKey(), methods);
-        }
 
         this.stepper = new NullStepper(classes);
     }

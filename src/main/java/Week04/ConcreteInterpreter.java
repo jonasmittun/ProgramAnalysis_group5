@@ -12,24 +12,9 @@ import java.util.stream.IntStream;
 public class ConcreteInterpreter {
 
     private final Map<String, JSONObject> classes;                      // Map<Classname, JSONObject>
-    private final Map<String, Map<String, JSONObject>> class_methods;   // Map<Classname, Map<Methodname, JSONObject>> // TODO: Fix overwrite if two methods have the same name
 
     public ConcreteInterpreter(Map<String, JSONObject> classes) {
         this.classes = classes;
-
-        // Map methods for all classes
-        class_methods = new HashMap<>();
-        for(Map.Entry<String, JSONObject> entry : classes.entrySet()) {
-            Map<String, JSONObject> methods = new HashMap<>();
-
-            JSONArray ms = entry.getValue().getJSONArray("methods");
-            for(int i = 0; i < ms.length(); i++) {
-                JSONObject m = ms.getJSONObject(i);
-                methods.put(m.getString("name"), m);
-            }
-
-            class_methods.put(entry.getKey(), methods);
-        }
     }
 
     /** Returns the resolved method as a JSONObject

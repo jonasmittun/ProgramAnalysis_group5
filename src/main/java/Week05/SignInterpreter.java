@@ -13,8 +13,6 @@ public class SignInterpreter implements Interpreter {
 
     private final Map<String, JSONObject> classes; // Map<Classname, JSONObject>
 
-    private final Map<String, Map<String, JSONObject>> class_methods;
-
     private final int depthLimit;
 
     private final SignStepper stepper;
@@ -22,20 +20,6 @@ public class SignInterpreter implements Interpreter {
     public SignInterpreter(Map<String, JSONObject> classes, int depthLimit){
         this.classes = classes;
         this.depthLimit = depthLimit;
-
-        // Map methods for all classes
-        class_methods = new HashMap<>();
-        for(Map.Entry<String, JSONObject> entry : classes.entrySet()) {
-            Map<String, JSONObject> methods = new HashMap<>();
-
-            JSONArray ms = entry.getValue().getJSONArray("methods");
-            for(int i = 0; i < ms.length(); i++) {
-                JSONObject m = ms.getJSONObject(i);
-                methods.put(m.getString("name"), m);
-            }
-
-            class_methods.put(entry.getKey(), methods);
-        }
 
         this.stepper = new SignStepper(classes);
     }
