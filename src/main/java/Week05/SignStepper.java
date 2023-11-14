@@ -97,7 +97,7 @@ public class SignStepper implements AbstractStepper {
                 } else if(value.has("kind")) { // Check if it's a reference type
                     f.sigma().push(value);
                 } else {
-                    f.sigma().push(toAbstract(cloneJSONObject(value)));
+                    f.sigma().push(cloneJSONObject(value));
                 }
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
