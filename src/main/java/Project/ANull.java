@@ -1,5 +1,6 @@
 package Project;
 
+import Week04.ConcreteInterpreter;
 import org.json.JSONObject;
 
 import java.util.Map;
@@ -15,13 +16,17 @@ public enum ANull {
      */
     public static JSONObject toAbstract(Object o) {
         if(o == null) {
-            return new JSONObject(Map.of("abstract", NULL));
+            JSONObject jo = ConcreteInterpreter.createNull();
+            jo.put("abstract", NULL);
+            return jo;
         } else if(o instanceof JSONObject jo) {
             if(!jo.has("abstract")) {
                 if (jo.has("kind")) { // SimpleReferenceType
                     jo.put("abstract", NULLABLE);
                 } else if(jo.has("type")) { // BaseType
                     jo.put("abstract", NOTNULL);
+                } else if(ConcreteInterpreter.isNull(jo)) {
+                    jo.put("abstract", NULL);
                 } else throw new RuntimeException(jo + " is not a SimpleType!");
             }
 
