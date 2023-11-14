@@ -146,7 +146,8 @@ public class ConcreteInterpreter {
             }
         }
 
-        return Optional.empty();
+        // Try superclass if exists
+        return mu.containsKey(System.identityHashCode(object)) ? getField(mu.get(System.identityHashCode(object)), fieldname, fieldtype, mu) : Optional.empty();
     }
 
     /** Tries to put a value into a field of the object.
@@ -155,7 +156,7 @@ public class ConcreteInterpreter {
      * @param fieldtype The type of the field (a &lt;SimpleType&gt;).
      * @return          True when the field has been correctly put and false when not.
      */
-    public static boolean putField(JSONObject object, String fieldname, Object fieldtype, JSONObject value) {
+    public static boolean putField(JSONObject object, String fieldname, Object fieldtype, JSONObject value, Map<Integer, JSONObject> mu) {
         if(!object.has("fields")) return false;
 
         JSONArray fields = object.getJSONArray("fields");
@@ -186,7 +187,8 @@ public class ConcreteInterpreter {
             }
         }
 
-        return false;
+        // Try superclass if exists
+        return mu.containsKey(System.identityHashCode(object)) && putField(mu.get(System.identityHashCode(object)), fieldname, fieldtype, value, mu);
     }
 
     /** Creates an array of specified <code>dimension</code>, <code>length</code> and <code>type</code>.
@@ -760,20 +762,11 @@ public class ConcreteInterpreter {
                 } else {
                     JSONObject ref = f.sigma().pop();
                     object = mu.get(System.identityHashCode(ref));
+                    JSONObject objectref = f.sigma().pop();
+                    object = mu.get(System.identityHashCode(objectref));
                 }
 
-                Optional<JSONObject> value = Optional.empty();
-                while(value.isEmpty()) {
-                    value = getField(object, fieldname, fieldtype, mu);
-
-                    if(value.isEmpty()) {
-                        // Get superclass if exists
-                        if(mu.containsKey(System.identityHashCode(object))) {
-                            object = mu.get(System.identityHashCode(object));
-                        } else break;
-                    }
-                }
-
+                Optional<JSONObject> value = getField(object, fieldname, fieldtype, mu);
                 if(value.isEmpty()) throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist.");
 
                 f.sigma().push(value.get());
@@ -792,14 +785,11 @@ public class ConcreteInterpreter {
                 } else {
                     JSONObject ref = f.sigma().pop();
                     object = mu.get(System.identityHashCode(ref));
+                    JSONObject objectref = f.sigma().pop();
+                    object = mu.get(System.identityHashCode(objectref));
                 }
 
-                while(!putField(object, fieldname, fieldtype, value)) {
-                    // Get superclass if exists
-                    if(mu.containsKey(System.identityHashCode(object))) {
-                        object = mu.get(System.identityHashCode(object));
-                    } else throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist.");
-                }
+                if(!putField(object, fieldname, fieldtype, value, mu)) throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist in " + object.getString("name"));
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }

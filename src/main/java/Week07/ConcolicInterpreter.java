@@ -533,18 +533,7 @@ public class ConcolicInterpreter {
                     object = mu.get(System.identityHashCode(ref));
                 }
 
-                Optional<JSONObject> value = Optional.empty();
-                while(value.isEmpty()) {
-                    value = getField(object, fieldname, fieldtype, mu);
-
-                    if(value.isEmpty()) {
-                        // Get superclass if exists
-                        if(mu.containsKey(System.identityHashCode(object))) {
-                            object = mu.get(System.identityHashCode(object));
-                        } else break;
-                    }
-                }
-
+                Optional<JSONObject> value = getField(object, fieldname, fieldtype, mu);
                 if(value.isEmpty()) throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist.");
 
                 f.sigma().push(value.get());
@@ -565,12 +554,7 @@ public class ConcolicInterpreter {
                     object = mu.get(System.identityHashCode(ref));
                 }
 
-                while(!putField(object, fieldname, fieldtype, value)) {
-                    // Get superclass if exists
-                    if(mu.containsKey(System.identityHashCode(object))) {
-                        object = mu.get(System.identityHashCode(object));
-                    } else throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist.");
-                }
+                if(!putField(object, fieldname, fieldtype, value, mu)) throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist in " + object.getString("name"));
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }

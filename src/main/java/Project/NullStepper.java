@@ -299,18 +299,7 @@ public class NullStepper implements AbstractStepper {
 
                 if(object == null) throw new NullPointerException("Cannot get field because \"object\" is null");
 
-                Optional<JSONObject> value = Optional.empty();
-                while(value.isEmpty()) {
-                    value = getField(object, fieldname, fieldtype, mu);
-
-                    if(value.isEmpty()) {
-                        // Get superclass if exists
-                        if(mu.containsKey(System.identityHashCode(object))) {
-                            object = mu.get(System.identityHashCode(object));
-                        } else break;
-                    }
-                }
-
+                Optional<JSONObject> value = getField(object, fieldname, fieldtype, mu);
                 if(value.isEmpty()) throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist.");
 
                 f.sigma().push(toAbstract(value.get())); // TODO: Check type of value and set annotation
@@ -333,12 +322,7 @@ public class NullStepper implements AbstractStepper {
                     object = mu.get(System.identityHashCode(ref));
                 }
 
-                while(!putField(object, fieldname, fieldtype, value)) {
-                    // Get superclass if exists
-                    if(mu.containsKey(System.identityHashCode(object))) {
-                        object = mu.get(System.identityHashCode(object));
-                    } else throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist.");
-                }
+                if(!putField(object, fieldname, fieldtype, value, mu)) throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist in " + object.getString("name"));
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
