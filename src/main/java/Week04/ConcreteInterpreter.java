@@ -9,6 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.IntStream;
 
+import static Week04.Main.cloneJSONObject;
+
 public class ConcreteInterpreter {
 
     private final Map<String, JSONObject> classes;                      // Map<Classname, JSONObject>
@@ -96,7 +98,7 @@ public class ConcreteInterpreter {
      */
     public static JSONObject initialize(Map<String, JSONObject> classes, String classname, Map<Integer, JSONObject> mu) {
         if(!classes.containsKey(classname)) throw new InstantiationError(classname + " does not exist.");
-        JSONObject cls = new JSONObject(classes.get(classname).toMap());
+        JSONObject cls = cloneJSONObject(classes.get(classname));
 
         // Initialize super class if it exists
         if(!cls.isNull("super")) {
@@ -126,7 +128,7 @@ public class ConcreteInterpreter {
                 if(f.isNull("value")) {
                     return Optional.of(SimpleType.createDefault(fieldtype, mu));
                 } else {
-                    return Optional.of(new JSONObject(f.getJSONObject("value").toMap()));
+                    return Optional.of(cloneJSONObject(f.getJSONObject("value")));
                 }
             }
         }
@@ -336,7 +338,7 @@ public class ConcreteInterpreter {
 
                 JSONObject value = array.getJSONObject(index_value);
 
-                f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "array_store" -> {
@@ -374,7 +376,7 @@ public class ConcreteInterpreter {
                             mu.put(System.identityHashCode(arrayref), array);
 
                             // Create a new String object
-                            JSONObject object = new JSONObject(classes.get("java/lang/String").toMap());
+                            JSONObject object = cloneJSONObject(classes.get("java/lang/String"));
                             // Update "value" field in this String object to the array reference
                             object.getJSONArray("fields").getJSONObject(0).put("value", arrayref);
 
@@ -386,7 +388,7 @@ public class ConcreteInterpreter {
                             f.sigma().push(objectref);
                         }
                         default -> {
-                            f.sigma().push(new JSONObject(value.toMap()));
+                            f.sigma().push(cloneJSONObject(value));
                         }
                     }
                 }
@@ -402,7 +404,7 @@ public class ConcreteInterpreter {
                 } else if(value.has("kind")) { // Check if it's a reference type
                    f.sigma().push(value);
                 } else {
-                    f.sigma().push(new JSONObject(value.toMap()));
+                    f.sigma().push(cloneJSONObject(value));
                 }
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
@@ -1017,7 +1019,7 @@ public class ConcreteInterpreter {
                 String type = instruction.getString("type"); // LocalType
                 JSONObject value = f.sigma().pop();
 
-                JSONObject result = type.equals("ref") ? value : new JSONObject(value.toMap());
+                JSONObject result = type.equals("ref") ? value : cloneJSONObject(value);
 
                 if(!psi.isEmpty()) {
                     Frame f2 = psi.peek();
@@ -1051,7 +1053,7 @@ public class ConcreteInterpreter {
 
                 for(int i = 0; i < words+1; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -1070,7 +1072,7 @@ public class ConcreteInterpreter {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -1078,7 +1080,7 @@ public class ConcreteInterpreter {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -1098,7 +1100,7 @@ public class ConcreteInterpreter {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -1107,7 +1109,7 @@ public class ConcreteInterpreter {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 

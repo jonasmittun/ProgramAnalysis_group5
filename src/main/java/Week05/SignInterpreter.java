@@ -1,5 +1,6 @@
 package Week05;
 
+import Week04.ConcreteInterpreter;
 import Week04.Frame;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -7,6 +8,7 @@ import org.json.JSONObject;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static Week04.Main.cloneJSONObject;
 import static Week05.Sign.*;
 
 public class SignInterpreter implements Interpreter {
@@ -78,13 +80,13 @@ public class SignInterpreter implements Interpreter {
                 if(mu_mapper.containsKey(System.identityHashCode(e_old))) {
                     lambda_new[i] = mu_mapper.get(System.identityHashCode(e_old));
                 } else {
-                    JSONObject e_new = new JSONObject(e_old.toMap());
+                    JSONObject e_new = cloneJSONObject(e_old);
                     clone_helper(e_old, e_new, mu_old, mu_new, mu_mapper);
 
                     lambda_new[i] = e_new;
                 }
             } else {
-                lambda_new[i] = new JSONObject(e_old.toMap());
+                lambda_new[i] = cloneJSONObject(e_old);
             }
         }
 
@@ -96,13 +98,13 @@ public class SignInterpreter implements Interpreter {
                 if(mu_mapper.containsKey(System.identityHashCode(e_old))) {
                     sigma_new.addLast(mu_mapper.get(System.identityHashCode(e_old)));
                 } else {
-                    JSONObject e_new = new JSONObject(e_old.toMap());
+                    JSONObject e_new = cloneJSONObject(e_old);
                     clone_helper(e_old, e_new, mu_old, mu_new, mu_mapper);
 
                     sigma_new.addLast(e_new);
                 }
             } else {
-                sigma_new.addLast(new JSONObject(e_old.toMap()));
+                sigma_new.addLast(cloneJSONObject(e_old));
             }
         }
 
@@ -115,7 +117,7 @@ public class SignInterpreter implements Interpreter {
 
         if(e_old.has("kind") && !mu_mapper.containsKey(System.identityHashCode(e_old))) {
             JSONObject v_old = mu_old.get(System.identityHashCode(e_old));
-            JSONObject v_new = new JSONObject(v_old.toMap());
+            JSONObject v_new = cloneJSONObject(v_old);
 
             mu_new.put(System.identityHashCode(e_new), v_new);
             mu_mapper.put(System.identityHashCode(e_old), e_new);
@@ -128,7 +130,7 @@ public class SignInterpreter implements Interpreter {
                         JSONObject v_inner = array.getJSONObject(i);
 
                         if(v_inner.has("kind")) {
-                            clone_helper(v_inner, new JSONObject(v_inner.toMap()), mu_old, mu_new, mu_mapper);
+                            clone_helper(v_inner, cloneJSONObject(v_inner), mu_old, mu_new, mu_mapper);
                         }
                     }
                 }
@@ -140,7 +142,7 @@ public class SignInterpreter implements Interpreter {
 
                         if(field.getJSONObject("type").has("kind") && !field.isNull("value")) {
                             JSONObject f_old = field.getJSONObject("value");
-                            clone_helper(f_old, new JSONObject(f_old.toMap()), mu_old, mu_new, mu_mapper);
+                            clone_helper(f_old, cloneJSONObject(f_old), mu_old, mu_new, mu_mapper);
                         }
                     }
                 }

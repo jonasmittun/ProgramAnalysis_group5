@@ -12,6 +12,7 @@ import java.util.*;
 
 import static Project.ANull.*;
 import static Week04.ConcreteInterpreter.*;
+import static Week04.Main.cloneJSONObject;
 import static Week05.SignInterpreter.clone_state;
 
 public class NullStepper implements AbstractStepper {
@@ -48,7 +49,7 @@ public class NullStepper implements AbstractStepper {
 
                 JSONObject value = array.getJSONObject(index_value);
 
-                f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
                 results.add(state);
@@ -80,7 +81,7 @@ public class NullStepper implements AbstractStepper {
                     if(value.getString("type").equals("class")) { // Value is a <SimpleReferenceType>
                         o = value;
                     } else {
-                        o = new JSONObject(value.toMap());
+                        o = cloneJSONObject(value);
                     }
                 }
 
@@ -99,7 +100,7 @@ public class NullStepper implements AbstractStepper {
                 } else if(value.has("kind")) { // Check if it's a reference type
                     f.sigma().push(value);
                 } else {
-                    f.sigma().push(new JSONObject(value.toMap()));
+                    f.sigma().push(cloneJSONObject(value));
                 }
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
@@ -404,7 +405,7 @@ public class NullStepper implements AbstractStepper {
                 if(access.contains("interface")) throw new InstantiationError(classname + " is an interface.");
 
                 JSONObject objectref = toAbstract(new JSONObject(Map.of("kind", "class", "name", classname)));
-                JSONObject value = new JSONObject(classes.get(classname).toMap());
+                JSONObject value = cloneJSONObject(classes.get(classname));
 
                 mu.put(System.identityHashCode(objectref), value);
 
@@ -565,7 +566,7 @@ public class NullStepper implements AbstractStepper {
                 String type = instruction.getString("type"); // LocalType
                 JSONObject value = f.sigma().pop();
 
-                JSONObject result = new JSONObject(value.toMap());
+                JSONObject result = cloneJSONObject(value);
 
                 if(!psi.isEmpty()) {
                     Frame f2 = psi.peek();
@@ -602,7 +603,7 @@ public class NullStepper implements AbstractStepper {
 
                 for(int i = 0; i < words+1; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -622,7 +623,7 @@ public class NullStepper implements AbstractStepper {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -630,7 +631,7 @@ public class NullStepper implements AbstractStepper {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -651,7 +652,7 @@ public class NullStepper implements AbstractStepper {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -660,7 +661,7 @@ public class NullStepper implements AbstractStepper {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 

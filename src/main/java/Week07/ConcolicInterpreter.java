@@ -8,36 +8,20 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.module.ResolutionException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.IntStream;
 
 import static Week04.ConcreteInterpreter.*;
+import static Week04.Main.cloneJSONObject;
 
 public class ConcolicInterpreter {
 
     private final Map<String, JSONObject> classes;                      // Map<Classname, JSONObject>
-    private final Map<String, Map<String, JSONObject>> class_methods;   // Map<Classname, Map<Methodname, JSONObject>> // TODO: Fix overwrite if two methods have the same name
 
     private static int counter;
 
     public ConcolicInterpreter(Map<String, JSONObject> classes) {
         this.classes = classes;
-
-        // Map methods for all classes
-        class_methods = new HashMap<>();
-        for(Map.Entry<String, JSONObject> entry : classes.entrySet()) {
-            Map<String, JSONObject> methods = new HashMap<>();
-
-            JSONArray ms = entry.getValue().getJSONArray("methods");
-            for(int i = 0; i < ms.length(); i++) {
-                JSONObject m = ms.getJSONObject(i);
-                methods.put(m.getString("name"), m);
-            }
-
-            class_methods.put(entry.getKey(), methods);
-        }
 
         counter = 0;
     }
@@ -108,7 +92,7 @@ public class ConcolicInterpreter {
 
                 JSONObject value = array.getJSONObject(index_value);
 
-                f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "array_store" -> {
@@ -145,7 +129,7 @@ public class ConcolicInterpreter {
                         mu.put(System.identityHashCode(arrayref), array);
 
                         // Create a new String object
-                        JSONObject object = new JSONObject(classes.get("java/lang/String").toMap());
+                        JSONObject object = cloneJSONObject(classes.get("java/lang/String"));
                         // Update "value" field in this String object to the array reference
                         object.getJSONArray("fields").getJSONObject(0).put("value", arrayref);
 
@@ -157,7 +141,7 @@ public class ConcolicInterpreter {
                         f.sigma().push(objectref);
                     }
                     default -> {
-                        f.sigma().push(new JSONObject(value.toMap()));
+                        f.sigma().push(cloneJSONObject(value));
                     }
                 }
 
@@ -169,7 +153,7 @@ public class ConcolicInterpreter {
                 if(value.has("kind")) { // Check if it's a reference type
                    f.sigma().push(value);
                 } else {
-                    f.sigma().push(new JSONObject(value.toMap()));
+                    f.sigma().push(cloneJSONObject(value));
                 }
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
@@ -782,7 +766,7 @@ public class ConcolicInterpreter {
                 String type = instruction.getString("type"); // LocalType
                 JSONObject value = f.sigma().pop();
 
-                JSONObject result = type.equals("ref") ? value : new JSONObject(value.toMap());
+                JSONObject result = type.equals("ref") ? value : cloneJSONObject(value);
 
                 if(!psi.isEmpty()) {
                     Frame f2 = psi.peek();
@@ -816,7 +800,7 @@ public class ConcolicInterpreter {
 
                 for(int i = 0; i < words+1; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -835,7 +819,7 @@ public class ConcolicInterpreter {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -843,7 +827,7 @@ public class ConcolicInterpreter {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -863,7 +847,7 @@ public class ConcolicInterpreter {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -872,7 +856,7 @@ public class ConcolicInterpreter {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 

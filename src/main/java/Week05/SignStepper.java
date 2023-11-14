@@ -10,6 +10,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static Week04.ConcreteInterpreter.*;
+import static Week04.Main.cloneJSONObject;
 import static Week05.Sign.*;
 import static Week05.SignInterpreter.clone_state;
 import static Week05.SignInterpreter.toAbstract;
@@ -48,7 +49,7 @@ public class SignStepper implements AbstractStepper {
 
                 JSONObject value = array.getJSONObject(index_value);
 
-                f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
                 results.add(state);
@@ -79,7 +80,7 @@ public class SignStepper implements AbstractStepper {
                     if(value.getString("type").equals("class")) { // Value is a <SimpleReferenceType>
                         f.sigma().push(value);
                     } else {
-                        f.sigma().push(toAbstract(new JSONObject(value.toMap())));
+                        f.sigma().push(toAbstract(cloneJSONObject(value)));
                     }
                 }
 
@@ -96,7 +97,7 @@ public class SignStepper implements AbstractStepper {
                 } else if(value.has("kind")) { // Check if it's a reference type
                     f.sigma().push(value);
                 } else {
-                    f.sigma().push(toAbstract(new JSONObject(value.toMap())));
+                    f.sigma().push(toAbstract(cloneJSONObject(value)));
                 }
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
@@ -146,7 +147,7 @@ public class SignStepper implements AbstractStepper {
                     Deque<Frame> _psi = t.e2();
                     Map<Integer, JSONObject> _mu = t.e3();
 
-                    JSONObject value_new = new JSONObject(value.toMap());
+                    JSONObject value_new = cloneJSONObject(value);
                     value_new.put("sign", signs);
                     _f.lambda()[index] = value_new;
 
@@ -768,7 +769,7 @@ public class SignStepper implements AbstractStepper {
                 if(access.contains("interface")) throw new InstantiationError(classname + " is an interface.");
 
                 JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", classname));
-                JSONObject value = new JSONObject(classes.get(classname).toMap());
+                JSONObject value = cloneJSONObject(classes.get(classname));
 
                 mu.put(System.identityHashCode(objectref), value);
 
@@ -934,7 +935,7 @@ public class SignStepper implements AbstractStepper {
                 String type = instruction.getString("type"); // LocalType
                 JSONObject value = f.sigma().pop();
 
-                JSONObject result = new JSONObject(value.toMap());
+                JSONObject result = cloneJSONObject(value);
 
                 if(!psi.isEmpty()) {
                     Frame f2 = psi.peek();
@@ -971,7 +972,7 @@ public class SignStepper implements AbstractStepper {
 
                 for(int i = 0; i < words+1; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -991,7 +992,7 @@ public class SignStepper implements AbstractStepper {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -999,7 +1000,7 @@ public class SignStepper implements AbstractStepper {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -1020,7 +1021,7 @@ public class SignStepper implements AbstractStepper {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 
@@ -1029,7 +1030,7 @@ public class SignStepper implements AbstractStepper {
 
                 for(int i = 0; i < words; i++) {
                     for(JSONObject value : local) {
-                        f.sigma().push(value.has("kind") ? value : new JSONObject(value.toMap()));
+                        f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
                     }
                 }
 

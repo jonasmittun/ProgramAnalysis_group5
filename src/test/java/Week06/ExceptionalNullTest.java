@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 
+import static Week04.Main.cloneJSONObject;
+
 public class ExceptionalNullTest extends TestSuperclass {
 
     @BeforeAll
@@ -26,7 +28,7 @@ public class ExceptionalNullTest extends TestSuperclass {
 
         @Test
         void alwaysThrows2() {
-            JSONObject object = new JSONObject(classes.get("java/lang/Object").toMap());
+            JSONObject object = cloneJSONObject(classes.get("java/lang/Object"));
             JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
 
             Map<Integer, JSONObject> mu = new HashMap<>();
@@ -40,7 +42,7 @@ public class ExceptionalNullTest extends TestSuperclass {
 
         @Test
         void alwaysThrows3() {
-            JSONObject object = new JSONObject(classes.get("java/lang/Object").toMap());
+            JSONObject object = cloneJSONObject(classes.get("java/lang/Object"));
             JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
 
             Map<Integer, JSONObject> mu = new HashMap<>();
@@ -63,7 +65,7 @@ public class ExceptionalNullTest extends TestSuperclass {
 
         @Test
         void neverThrows2() {
-            JSONObject object = new JSONObject(classes.get("java/lang/Object").toMap());
+            JSONObject object = cloneJSONObject(classes.get("java/lang/Object"));
             JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
 
             Map<Integer, JSONObject> mu = new HashMap<>();
@@ -77,10 +79,10 @@ public class ExceptionalNullTest extends TestSuperclass {
 
         @Test
         void neverThrows3() {
-            JSONObject integer1 = new JSONObject(classes.get("java/lang/Integer").toMap());
+            JSONObject integer1 = cloneJSONObject(classes.get("java/lang/Integer"));
             JSONObject integer1ref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Integer"));
 
-            JSONObject integer2 = new JSONObject(classes.get("java/lang/Integer").toMap());
+            JSONObject integer2 = cloneJSONObject(classes.get("java/lang/Integer"));
             JSONObject integer2ref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Integer"));
 
             Map<Integer, JSONObject> mu = new HashMap<>();
@@ -96,7 +98,7 @@ public class ExceptionalNullTest extends TestSuperclass {
 
         @Test
         void neverThrows4() {
-            JSONObject object = new JSONObject(classes.get("eu/bogoe/dtu/exceptional/Null").toMap());
+            JSONObject object = cloneJSONObject(classes.get("eu/bogoe/dtu/exceptional/Null"));
             JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "eu/bogoe/dtu/exceptional/Null"));
 
             Map<Integer, JSONObject> mu = new HashMap<>();
@@ -110,10 +112,10 @@ public class ExceptionalNullTest extends TestSuperclass {
 
         @Test
         void neverThrows5() {
-            JSONObject s = new JSONObject(classes.get("java/lang/String").toMap());
+            JSONObject s = cloneJSONObject(classes.get("java/lang/String"));
             JSONObject sref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
 
-            JSONObject notYourProblem = new JSONObject(classes.get("java/lang/String").toMap());
+            JSONObject notYourProblem = cloneJSONObject(classes.get("java/lang/String"));
             JSONObject notYourProblemref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
 
             Map<Integer, JSONObject> mu = new HashMap<>();
@@ -130,7 +132,7 @@ public class ExceptionalNullTest extends TestSuperclass {
 
     @Test
     void interestingCase() {
-        JSONObject object = new JSONObject(classes.get("java/lang/Object").toMap());
+        JSONObject object = cloneJSONObject(classes.get("java/lang/Object"));
         JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
