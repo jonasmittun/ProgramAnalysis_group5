@@ -144,7 +144,7 @@ public class SignInterpreter implements Interpreter {
             JSONObject v_new = new JSONObject(v_old.toMap());
 
             mu_new.put(System.identityHashCode(e_new), v_new);
-            mu_mapper.put(System.identityHashCode(e_old), v_new);
+            mu_mapper.put(System.identityHashCode(e_old), e_new);
 
             switch(e_new.getString("kind")) {
                 case "array" -> {
