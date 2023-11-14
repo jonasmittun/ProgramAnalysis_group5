@@ -93,9 +93,10 @@ public class NullStepper implements AbstractStepper {
             case "load" -> {
                 int index = instruction.getInt("index");
                 JSONObject value = f.lambda()[index];
-                if(value == null) value = createNull();
 
-                if(value.has("kind")) { // Check if it's a reference type
+                if(value == null) {
+                    f.sigma().push(toAbstract(createNull()));
+                } else if(value.has("kind")) { // Check if it's a reference type
                     f.sigma().push(value);
                 } else {
                     f.sigma().push(new JSONObject(value.toMap()));

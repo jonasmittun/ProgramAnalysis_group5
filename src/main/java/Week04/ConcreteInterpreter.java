@@ -396,13 +396,15 @@ public class ConcreteInterpreter {
             case "load" -> {
                 int index = instruction.getInt("index");
                 JSONObject value = f.lambda()[index];
-                if(value == null) value = createNull();
 
-                if(value.has("kind")) { // Check if it's a reference type
+                if(value == null) {
+                    f.sigma().push(createNull());
+                } else if(value.has("kind")) { // Check if it's a reference type
                    f.sigma().push(value);
                 } else {
                     f.sigma().push(new JSONObject(value.toMap()));
                 }
+
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "store" -> {
