@@ -5,6 +5,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static Week05.Sign.*;
 
@@ -72,65 +73,47 @@ public class SignInterpreter implements Interpreter {
         }
     }
 
-    /** Clones everything from a triple of a method, psi and mu to a new triple */
+    /** Clones everything from a triple of a frame, psi and mu to a new triple */
     public static Triple<Frame, Deque<Frame>, Map<Integer, JSONObject>> clone_state(Frame frame, Deque<Frame> psi, Map<Integer, JSONObject> mu) {
+        // Create new memory
         Map<Integer, JSONObject> mu_new = new HashMap<>();
-        Deque<Frame> psi_new = new ArrayDeque<>();
 
         // Clone all elements in psi
-        for(Frame f : psi) {
-            // Clone elements in lambda
-            JSONObject[] lambda = new JSONObject[f.lambda().length];
-            for(int i = 0; i < lambda.length; i++) {
-                JSONObject e_old = f.lambda()[i];
-                JSONObject e_new = (e_old == null) ? null : new JSONObject(e_old.toMap());
+        Deque<Frame> psi_new = psi.stream().map(f -> clone_frame(f, mu, mu_new)).collect(Collectors.toCollection(ArrayDeque::new));
 
-                clone_helper(e_old, e_new, mu, mu_new);
+        // Clone current Frame
+        Frame frame_new = clone_frame(frame, mu, mu_new);
 
-                lambda[i] = e_new;
-            }
+        return new Triple<>(frame_new, psi_new, mu_new);
+    }
 
-            // Clone elements in sigma
-            Deque<JSONObject> sigma = new ArrayDeque<>();
-            for(JSONObject e_old : f.sigma()) {
-                JSONObject e_new = (e_old == null) ? null : new JSONObject(e_old.toMap());
-
-                clone_helper(e_old, e_new, mu, mu_new);
-
-                sigma.addLast(e_new);
-            }
-
-            psi_new.addLast(new Frame(lambda, sigma, f.iota()));
-        }
-
-        // --- Clone current method ---
-        // Clone elements in lambda
+    /** Clone Helper: Clones the frame and copies any references from the old memory to the new memory */
+    public static Frame clone_frame(Frame frame, Map<Integer, JSONObject> mu_old, Map<Integer, JSONObject> mu_new) {
+        // Clone Lambda
         JSONObject[] lambda_new = new JSONObject[frame.lambda().length];
         for(int i = 0; i < lambda_new.length; i++) {
             JSONObject e_old = frame.lambda()[i];
             JSONObject e_new = (e_old == null) ? null : new JSONObject(e_old.toMap());
 
-            clone_helper(e_old, e_new, mu, mu_new);
+            clone_helper(e_old, e_new, mu_old, mu_new);
 
             lambda_new[i] = e_new;
         }
 
-        // Clone elements in sigma
+        // Clone Sigma
         Deque<JSONObject> sigma_new = new ArrayDeque<>();
         for(JSONObject e_old : frame.sigma()) {
-            JSONObject e_new = (e_old == null) ? null : new JSONObject(e_old.toMap());
+            JSONObject e_new = new JSONObject(e_old.toMap());
 
-            clone_helper(e_old, e_new, mu, mu_new);
+            clone_helper(e_old, e_new, mu_old, mu_new);
 
             sigma_new.addLast(e_new);
         }
 
-        Frame frame_new = new Frame(lambda_new, sigma_new, frame.iota());
-
-        return new Triple<>(frame_new, psi_new, mu_new);
+        return new Frame(lambda_new, sigma_new, frame.iota());
     }
 
-    /** Copies any object e_old that exists in mu_old to mu_new, but with e_new as the new reference */
+    /** Clone Helper: Copies any object e_old that exists in mu_old to mu_new, but with e_new as the new reference */
     private static void clone_helper(JSONObject e_old, JSONObject e_new, Map<Integer, JSONObject> mu_old, Map<Integer, JSONObject> mu_new) {
         if(e_old == null) return;
 
