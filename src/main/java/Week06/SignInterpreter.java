@@ -50,7 +50,7 @@ public class SignInterpreter implements Interpreter {
 
             Set<State> next = stepper.step(current);
 
-            System.out.println("Generated: " + next.size());
+            System.out.println("Generated: " + next.size() + "\n");
 
             queue.addAll(next);
         }
