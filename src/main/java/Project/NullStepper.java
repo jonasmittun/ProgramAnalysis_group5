@@ -419,7 +419,7 @@ public class NullStepper implements AbstractStepper {
                 JSONObject count = f.sigma().pop();
                 int length = count.getInt("value");
 
-                JSONObject arrayref = initializeArray(type, length, dim, f.sigma(), mu);
+                JSONObject arrayref = toAbstract(initializeArray(type, length, dim, f.sigma(), mu));
 
                 JSONArray array = mu.get(System.identityHashCode(arrayref)).getJSONArray("value");
                 for(int i = 0; i < array.length(); i++) {
