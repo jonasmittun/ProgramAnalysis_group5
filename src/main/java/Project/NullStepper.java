@@ -402,8 +402,7 @@ public class NullStepper implements AbstractStepper {
                 if(access.contains("abstract")) throw new InstantiationError(classname + " is abstract.");
                 if(access.contains("interface")) throw new InstantiationError(classname + " is an interface.");
 
-                JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", classname));
-                toAbstract(objectref);
+                JSONObject objectref = toAbstract(new JSONObject(Map.of("kind", "class", "name", classname)));
                 JSONObject value = new JSONObject(classes.get(classname).toMap());
 
                 mu.put(System.identityHashCode(objectref), value);
