@@ -146,18 +146,6 @@ public class SignInterpreter implements Interpreter {
             mu_new.put(System.identityHashCode(e_new), v_new);
             mu_mapper.put(System.identityHashCode(e_old), v_new);
 
-                if(o.has("value")) {
-                    if(o.get("value") instanceof JSONArray array) {
-                        for(int i = 0; i < array.length(); i++) {
-                            JSONObject va = array.getJSONObject(i);
-                            if(va.has("kind")) {
-                                clone_helper(va, new JSONObject(va.toMap()), mu_old, mu_new);
-                            }
-                        }
-                    }
-                }
-            } else {
-                mu_new.put(System.identityHashCode(e_new), null);
             switch(e_new.getString("kind")) {
                 case "array" -> {
                     // Clone inner values if they are reference types
