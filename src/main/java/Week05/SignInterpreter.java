@@ -78,49 +78,73 @@ public class SignInterpreter implements Interpreter {
         // Create new memory
         Map<Integer, JSONObject> mu_new = new HashMap<>();
 
+        // Map to check if a reference has been cloned already (old reference -> new reference if exists)
+        Map<Integer, JSONObject> mu_mapper = new HashMap<>();
+
         // Clone all elements in psi
-        Deque<Frame> psi_new = psi.stream().map(f -> clone_frame(f, mu, mu_new)).collect(Collectors.toCollection(ArrayDeque::new));
+        Deque<Frame> psi_new = psi.stream().map(f -> clone_frame(f, mu, mu_new, mu_mapper)).collect(Collectors.toCollection(ArrayDeque::new));
 
         // Clone current Frame
-        Frame frame_new = clone_frame(frame, mu, mu_new);
+        Frame frame_new = clone_frame(frame, mu, mu_new, mu_mapper);
 
         return new Triple<>(frame_new, psi_new, mu_new);
     }
 
     /** Clone Helper: Clones the frame and copies any references from the old memory to the new memory */
-    public static Frame clone_frame(Frame frame, Map<Integer, JSONObject> mu_old, Map<Integer, JSONObject> mu_new) {
+    public static Frame clone_frame(Frame frame, Map<Integer, JSONObject> mu_old, Map<Integer, JSONObject> mu_new, Map<Integer, JSONObject> mu_mapper) {
         // Clone Lambda
         JSONObject[] lambda_new = new JSONObject[frame.lambda().length];
         for(int i = 0; i < lambda_new.length; i++) {
             JSONObject e_old = frame.lambda()[i];
-            JSONObject e_new = (e_old == null) ? null : new JSONObject(e_old.toMap());
 
-            clone_helper(e_old, e_new, mu_old, mu_new);
+            if(e_old == null) continue;
 
-            lambda_new[i] = e_new;
+            if(e_old.has("kind")) {
+                // Check if the reference has already been cloned
+                if(mu_mapper.containsKey(System.identityHashCode(e_old))) {
+                    lambda_new[i] = mu_mapper.get(System.identityHashCode(e_old));
+                } else {
+                    JSONObject e_new = new JSONObject(e_old.toMap());
+                    clone_helper(e_old, e_new, mu_old, mu_new, mu_mapper);
+
+                    lambda_new[i] = e_new;
+                }
+            } else {
+                lambda_new[i] = new JSONObject(e_old.toMap());
+            }
         }
 
         // Clone Sigma
         Deque<JSONObject> sigma_new = new ArrayDeque<>();
         for(JSONObject e_old : frame.sigma()) {
-            JSONObject e_new = new JSONObject(e_old.toMap());
+            if(e_old.has("kind")) {
+                // Check if the reference has already been cloned
+                if(mu_mapper.containsKey(System.identityHashCode(e_old))) {
+                    sigma_new.addLast(mu_mapper.get(System.identityHashCode(e_old)));
+                } else {
+                    JSONObject e_new = new JSONObject(e_old.toMap());
+                    clone_helper(e_old, e_new, mu_old, mu_new, mu_mapper);
 
-            clone_helper(e_old, e_new, mu_old, mu_new);
-
-            sigma_new.addLast(e_new);
+                    sigma_new.addLast(e_new);
+                }
+            } else {
+                sigma_new.addLast(new JSONObject(e_old.toMap()));
+            }
         }
 
         return new Frame(lambda_new, sigma_new, frame.iota());
     }
 
     /** Clone Helper: Copies any object e_old that exists in mu_old to mu_new, but with e_new as the new reference */
-    private static void clone_helper(JSONObject e_old, JSONObject e_new, Map<Integer, JSONObject> mu_old, Map<Integer, JSONObject> mu_new) {
+    private static void clone_helper(JSONObject e_old, JSONObject e_new, Map<Integer, JSONObject> mu_old, Map<Integer, JSONObject> mu_new, Map<Integer, JSONObject> mu_mapper) {
         if(e_old == null) return;
 
-        if(mu_old.containsKey(System.identityHashCode(e_old))) {
-            Object v = mu_old.get(System.identityHashCode(e_old));
-            if(v instanceof JSONObject o) {
-                mu_new.put(System.identityHashCode(e_new), new JSONObject(o.toMap()));
+        if(e_old.has("kind") && !mu_mapper.containsKey(System.identityHashCode(e_old))) {
+            JSONObject v_old = mu_old.get(System.identityHashCode(e_old));
+            JSONObject v_new = new JSONObject(v_old.toMap());
+
+            mu_new.put(System.identityHashCode(e_new), v_new);
+            mu_mapper.put(System.identityHashCode(e_old), v_new);
 
                 if(o.has("value")) {
                     if(o.get("value") instanceof JSONArray array) {
@@ -134,6 +158,31 @@ public class SignInterpreter implements Interpreter {
                 }
             } else {
                 mu_new.put(System.identityHashCode(e_new), null);
+            switch(e_new.getString("kind")) {
+                case "array" -> {
+                    // Clone inner values if they are reference types
+                    JSONArray array = v_new.getJSONArray("value");
+                    for(int i = 0; i < array.length(); i++) {
+                        JSONObject v_inner = array.getJSONObject(i);
+
+                        if(v_inner.has("kind")) {
+                            clone_helper(v_inner, new JSONObject(v_inner.toMap()), mu_old, mu_new, mu_mapper);
+                        }
+                    }
+                }
+                case "class" -> {
+                    // Clone any fields that have references in memory
+                    JSONArray fields = v_new.getJSONArray("fields");
+                    for(int i = 0; i < fields.length(); i++) {
+                        JSONObject field = fields.getJSONObject(i);
+
+                        if(field.getJSONObject("type").has("kind") && !field.isNull("value")) {
+                            JSONObject f_old = field.getJSONObject("value");
+                            clone_helper(f_old, new JSONObject(f_old.toMap()), mu_old, mu_new, mu_mapper);
+                        }
+                    }
+                }
+                default -> throw new RuntimeException("Unsupported reference type: " + e_old.get("kind"));
             }
         }
     }
