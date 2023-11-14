@@ -33,16 +33,16 @@ public class ConcreteInterpreter {
     }
 
     /** Returns the resolved method as a JSONObject
-     * @param ref           SimpleReferenceType: { "kind": "class", "name": &lt;ClassName&gt; }
+     * @param classref      SimpleReferenceType: { "kind": "class", "name": &lt;ClassName&gt; }
      * @param name          String
      * @param args          SimpleType[]
      * @param return_type   nullable SimpleType
      * @return              The method - if correctly resolved
      */
-    public static Method resolveMethod(Map<String, JSONObject> classes, JSONObject ref, String name, JSONArray args, Object return_type) {
-        if(!ref.has("name")) throw new IllegalArgumentException("Incorrect reference type!");
-        if(!classes.containsKey(ref.getString("name"))) throw new ResolutionException("Class " + ref.getString("name") + " not found!");
-        JSONObject cls = classes.get(ref.getString("name"));
+    public static Method resolveMethod(Map<String, JSONObject> classes, JSONObject classref, String name, JSONArray args, Object return_type) {
+        if(!classref.has("name")) throw new IllegalArgumentException("Incorrect reference type!");
+        if(!classes.containsKey(classref.getString("name"))) throw new ResolutionException("Class " + classref.getString("name") + " not found!");
+        JSONObject cls = classes.get(classref.getString("name"));
 
         JSONArray methods = cls.getJSONArray("methods");
         compare:
@@ -72,7 +72,7 @@ public class ConcreteInterpreter {
             return new Method(cls.getString("name"), method);
         }
 
-        throw new ResolutionException(ref.getString("name") + "." + name + " " + args + " → " + return_type + " not found!");
+        throw new ResolutionException(classref.getString("name") + "." + name + " " + args + " → " + return_type + " not found!");
     }
 
     /** Checks if the &lt;Type&gt; is equal to the &lt;SimpleType&gt; */
@@ -301,6 +301,18 @@ public class ConcreteInterpreter {
         return false;
     }
 
+    /** Returns a new JSONObject representing the null value: { "value": {@code JSONObject.NULL} } */
+    public static JSONObject createNull() {
+        return new JSONObject(Map.of("value", JSONObject.NULL));
+    }
+
+    /** Check if a JSONObject is null
+     * @see Week04.ConcreteInterpreter#createNull()
+     */
+    public static boolean isNull(JSONObject o) {
+        return o == null || (o.has("value") && o.isNull("value"));
+    }
+
     public void run(Frame frame, Map<Integer, JSONObject> mu) {
         Deque<Frame> psi = new ArrayDeque<>();  // Method Stack
         psi.push(frame);
@@ -329,12 +341,10 @@ public class ConcreteInterpreter {
                 JSONObject index = f.sigma().pop();
                 JSONObject arrayref = f.sigma().pop();
 
-                if(arrayref == null) throw new NullPointerException("Cannot load from array because \"arrayref\" is null");
+                if(isNull(arrayref)) throw new NullPointerException("Cannot load from array because \"arrayref\" is null");
 
                 JSONObject actual = mu.get(System.identityHashCode(arrayref));
                 JSONArray array = actual.getJSONArray("value");
-
-                if(array == null) throw new NullPointerException("Cannot load from array because \"array\" is null");
 
                 int index_value = index.getInt("value");
                 if(array.length() < index_value) throw new ArrayIndexOutOfBoundsException("Index " + index_value + " out of bounds for length " + array.length());
@@ -349,12 +359,10 @@ public class ConcreteInterpreter {
                 JSONObject index = f.sigma().pop();
                 JSONObject arrayref = f.sigma().pop();
 
-                if(arrayref == null) throw new NullPointerException("Cannot store to array because \"arrayref\" is null");
+                if(isNull(arrayref)) throw new NullPointerException("Cannot store to array because \"arrayref\" is null");
 
                 JSONObject actual = mu.get(System.identityHashCode(arrayref));
                 JSONArray array = actual.getJSONArray("value");
-
-                if(array == null) throw new NullPointerException("Cannot store to array because \"array\" is null");
 
                 int index_value = index.getInt("value");
                 if(array.length() < index_value) throw new ArrayIndexOutOfBoundsException("Index " + index_value + " out of bounds for length " + array.length());
@@ -363,34 +371,38 @@ public class ConcreteInterpreter {
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "push" -> {
-                JSONObject value = instruction.getJSONObject("value");
-                String type = value.getString("type");
+                if(instruction.isNull("value")) {
+                    f.sigma().push(createNull());
+                } else {
+                    JSONObject value = instruction.getJSONObject("value");
+                    String type = value.getString("type");
 
-                switch (type) {
-                    case "class" -> {
-                        f.sigma().push(value);
-                    }
-                    case "string" -> {
-                        // Create array reference for string value
-                        JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "byte"));
-                        // Create array to hold string value as a byte[]
-                        JSONObject array = new JSONObject(Map.of("type", "byte", "value", new JSONArray(value.getString("value").getBytes(StandardCharsets.UTF_8))));
-                        mu.put(System.identityHashCode(arrayref), array);
+                    switch(type) {
+                        case "class" -> {
+                            f.sigma().push(value);
+                        }
+                        case "string" -> {
+                            // Create array reference for string value
+                            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "byte"));
+                            // Create array to hold string value as a byte[]
+                            JSONObject array = new JSONObject(Map.of("type", "byte", "value", new JSONArray(value.getString("value").getBytes(StandardCharsets.UTF_8))));
+                            mu.put(System.identityHashCode(arrayref), array);
 
-                        // Create a new String object
-                        JSONObject object = new JSONObject(classes.get("java/lang/String").toMap());
-                        // Update "value" field in this String object to the array reference
-                        object.getJSONArray("fields").getJSONObject(0).put("value", arrayref);
+                            // Create a new String object
+                            JSONObject object = new JSONObject(classes.get("java/lang/String").toMap());
+                            // Update "value" field in this String object to the array reference
+                            object.getJSONArray("fields").getJSONObject(0).put("value", arrayref);
 
-                        // Create String object reference
-                        JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
-                        mu.put(System.identityHashCode(objectref), object);
+                            // Create String object reference
+                            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
+                            mu.put(System.identityHashCode(objectref), object);
 
-                        // Push object reference
-                        f.sigma().push(objectref);
-                    }
-                    default -> {
-                        f.sigma().push(new JSONObject(value.toMap()));
+                            // Push object reference
+                            f.sigma().push(objectref);
+                        }
+                        default -> {
+                            f.sigma().push(new JSONObject(value.toMap()));
+                        }
                     }
                 }
 
@@ -399,6 +411,8 @@ public class ConcreteInterpreter {
             case "load" -> {
                 int index = instruction.getInt("index");
                 JSONObject value = f.lambda()[index];
+                if(value == null) value = createNull();
+
                 if(value.has("kind")) { // Check if it's a reference type
                    f.sigma().push(value);
                 } else {
@@ -473,14 +487,14 @@ public class ConcreteInterpreter {
             }
             case "negate" -> {
                 String type = instruction.getString("type"); // Arithmetic Type
-                JSONObject value1 = f.sigma().pop();
+                JSONObject value = f.sigma().pop();
                 JSONObject result = new JSONObject();
                 result.put("type", type);
                 switch(type) {
-                    case "int"      -> result.put("value", value1.getInt("value") * -1);
-                    case "long"     -> result.put("value", value1.getLong("value") * -1L);
-                    case "float"    -> result.put("value", value1.getFloat("value") * -1.f);
-                    case "double"   -> result.put("value", value1.getDouble("value") * -1.d);
+                    case "int"      -> result.put("value", value.getInt("value") * -1);
+                    case "long"     -> result.put("value", value.getLong("value") * -1L);
+                    case "float"    -> result.put("value", value.getFloat("value") * -1.f);
+                    case "double"   -> result.put("value", value.getDouble("value") * -1.d);
                 }
                 f.sigma().push(result);
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
@@ -675,8 +689,8 @@ public class ConcreteInterpreter {
                 if(value.has("kind")) {
                     JSONObject v = mu.get(System.identityHashCode(value));
                     result = switch(condition) {
-                        case "is"       -> v == null;
-                        case "isnot"    -> v != null;
+                        case "is"       -> isNull(v);
+                        case "isnot"    -> !isNull(v);
                         default  -> throw new IllegalArgumentException("Unsupported ifz condition in \"ref\": " + condition);
                     };
                 } else {
@@ -760,9 +774,10 @@ public class ConcreteInterpreter {
                 if(instruction.getBoolean("static")) {
                     object = classes.get(field.getString("class"));
                 } else {
-                    JSONObject ref = f.sigma().pop();
-                    object = mu.get(System.identityHashCode(ref));
                     JSONObject objectref = f.sigma().pop();
+
+                    if(isNull(objectref)) throw new NullPointerException("Cannot get field from object because \"objectref\" is null");
+
                     object = mu.get(System.identityHashCode(objectref));
                 }
 
@@ -783,9 +798,10 @@ public class ConcreteInterpreter {
                 if(instruction.getBoolean("static")) {
                     object = classes.get(field.getString("class"));
                 } else {
-                    JSONObject ref = f.sigma().pop();
-                    object = mu.get(System.identityHashCode(ref));
                     JSONObject objectref = f.sigma().pop();
+
+                    if(isNull(objectref)) throw new NullPointerException("Cannot put field in object because \"objectref\" is null");
+
                     object = mu.get(System.identityHashCode(objectref));
                 }
 
@@ -887,21 +903,18 @@ public class ConcreteInterpreter {
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "arraylength" -> {
-                JSONObject ref = f.sigma().pop();
+                JSONObject arrayref = f.sigma().pop();
+                JSONObject array = mu.get(System.identityHashCode(arrayref));
+                int arraylength = array.getJSONArray("value").length();
 
-                JSONObject array = mu.get(System.identityHashCode(ref));
-
-                JSONObject result = new JSONObject();
-                result.put("type", "int");
-                result.put("value", array.getJSONArray("value").length());
-
-                f.sigma().push(result);
+                JSONObject value = new JSONObject(Map.of("type", "int", "value", arraylength));
+                f.sigma().push(value);
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
             case "throw" -> {
                 JSONObject objectref = f.sigma().pop();
-                if(objectref == null) throw new NullPointerException("Cannot throw because \"objectref\" is null");
+                if(isNull(objectref)) throw new NullPointerException("Cannot throw because \"objectref\" is null");
 
                 JSONObject exceptionhandler = null;
                 while(exceptionhandler == null) {
@@ -954,7 +967,7 @@ public class ConcreteInterpreter {
                         Optional<JSONObject> stacktraceref = getField(o, "stackTrace", new JSONObject(Map.of("kind", "array", "type", new JSONObject(Map.of("kind", "class", "name", "java/lang/StackTraceElement")))), mu);
                         if(stacktraceref.isPresent()) {
                             JSONObject stacktrace = mu.get(System.identityHashCode(stacktraceref.get()));
-                            if(stacktrace != null) {
+                            if(!isNull(stacktrace)) {
                                 JSONArray array = stacktrace.getJSONArray("value");
                                 for(int i = 0; i < array.length(); i++) {
                                     JSONObject stacktraceelementref = array.getJSONObject(i);
@@ -983,7 +996,7 @@ public class ConcreteInterpreter {
                         Optional<JSONObject> causeref = getField(o, "cause", new JSONObject(Map.of("kind", "class", "name", "java/lang/Throwable")), mu);
                         if(causeref.isPresent()) {
                             JSONObject cause = mu.get(System.identityHashCode(causeref));
-                            if(cause != null) {
+                            if(!isNull(cause)) {
                                 System.err.println("Caused by: " + cause.getString("name").replace("/", "."));
                             }
                         }
@@ -995,7 +1008,7 @@ public class ConcreteInterpreter {
 
                 JSONObject objectref = f.sigma().peek();
 
-                if(objectref != null && !isInstanceOf(classes, objectref, type)) {
+                if(!isNull(objectref) && !isInstanceOf(classes, objectref, type)) {
                     throw new ClassCastException(objectref + " cannot be cast to " + type);
                 }
 
@@ -1006,7 +1019,7 @@ public class ConcreteInterpreter {
 
                 JSONObject objectref = f.sigma().pop();
 
-                boolean result = isInstanceOf(classes, objectref, type);
+                boolean result = !isNull(objectref) && isInstanceOf(classes, objectref, type);
 
                 f.sigma().push(new JSONObject(Map.of("type", "int", "value", result ? 1 : 0)));
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));

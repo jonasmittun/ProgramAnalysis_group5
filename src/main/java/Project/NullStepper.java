@@ -38,12 +38,10 @@ public class NullStepper implements AbstractStepper {
                 JSONObject index = f.sigma().pop();
                 JSONObject arrayref = f.sigma().pop();
 
-                if(arrayref == null) throw new NullPointerException("Cannot load from array because \"arrayref\" is null");
+                if(isNull(arrayref)) throw new NullPointerException("Cannot load from array because \"arrayref\" is null");
 
                 JSONObject actual = mu.get(System.identityHashCode(arrayref));
                 JSONArray array = actual.getJSONArray("value");
-
-                if(array == null) throw new NullPointerException("Cannot load from array because \"array\" is null");
 
                 int index_value = index.getInt("value");
                 if(array.length() < index_value) throw new ArrayIndexOutOfBoundsException("Index " + index_value + " out of bounds for length " + array.length());
@@ -60,12 +58,10 @@ public class NullStepper implements AbstractStepper {
                 JSONObject index = f.sigma().pop();
                 JSONObject arrayref = f.sigma().pop();
 
-                if(arrayref == null) throw new NullPointerException("Cannot store to array because \"arrayref\" is null");
+                if(isNull(arrayref)) throw new NullPointerException("Cannot store to array because \"arrayref\" is null");
 
                 JSONObject actual = mu.get(System.identityHashCode(arrayref));
                 JSONArray array = actual.getJSONArray("value");
-
-                if(array == null) throw new NullPointerException("Cannot store to array because \"array\" is null");
 
                 int index_value = index.getInt("value");
                 if(array.length() < index_value) throw new ArrayIndexOutOfBoundsException("Index " + index_value + " out of bounds for length " + array.length());
@@ -76,8 +72,10 @@ public class NullStepper implements AbstractStepper {
                 results.add(state);
             }
             case "push" -> {
-                JSONObject o = null;
-                if(!instruction.isNull("value")) {
+                JSONObject o;
+                if(instruction.isNull("value")) {
+                    o = createNull();
+                } else {
                     JSONObject value = instruction.getJSONObject("value");
                     if(value.getString("type").equals("class")) { // Value is a <SimpleReferenceType>
                         o = value;
@@ -95,6 +93,8 @@ public class NullStepper implements AbstractStepper {
             case "load" -> {
                 int index = instruction.getInt("index");
                 JSONObject value = f.lambda()[index];
+                if(value == null) value = createNull();
+
                 if(value.has("kind")) { // Check if it's a reference type
                     f.sigma().push(value);
                 } else {
@@ -293,11 +293,12 @@ public class NullStepper implements AbstractStepper {
                 if(instruction.getBoolean("static")) {
                     object = classes.get(field.getString("class"));
                 } else {
-                    JSONObject ref = f.sigma().pop();
-                    object = mu.get(System.identityHashCode(ref));
-                }
+                    JSONObject objectref = f.sigma().pop();
 
-                if(object == null) throw new NullPointerException("Cannot get field because \"object\" is null");
+                    if(isNull(objectref)) throw new NullPointerException("Cannot get field because \"object\" is null");
+
+                    object = mu.get(System.identityHashCode(objectref));
+                }
 
                 Optional<JSONObject> value = getField(object, fieldname, fieldtype, mu);
                 if(value.isEmpty()) throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist.");
@@ -318,8 +319,11 @@ public class NullStepper implements AbstractStepper {
                 if(instruction.getBoolean("static")) {
                     object = classes.get(field.getString("class"));
                 } else {
-                    JSONObject ref = f.sigma().pop();
-                    object = mu.get(System.identityHashCode(ref));
+                    JSONObject objectref = f.sigma().pop();
+
+                    if(isNull(objectref)) throw new NullPointerException("Cannot put field in object because \"objectref\" is null");
+
+                    object = mu.get(System.identityHashCode(objectref));
                 }
 
                 if(!putField(object, fieldname, fieldtype, value, mu)) throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist in " + object.getString("name"));
@@ -431,7 +435,7 @@ public class NullStepper implements AbstractStepper {
                 results.add(state);
             }
             case "arraylength" -> {
-                JSONObject ref = f.sigma().pop();
+                JSONObject arrayref = f.sigma().pop();
 
                 f.sigma().push(new JSONObject(Map.of("type", "int", "value", 0, "abstract", NOTNULL)));
 
@@ -441,7 +445,7 @@ public class NullStepper implements AbstractStepper {
             }
             case "throw" -> {
                 JSONObject objectref = f.sigma().pop();
-                if(objectref == null) throw new NullPointerException("Cannot throw because \"objectref\" is null");
+                if(isNull(objectref)) throw new NullPointerException("Cannot throw because \"objectref\" is null");
 
                 JSONObject exceptionhandler = null;
                 while(exceptionhandler == null) {
@@ -495,7 +499,7 @@ public class NullStepper implements AbstractStepper {
                         Optional<JSONObject> stacktraceref = getField(o, "stackTrace", new JSONObject(Map.of("kind", "array", "type", new JSONObject(Map.of("kind", "class", "name", "java/lang/StackTraceElement")))), mu);
                         if(stacktraceref.isPresent()) {
                             JSONObject stacktrace = mu.get(System.identityHashCode(stacktraceref.get()));
-                            if(stacktrace != null) {
+                            if(!isNull(stacktrace)) {
                                 JSONArray array = stacktrace.getJSONArray("value");
                                 for(int i = 0; i < array.length(); i++) {
                                     JSONObject stacktraceelementref = array.getJSONObject(i);
@@ -524,7 +528,7 @@ public class NullStepper implements AbstractStepper {
                         Optional<JSONObject> causeref = getField(o, "cause", new JSONObject(Map.of("kind", "class", "name", "java/lang/Throwable")), mu);
                         if(causeref.isPresent()) {
                             JSONObject cause = mu.get(System.identityHashCode(causeref));
-                            if(cause != null) {
+                            if(!isNull(cause)) {
                                 System.err.println("Caused by: " + cause.getString("name").replace("/", "."));
                             }
                         }
@@ -536,7 +540,7 @@ public class NullStepper implements AbstractStepper {
 
                 JSONObject objectref = f.sigma().peek();
 
-                if(objectref != null && !isInstanceOf(classes, objectref, type)) {
+                if(!isNull(objectref) && !isInstanceOf(classes, objectref, type)) {
                     throw new ClassCastException(objectref + " cannot be cast to " + type);
                 }
 
@@ -548,7 +552,7 @@ public class NullStepper implements AbstractStepper {
 
                 JSONObject objectref = f.sigma().pop();
 
-                boolean result = isInstanceOf(classes, objectref, type);
+                boolean result = !isNull(objectref) && isInstanceOf(classes, objectref, type);
 
                 f.sigma().push(new JSONObject(Map.of("type", "int", "value", result ? 1 : 0)));
 

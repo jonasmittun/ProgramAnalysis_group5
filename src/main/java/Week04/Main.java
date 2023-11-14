@@ -50,7 +50,7 @@ public class Main {
 
     /** Converts a JSONObject into a formatted value string. */
     public static String toFormattedString(JSONObject o) {
-        if(o == null || o.isEmpty()) {
+        if(ConcreteInterpreter.isNull(o)) {
             return "(null)";
         } else if(o.has("kind")) {
             return "(" + SimpleType.toFormattedString(o, false) + ")";

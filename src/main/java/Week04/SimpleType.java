@@ -36,11 +36,9 @@ public class SimpleType {
 
             return result;
         } else if(SimpleType instanceof JSONObject SimpleReferenceType) {
-            mu.put(System.identityHashCode(SimpleReferenceType), null);
+            mu.put(System.identityHashCode(SimpleReferenceType), ConcreteInterpreter.createNull());
             return SimpleReferenceType;
-        } else {
-            throw new IllegalArgumentException("Invalid SimpleType: " + SimpleType);
-        }
+        } else throw new IllegalArgumentException("Invalid SimpleType: " + SimpleType);
     }
 
     /** Converts the SimpleType object into a formatted string.
