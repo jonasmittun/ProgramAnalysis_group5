@@ -21,8 +21,12 @@ public class SignInterpreter implements Interpreter {
     @Override
     public void run(Frame frame, Map<Integer, JSONObject> mu){
         Deque<Frame> psi = new ArrayDeque<>();  // Method Stack
-        Week05.SignInterpreter.addSigns(frame);
-        System.out.println(frame);
+
+        // Transform values to abstract domain
+        for(JSONObject o : frame.lambda()) o = Week05.SignInterpreter.toAbstract(o);
+        for(JSONObject o : frame.sigma()) o = Week05.SignInterpreter.toAbstract(o);
+
+        System.out.println("Initial: " + "\nΨ[" + frame + "]\n");
         psi.push(frame);
 
         Queue<State> queue = new LinkedList<>();

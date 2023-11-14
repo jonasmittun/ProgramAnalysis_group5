@@ -47,16 +47,6 @@ public class SignInterpreter implements Interpreter {
         return o;
     }
 
-    public static void addSigns(Frame f) {
-        for(JSONObject o : f.lambda()) {
-            toAbstract(o);
-        }
-
-        for(JSONObject o : f.sigma()) {
-            toAbstract(o);
-        }
-    }
-
     /** Clones everything from a triple of a frame, psi and mu to a new triple */
     public static Triple<Frame, Deque<Frame>, Map<Integer, JSONObject>> clone_state(Frame frame, Deque<Frame> psi, Map<Integer, JSONObject> mu) {
         // Create new memory
@@ -162,7 +152,11 @@ public class SignInterpreter implements Interpreter {
     @Override
     public void run(Frame frame, Map<Integer, JSONObject> mu){
         Deque<Frame> psi = new ArrayDeque<>();  // Method Stack
-        addSigns(frame);
+
+        // Transform values to abstract domain
+        for(JSONObject o : frame.lambda()) o = toAbstract(o);
+        for(JSONObject o : frame.sigma()) o = toAbstract(o);
+
         System.out.println("Initial: " + "\nΨ[" + frame + "]\n");
         psi.push(frame);
 
