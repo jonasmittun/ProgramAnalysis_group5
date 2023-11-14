@@ -26,27 +26,28 @@ public class SignInterpreter implements Interpreter {
         this.stepper = new SignStepper(classes);
     }
 
-    public static JSONObject toAbstract(JSONObject o) {
-        if(o != null && !o.has("sign")) {
-            if(!o.has("kind") && o.has("type") && o.has("value")) {
-                Sign r = switch (o.getString("type")) {
-                    case "boolean" -> o.getBoolean("value") ? POSITIVE : ZERO;
-                    case "int", "integer" -> toSign(Integer.compare(o.getInt("value"), 0));
-                    case "long" -> toSign(Long.compare(o.getLong("value"), 0));
-                    case "float" -> toSign(Float.compare(o.getFloat("value"), 0));
-                    case "double" -> toSign(Double.compare(o.getDouble("value"), 0));
+    public static JSONObject toAbstract(Object o) {
+        if(o == null) {
+            return ConcreteInterpreter.createNull();
+        } else if(o instanceof JSONObject jo) {
+            if(!jo.has("sign") && !jo.has("kind") && jo.has("type") && jo.has("value")) {
+                Sign r = switch (jo.getString("type")) {
+                    case "boolean" -> jo.getBoolean("value") ? POSITIVE : ZERO;
+                    case "int", "integer" -> toSign(Integer.compare(jo.getInt("value"), 0));
+                    case "long" -> toSign(Long.compare(jo.getLong("value"), 0));
+                    case "float" -> toSign(Float.compare(jo.getFloat("value"), 0));
+                    case "double" -> toSign(Double.compare(jo.getDouble("value"), 0));
                     default -> {
-                        System.out.println("Warning: Unsupported type: " + o.get("type"));
+                        System.out.println("Warning: Unsupported type: " + jo.get("type"));
                         yield ZERO;
                     }
                 };
 
-                o.put("sign", Set.of(r));
-                return o;
+                jo.put("sign", Set.of(r));
             }
-        }
 
-        return o;
+            return jo;
+        } else throw new RuntimeException(o + " is not a JSONObject");
     }
 
     /** Clones everything from a triple of a frame, psi and mu to a new triple */
