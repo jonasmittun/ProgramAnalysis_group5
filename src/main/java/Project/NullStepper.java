@@ -296,10 +296,10 @@ public class NullStepper implements AbstractStepper {
                     object = classes.get(field.getString("class"));
                 } else {
                     JSONObject objectref = f.sigma().pop();
-
-                    if(isNull(objectref)) throw new NullPointerException("Cannot get field because \"object\" is null");
+                    if(isNull(objectref)) throw new NullPointerException("Cannot get field because \"objectref\" is null");
 
                     object = mu.get(System.identityHashCode(objectref));
+                    if(isNull(object)) throw new NullPointerException("Cannot get field because \"object\" is null");
                 }
 
                 Optional<JSONObject> value = getField(object, fieldname, fieldtype, mu);
@@ -322,10 +322,10 @@ public class NullStepper implements AbstractStepper {
                     object = classes.get(field.getString("class"));
                 } else {
                     JSONObject objectref = f.sigma().pop();
-
                     if(isNull(objectref)) throw new NullPointerException("Cannot put field in object because \"objectref\" is null");
 
                     object = mu.get(System.identityHashCode(objectref));
+                    if(isNull(object)) throw new NullPointerException("Cannot put field in object because \"object\" is null");
                 }
 
                 if(!putField(object, fieldname, fieldtype, value, mu)) throw new NoSuchFieldError("The field \"" + field.getString("name") + "\" does not exist in " + object.getString("name"));
