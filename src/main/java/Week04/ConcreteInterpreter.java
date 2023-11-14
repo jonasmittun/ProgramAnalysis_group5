@@ -117,7 +117,7 @@ public class ConcreteInterpreter {
      * @return          An Optional&lt;JSONObject&gt; containing the value of the field if found, else an Optional.empty()
      */
     public static Optional<JSONObject> getField(JSONObject object, String fieldname, Object fieldtype, Map<Integer, JSONObject> mu) {
-        if(!object.has("fields")) return Optional.empty();
+        if(isNull(object) || !object.has("fields")) return Optional.empty();
 
         JSONArray fields = object.getJSONArray("fields");
         for(int i = 0; i < fields.length(); i++) {
@@ -142,7 +142,7 @@ public class ConcreteInterpreter {
      * @return          True when the field has been correctly put and false when not.
      */
     public static boolean putField(JSONObject object, String fieldname, Object fieldtype, JSONObject value, Map<Integer, JSONObject> mu) {
-        if(!object.has("fields")) return false;
+        if(isNull(object) || !object.has("fields")) return false;
 
         JSONArray fields = object.getJSONArray("fields");
         for(int i = 0; i < fields.length(); i++) {
