@@ -112,43 +112,66 @@ public class SignInterpreter implements Interpreter {
         return new Frame(lambda_new, sigma_new, frame.iota());
     }
 
-    /** Clone Helper: Copies any object e_old that exists in mu_old to mu_new, but with e_new as the new reference */
+    /** Clone Helper: Copies any reference e_old that exists in mu_old to mu_new, but with e_new as the new reference */
     private static void clone_helper(JSONObject e_old, JSONObject e_new, Map<Integer, JSONObject> mu_old, Map<Integer, JSONObject> mu_new, Map<Integer, JSONObject> mu_mapper) {
         if(e_old == null) return;
 
-        if(e_old.has("kind") && !mu_mapper.containsKey(System.identityHashCode(e_old))) {
+        if(e_old.has("kind") && mu_old.containsKey(System.identityHashCode(e_old)) && !mu_mapper.containsKey(System.identityHashCode(e_old))) {
             JSONObject v_old = mu_old.get(System.identityHashCode(e_old));
             JSONObject v_new = cloneJSONObject(v_old);
 
             mu_new.put(System.identityHashCode(e_new), v_new);
             mu_mapper.put(System.identityHashCode(e_old), e_new);
 
-            switch(e_new.getString("kind")) {
+            switch(e_old.getString("kind")) {
                 case "array" -> {
                     // Clone inner values if they are reference types
-                    JSONArray array = v_new.getJSONArray("value");
-                    for(int i = 0; i < array.length(); i++) {
-                        JSONObject v_inner = array.getJSONObject(i);
+                    JSONArray array_old = v_old.getJSONArray("value");
+                    JSONArray array_new = v_new.getJSONArray("value");
+                    for(int i = 0; i < array_old.length(); i++) {
+                        JSONObject inner_old = array_old.getJSONObject(i);
+                        JSONObject inner_new = array_new.getJSONObject(i);
 
-                        if(v_inner.has("kind")) {
-                            clone_helper(v_inner, cloneJSONObject(v_inner), mu_old, mu_new, mu_mapper);
+                        if(inner_old.has("kind")) {
+                            clone_helper(inner_old, inner_new, mu_old, mu_new, mu_mapper);
                         }
                     }
                 }
-                case "class" -> {
-                    // Clone any fields that have references in memory
-                    JSONArray fields = v_new.getJSONArray("fields");
-                    for(int i = 0; i < fields.length(); i++) {
-                        JSONObject field = fields.getJSONObject(i);
-
-                        if(field.getJSONObject("type").has("kind") && !field.isNull("value")) {
-                            JSONObject f_old = field.getJSONObject("value");
-                            clone_helper(f_old, cloneJSONObject(f_old), mu_old, mu_new, mu_mapper);
-                        }
-                    }
-                }
+                case "class" -> clone_class(v_old, v_new, mu_old, mu_new, mu_mapper);
                 default -> throw new RuntimeException("Unsupported reference type: " + e_old.get("kind"));
             }
+        }
+    }
+
+    /** Clone Helper: Recursively copies the class from mu_old to mu_new until no superclass can be found
+     * @param class_old The old class object
+     * @param class_new The copy of class_old
+     */
+    private static void clone_class(JSONObject class_old, JSONObject class_new, Map<Integer, JSONObject> mu_old, Map<Integer, JSONObject> mu_new, Map<Integer, JSONObject> mu_mapper) {
+        // Clone fields
+        JSONArray fields_old = class_old.getJSONArray("fields");
+        JSONArray fields_new = class_new.getJSONArray("fields");
+        for(int i = 0; i < fields_old.length(); i++) {
+            JSONObject field_old = fields_old.getJSONObject(i);
+            JSONObject field_new = fields_new.getJSONObject(i);
+
+            if(field_old.getJSONObject("type").has("kind") && !field_old.isNull("value")) {
+                JSONObject f_old = field_old.getJSONObject("value");
+                JSONObject f_new = field_new.getJSONObject("value");
+
+                clone_helper(f_old, f_new, mu_old, mu_new, mu_mapper);
+            }
+        }
+
+        // Clone superclass if exists
+        if(mu_old.containsKey(System.identityHashCode(class_old))) {
+            JSONObject super_old = mu_old.get(System.identityHashCode(class_old));
+            JSONObject super_new = cloneJSONObject(super_old);
+
+            mu_new.put(System.identityHashCode(class_new), super_new);
+            mu_mapper.put(System.identityHashCode(class_old), class_new);
+
+            clone_class(super_old, super_new, mu_old, mu_new, mu_mapper);
         }
     }
 
