@@ -405,15 +405,10 @@ public class ConcreteInterpreter {
             }
             case "load" -> {
                 int index = instruction.getInt("index");
+                String type = instruction.getString("type");
                 JSONObject value = f.lambda()[index];
 
-                if(value == null) {
-                    f.sigma().push(createNull());
-                } else if(value.has("kind") || (value.has("value") && value.isNull("value"))) { // Check if it's a reference type
-                   f.sigma().push(value);
-                } else {
-                    f.sigma().push(cloneJSONObject(value));
-                }
+                f.sigma().push(type.equals("ref") ? value : cloneJSONObject(value));
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
