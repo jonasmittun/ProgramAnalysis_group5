@@ -762,7 +762,7 @@ public class SignStepper implements AbstractStepper {
                     // TODO: Find method in subclass / "Implement class" at runtime
                 }
 
-                JSONObject[] lambda = new JSONObject[resolvedMethod.method().getJSONObject("code").getInt("max_locals")];
+                JSONObject[] lambda = createNullArray(resolvedMethod.method().getJSONObject("code").getInt("max_locals"));
                 for(int i = 0; i < args.length(); i++) {
                     JSONObject arg = f.sigma().pop();
 

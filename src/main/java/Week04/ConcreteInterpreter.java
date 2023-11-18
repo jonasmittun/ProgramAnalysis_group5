@@ -293,6 +293,13 @@ public class ConcreteInterpreter {
         return new JSONObject(Map.of("value", JSONObject.NULL));
     }
 
+    /** Returns a new JSONArray filled with null-values
+     * @see Week04.ConcreteInterpreter#createNull()
+     */
+    public static JSONObject[] createNullArray(int length) {
+        return IntStream.range(0, length).mapToObj(i -> createNull()).toArray(JSONObject[]::new);
+    }
+
     /** Check if a JSONObject is null
      * @see Week04.ConcreteInterpreter#createNull()
      */
@@ -838,7 +845,7 @@ public class ConcreteInterpreter {
                     // TODO: Find method in subclass / "Implement class" at runtime
                 }
 
-                JSONObject[] lambda = new JSONObject[resolvedMethod.method().getJSONObject("code").getInt("max_locals")];
+                JSONObject[] lambda = createNullArray(resolvedMethod.method().getJSONObject("code").getInt("max_locals"));
                 for(int i = 0; i < args.length(); i++) {
                     JSONObject arg = f.sigma().pop();
 

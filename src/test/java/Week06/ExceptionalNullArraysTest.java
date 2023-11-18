@@ -1,10 +1,11 @@
 package Week06;
 
-import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import static Week04.ConcreteInterpreter.createNullArray;
 
 public class ExceptionalNullArraysTest extends TestSuperclass {
 
@@ -18,7 +19,7 @@ public class ExceptionalNullArraysTest extends TestSuperclass {
     class alwaysThrows {
         @Test
         void alwaysThrows1() {
-            test("alwaysThrows1", new JSONObject[1], null, NullPointerException.class, null);
+            test("alwaysThrows1", createNullArray(1), null, NullPointerException.class, null);
         }
 
         /*

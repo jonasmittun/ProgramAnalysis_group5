@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 import java.util.Set;
 
+import static Week04.ConcreteInterpreter.createNullArray;
 import static Week05.Sign.*;
 
 public class ExceptionalArithmeticTest extends TestSuperclass {
@@ -23,12 +24,12 @@ public class ExceptionalArithmeticTest extends TestSuperclass {
     class alwaysThrows {
         @Test
         void alwaysThrows1() {
-            test("alwaysThrows1", new JSONObject[0], null, ArithmeticException.class, "Illegal divide by zero");
+            test("alwaysThrows1", createNullArray(0), null, ArithmeticException.class, "Illegal divide by zero");
         }
 
         @Test
         void alwaysThrows2() {
-            JSONObject[] lambda = new JSONObject[2];
+            JSONObject[] lambda = createNullArray(2);
             lambda[0] = new JSONObject(Map.of("type", "int", "value", 6, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
 
             test("alwaysThrows2", lambda, null, ArithmeticException.class, "Illegal divide by zero");
@@ -36,7 +37,7 @@ public class ExceptionalArithmeticTest extends TestSuperclass {
 
         @Test
         void alwaysThrows3() {
-            JSONObject[] lambda = new JSONObject[2];
+            JSONObject[] lambda = createNullArray(2);
             lambda[0] = new JSONObject(Map.of("type", "float", "value", 6f, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
             lambda[1] = new JSONObject(Map.of("type", "float", "value", 1f, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
 
@@ -45,7 +46,7 @@ public class ExceptionalArithmeticTest extends TestSuperclass {
 
         @Test
         void alwaysThrows4() {
-            JSONObject[] lambda = new JSONObject[2];
+            JSONObject[] lambda = createNullArray(2);
             lambda[0] = new JSONObject(Map.of("type", "int", "value", 6, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
             lambda[1] = new JSONObject(Map.of("type", "int", "value", 1, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
 
@@ -54,7 +55,7 @@ public class ExceptionalArithmeticTest extends TestSuperclass {
 
         @Test
         void alwaysThrows5() {
-            JSONObject[] lambda = new JSONObject[2];
+            JSONObject[] lambda = createNullArray(2);
             lambda[0] = new JSONObject(Map.of("type", "int", "value", 6, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
             lambda[1] = new JSONObject(Map.of("type", "int", "value", 1, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
 
@@ -67,17 +68,17 @@ public class ExceptionalArithmeticTest extends TestSuperclass {
     class itDependsOnLattice {
         @Test
         void itDependsOnLattice1() {
-            test("itDependsOnLattice1", new JSONObject[1], null, ArithmeticException.class, "Illegal divide by zero");
+            test("itDependsOnLattice1", createNullArray(1), null, ArithmeticException.class, "Illegal divide by zero");
         }
 
         @Test
         void itDependsOnLattice2() {
-            test("itDependsOnLattice2", new JSONObject[1], null, ArithmeticException.class, "Illegal divide by zero");
+            test("itDependsOnLattice2", createNullArray(1), null, ArithmeticException.class, "Illegal divide by zero");
         }
 
         @Test
         void itDependsOnLattice3() {
-            JSONObject[] lambda = new JSONObject[3];
+            JSONObject[] lambda = createNullArray(3);
             lambda[0] = new JSONObject(Map.of("type", "int", "value", 6, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
             lambda[1] = new JSONObject(Map.of("type", "int", "value", 1, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
 
@@ -86,7 +87,7 @@ public class ExceptionalArithmeticTest extends TestSuperclass {
 
         @Test
         void itDependsOnLattice4() {
-            test("itDependsOnLattice4", new JSONObject[1], null, ArithmeticException.class, "Illegal divide by zero");
+            test("itDependsOnLattice4", createNullArray(1), null, ArithmeticException.class, "Illegal divide by zero");
         }
 
     }
@@ -96,12 +97,12 @@ public class ExceptionalArithmeticTest extends TestSuperclass {
     class neverThrows {
         @Test
         void neverThrows1() {
-            test("neverThrows1", new JSONObject[1], null, null, null);
+            test("neverThrows1", createNullArray(1), null, null, null);
         }
 
         @Test
         void neverThrows2() {
-            JSONObject[] lambda = new JSONObject[1];
+            JSONObject[] lambda = createNullArray(1);
             lambda[0] = new JSONObject(Map.of("type", "int", "value", 6, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
 
             test("neverThrows2", lambda, null, null, null);
@@ -109,7 +110,7 @@ public class ExceptionalArithmeticTest extends TestSuperclass {
 
         @Test
         void neverThrows3() {
-            JSONObject[] lambda = new JSONObject[2];
+            JSONObject[] lambda = createNullArray(2);
             lambda[0] = new JSONObject(Map.of("type", "int", "value", 6, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
             lambda[1] = new JSONObject(Map.of("type", "int", "value", 1, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
 
@@ -118,7 +119,7 @@ public class ExceptionalArithmeticTest extends TestSuperclass {
 
         @Test
         void neverThrows4() {
-            JSONObject[] lambda = new JSONObject[1];
+            JSONObject[] lambda = createNullArray(1);
             lambda[0] = new JSONObject(Map.of("type", "int", "value", 6, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
 
             test("neverThrows4", lambda, null, null, null);
@@ -126,7 +127,7 @@ public class ExceptionalArithmeticTest extends TestSuperclass {
 
         @Test
         void neverThrows5() {
-            JSONObject[] lambda = new JSONObject[2];
+            JSONObject[] lambda = createNullArray(2);
             lambda[0] = new JSONObject(Map.of("type", "int", "value", 6, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
             lambda[1] = new JSONObject(Map.of("type", "int", "value", 1, "sign", Set.of(NEGATIVE, ZERO, POSITIVE)));
 
@@ -136,7 +137,7 @@ public class ExceptionalArithmeticTest extends TestSuperclass {
 
     @Test
     void speedVsPrecision() {
-        test("speedVsPrecision", new JSONObject[1], null, ArithmeticException.class, "Illegal divide by zero");
+        test("speedVsPrecision", createNullArray(1), null, ArithmeticException.class, "Illegal divide by zero");
     }
 
 

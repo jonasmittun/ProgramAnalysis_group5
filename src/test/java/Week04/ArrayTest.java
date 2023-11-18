@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static Week01.Main.getFiles;
+import static Week04.ConcreteInterpreter.createNullArray;
 
 class ArrayTest {
 
@@ -101,7 +102,7 @@ class ArrayTest {
     }
     @Test
     void newArray() {
-        Frame f = new Frame(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "newArray"), 0));
+        Frame f = new Frame(createNullArray(1), new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "newArray"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
@@ -111,7 +112,7 @@ class ArrayTest {
 
     @Test
     void newArrayOutOfBounds() {
-        Frame f = new Frame(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "newArrayOutOfBounds"), 0));
+        Frame f = new Frame(createNullArray(1), new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "newArrayOutOfBounds"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
@@ -139,7 +140,7 @@ class ArrayTest {
     void bubbleSort() {
         JSONObject ref = new JSONObject(Map.of("kind", "array", "type", "int"));
 
-        JSONObject[] lambda = new JSONObject[5];
+        JSONObject[] lambda = createNullArray(5);
         lambda[0] = ref;
 
         Frame f = new Frame(lambda, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "bubbleSort"), 0));
@@ -153,7 +154,7 @@ class ArrayTest {
 
     @Test
     void aWierdOneOutOfBounds() {
-        Frame f = new Frame(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "aWierdOneOutOfBounds"), 0));
+        Frame f = new Frame(createNullArray(1), new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "aWierdOneOutOfBounds"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 
@@ -163,7 +164,7 @@ class ArrayTest {
 
     @Test
     void aWierdOneWithinBounds() {
-        Frame f = new Frame(new JSONObject[1], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "aWierdOneWithinBounds"), 0));
+        Frame f = new Frame(createNullArray(1), new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "aWierdOneWithinBounds"), 0));
 
         Map<Integer, JSONObject> mu = new HashMap<>();
 

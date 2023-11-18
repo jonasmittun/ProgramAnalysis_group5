@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static Week01.Main.getFiles;
+import static Week04.ConcreteInterpreter.createNullArray;
 
 class CallsTest {
 
@@ -36,7 +37,7 @@ class CallsTest {
 
     @Test
     void helloWorld() {
-        Frame f = new Frame(new JSONObject[0], new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "helloWorld"), 0));
+        Frame f = new Frame(createNullArray(0), new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, "helloWorld"), 0));
         Map<Integer, JSONObject> mu = new HashMap<>();
 
         ConcreteInterpreter in = new ConcreteInterpreter(new HashMap<>(classes));
