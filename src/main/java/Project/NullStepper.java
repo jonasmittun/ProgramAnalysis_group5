@@ -400,7 +400,7 @@ public class NullStepper implements AbstractStepper {
                 }
 
                 JSONObject[] lambda = createNullArray(resolvedMethod.method().getJSONObject("code").getInt("max_locals"));
-                for(int i = 0; i < args.length(); i++) {
+                for(int i = args.length() - 1; i >= 0; i--) {
                     JSONObject arg = f.sigma().pop();
 
                     // TODO: Create "fake" arguments if necessary
