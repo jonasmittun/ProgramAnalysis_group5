@@ -591,7 +591,7 @@ public class NullStepper implements AbstractStepper {
                 String type = instruction.getString("type"); // LocalType
                 JSONObject value = f.sigma().pop();
 
-                JSONObject result = cloneJSONObject(value);
+                JSONObject result = type.equals("ref") ? value : cloneJSONObject(value);
 
                 if(!psi.isEmpty()) {
                     Frame f2 = psi.peek();
