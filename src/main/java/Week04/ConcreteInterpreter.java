@@ -409,7 +409,7 @@ public class ConcreteInterpreter {
 
                 if(value == null) {
                     f.sigma().push(createNull());
-                } else if(value.has("kind")) { // Check if it's a reference type
+                } else if(value.has("kind") || (value.has("value") && value.isNull("value"))) { // Check if it's a reference type
                    f.sigma().push(value);
                 } else {
                     f.sigma().push(cloneJSONObject(value));
