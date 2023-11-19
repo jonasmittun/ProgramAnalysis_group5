@@ -1008,9 +1008,9 @@ public class ConcreteInterpreter {
 
                 JSONObject objectref = f.sigma().peek();
 
-                if(!isNull(objectref) && !isInstanceOf(classes, objectref, type)) {
-                    throw new ClassCastException(objectref + " cannot be cast to " + type);
-                }
+                if(isNull(objectref)) throw new NullPointerException("Could not check cast because \"objectref\" was null");
+
+                if(!isInstanceOf(classes, objectref, type)) throw new ClassCastException(objectref + " cannot be cast to " + type);
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
@@ -1019,7 +1019,9 @@ public class ConcreteInterpreter {
 
                 JSONObject objectref = f.sigma().pop();
 
-                boolean result = !isNull(objectref) && isInstanceOf(classes, objectref, type);
+                if(isNull(objectref)) throw new NullPointerException("Could not check cast because \"objectref\" was null");
+
+                boolean result = isInstanceOf(classes, objectref, type);
 
                 f.sigma().push(new JSONObject(Map.of("type", "int", "value", result ? 1 : 0)));
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
