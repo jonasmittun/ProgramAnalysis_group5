@@ -707,9 +707,7 @@ public class NullStepper implements AbstractStepper {
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
                 results.add(state);
             }
-            default -> {
-                System.out.println("Unsupported operation \"" + instruction.getString("opr") + "\"");
-            }
+            default -> throw new UnsupportedOperationException("Unsupported instruction \"" + instruction.getString("opr") + "\"");
         }
 
         for(State s : results) {
