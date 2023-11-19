@@ -995,7 +995,7 @@ public class ConcreteInterpreter {
                         // Print the cause, if any
                         Optional<JSONObject> causeref = getField(o, "cause", new JSONObject(Map.of("kind", "class", "name", "java/lang/Throwable")), mu);
                         if(causeref.isPresent()) {
-                            JSONObject cause = mu.get(System.identityHashCode(causeref));
+                            JSONObject cause = mu.get(System.identityHashCode(causeref.get()));
                             if(!isNull(cause)) {
                                 System.err.println("Caused by: " + cause.getString("name").replace("/", "."));
                             }
