@@ -37,6 +37,7 @@ public class SignStepper implements AbstractStepper {
 
         switch(instruction.getString("opr")) {
             case "array_load" -> {
+                String type = instruction.getString("type");
                 JSONObject index = f.sigma().pop();
                 JSONObject arrayref = f.sigma().pop();
 
@@ -50,7 +51,7 @@ public class SignStepper implements AbstractStepper {
 
                 JSONObject value = array.getJSONObject(index_value);
 
-                f.sigma().push(value.has("kind") ? value : cloneJSONObject(value));
+                f.sigma().push(type.equals("ref") ? value : cloneJSONObject(value));
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
                 results.add(state);
