@@ -32,9 +32,9 @@ public enum ANull {
         } else throw new RuntimeException(o + " is not a JSONObject");
     }
 
-    /** Returns true if the JSONObject's abstract value is greater or equal to some level and false otherwise. */
-    public boolean overflows(JSONObject o, int LEVEL) {
-        return (o.has("abstract") && o.get("abstract") instanceof ANull a && a.toInt() >= LEVEL);
+    /** Returns the JSONObject's abstract value if it has one and -1 otherwise. */
+    public int getInt(JSONObject o) {
+        return (o.has("abstract") && o.get("abstract") instanceof ANull a) ? a.toInt() : -1;
     }
 
     /** Converts the abstract value to an integer. */
