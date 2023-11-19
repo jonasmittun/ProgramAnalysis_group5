@@ -468,6 +468,7 @@ public class NullStepper implements AbstractStepper {
             }
             case "arraylength" -> {
                 JSONObject arrayref = f.sigma().pop();
+                if(isNull(arrayref) || NULL.getInt(arrayref) >= THROW_LEVEL) throw new NullPointerException("Cannot throw because \"arrayref\" is null");
 
                 f.sigma().push(new JSONObject(Map.of("type", "int", "value", 0, "abstract", NOTNULL)));
 

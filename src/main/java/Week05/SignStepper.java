@@ -835,6 +835,7 @@ public class SignStepper implements AbstractStepper {
             }
             case "arraylength" -> {
                 JSONObject arrayref = f.sigma().pop();
+                if(isNull(arrayref)) throw new NullPointerException("Cannot throw because \"arrayref\" is null");
 
                 JSONObject array = mu.get(System.identityHashCode(arrayref));
                 int arraylength = array.getJSONArray("value").length();
