@@ -3,8 +3,6 @@ package Project;
 import Week04.ConcreteInterpreter;
 import org.json.JSONObject;
 
-import java.util.Map;
-
 public enum ANull {
     NULL,
     NULLABLE,
@@ -32,6 +30,20 @@ public enum ANull {
 
             return jo;
         } else throw new RuntimeException(o + " is not a JSONObject");
+    }
+
+    /** Returns true if the JSONObject's abstract value is greater or equal to some level and false otherwise. */
+    public boolean overflows(JSONObject o, int LEVEL) {
+        return (o.has("abstract") && o.get("abstract") instanceof ANull a && a.toInt() >= LEVEL);
+    }
+
+    /** Converts the abstract value to an integer. */
+    public int toInt() {
+        return switch(this) {
+            case NULL       -> 2;
+            case NULLABLE   -> 1;
+            case NOTNULL    -> 0;
+        };
     }
 
     @Override
