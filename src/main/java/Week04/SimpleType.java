@@ -13,6 +13,19 @@ import java.util.Map;
  */
 public class SimpleType {
 
+    /** Returns true if the value's type is numeric and false otherwise. */
+    public static boolean isNumeric(JSONObject value) {
+        if(ConcreteInterpreter.isNull(value)) return false;
+        else if(value.has("type") && value.get("type") instanceof String type) {
+            return switch(type) {
+                case "int", "integer", "float", "double", "long", "byte", "short" -> true;
+                default -> false;
+            };
+        }
+
+        return false;
+    }
+
     /** Returns a new JSONObject of the specified type with the default value for that type.
      * @param SimpleType
      *  <pre>

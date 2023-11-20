@@ -40,7 +40,7 @@ public class TestSuperClass {
         Frame f = new Frame(parameter, new ArrayDeque<>(), new Pair<>(Main.simpleResolve(cls, methodName), 0));
         Map<Integer, JSONObject> mu = memory != null ? memory : new HashMap<>();
 
-        NullInterpreter in = new NullInterpreter(new HashMap<>(classes));
+        HybridInterpreter in = new HybridInterpreter(new HashMap<>(classes));
         if (exceptionClass != null) {
             Exception exception = (Exception) assertThrows(exceptionClass, () -> in.run(f, mu));
             if (exceptionMessage != null) {
