@@ -94,7 +94,7 @@ public class SignStepper implements AbstractStepper {
                             byte[] bytes = value.getString("value").getBytes(StandardCharsets.UTF_8);
                             JSONArray arrayvalue = new JSONArray(bytes.length);
                             for(int i = 0; i < bytes.length; i++) {
-                                arrayvalue.put(i, new JSONObject(Map.of("type", "byte", "value", bytes[i])));
+                                arrayvalue.put(i, new JSONObject(Map.of("type", "byte", "value", bytes[i], "sign", Set.of(toSign(bytes[i])))));
                             }
 
                             // Create the actual array
