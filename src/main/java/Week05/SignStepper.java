@@ -94,7 +94,7 @@ public class SignStepper implements AbstractStepper {
                             byte[] bytes = value.getString("value").getBytes(StandardCharsets.UTF_8);
                             JSONArray arrayvalue = new JSONArray(bytes.length);
                             for(int i = 0; i < bytes.length; i++) {
-                                arrayvalue.put(i, new JSONObject(Map.of("type", "byte", "value", bytes[i])));
+                                arrayvalue.put(i, new JSONObject(Map.of("type", "byte", "value", bytes[i], "sign", Set.of(toSign(bytes[i])))));
                             }
 
                             // Create the actual array
@@ -150,28 +150,8 @@ public class SignStepper implements AbstractStepper {
                 JSONObject value = f.lambda()[index];
                 Sign amount = Sign.toSign(instruction.getInt("amount"));
 
-                BiFunction<Sign, Sign, Set<Sign>> fun = (s1, s2) -> {
-                    return switch(s1) {
-                        case NEGATIVE -> switch(s2) {
-                            case NEGATIVE   -> Set.of(NEGATIVE);
-                            case ZERO       -> Set.of(NEGATIVE);
-                            case POSITIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
-                        };
-                        case ZERO -> switch(s2) {
-                            case NEGATIVE   -> Set.of(NEGATIVE);
-                            case ZERO       -> Set.of(ZERO);
-                            case POSITIVE   -> Set.of(POSITIVE);
-                        };
-                        case POSITIVE -> switch(s2) {
-                            case NEGATIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
-                            case ZERO       -> Set.of(POSITIVE);
-                            case POSITIVE   -> Set.of(POSITIVE);
-                        };
-                    };
-                };
-
                 for(Object sign : value.getJSONArray("sign")) {
-                    Set<Sign> signs = fun.apply((Sign) sign, amount);
+                    Set<Sign> signs = Sign.add((Sign) sign, amount);
 
                     Triple<Frame, Deque<Frame>, Map<Integer, JSONObject>> t = clone_state(f, psi, mu);
 
@@ -195,78 +175,10 @@ public class SignStepper implements AbstractStepper {
 
                 // value1 opr value2
                 BiFunction<Sign, Sign, Set<Sign>> fun = (s1, s2) -> switch(instruction.getString("operant")) {
-                    case "add" -> {
-                        yield switch(s1) {
-                            case NEGATIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(NEGATIVE);
-                                case ZERO       -> Set.of(NEGATIVE);
-                                case POSITIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
-                            };
-                            case ZERO -> switch(s2) {
-                                case NEGATIVE   -> Set.of(NEGATIVE);
-                                case ZERO       -> Set.of(ZERO);
-                                case POSITIVE   -> Set.of(POSITIVE);
-                            };
-                            case POSITIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
-                                case ZERO       -> Set.of(POSITIVE);
-                                case POSITIVE   -> Set.of(POSITIVE);
-                            };
-                        };
-                    }
-                    case "sub" -> {
-                        yield switch(s1) {
-                            case NEGATIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
-                                case ZERO       -> Set.of(NEGATIVE);
-                                case POSITIVE   -> Set.of(NEGATIVE);
-                            };
-                            case ZERO -> switch(s2) {
-                                case NEGATIVE   -> Set.of(POSITIVE);
-                                case ZERO       -> Set.of(ZERO);
-                                case POSITIVE   -> Set.of(NEGATIVE);
-                            };
-                            case POSITIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(POSITIVE);
-                                case ZERO       -> Set.of(POSITIVE);
-                                case POSITIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
-                            };
-                        };
-                    }
-                    case "mul" -> {
-                        yield switch(s1) {
-                            case NEGATIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(POSITIVE);
-                                case ZERO       -> Set.of(ZERO);
-                                case POSITIVE   -> Set.of(NEGATIVE);
-                            };
-                            case ZERO -> Set.of(ZERO);
-                            case POSITIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(NEGATIVE);
-                                case ZERO       -> Set.of(ZERO);
-                                case POSITIVE   -> Set.of(POSITIVE);
-                            };
-                        };
-                    }
-                    case "div" -> {
-                        yield switch(s1) {
-                            case NEGATIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(POSITIVE);
-                                case ZERO       -> throw new ArithmeticException("Illegal divide by zero");
-                                case POSITIVE   -> Set.of(NEGATIVE);
-                            };
-                            case ZERO -> switch(s2) {
-                                case NEGATIVE   -> Set.of(ZERO);
-                                case ZERO       -> throw new ArithmeticException("Illegal divide by zero");
-                                case POSITIVE   -> Set.of(ZERO);
-                            };
-                            case POSITIVE -> switch(s2) {
-                                case NEGATIVE   -> Set.of(NEGATIVE);
-                                case ZERO       -> throw new ArithmeticException("Illegal divide by zero");
-                                case POSITIVE   -> Set.of(POSITIVE);
-                            };
-                        };
-                    }
+                    case "add" -> Sign.add(s1, s2);
+                    case "sub" -> Sign.sub(s1, s2);
+                    case "mul" -> Sign.mul(s1, s2);
+                    case "div" -> Sign.div(s1, s2);
                     default -> throw new IllegalStateException("Unexpected value: " + instruction.getString("operant"));
                 };
 
@@ -294,15 +206,9 @@ public class SignStepper implements AbstractStepper {
                 String type = instruction.getString("type"); // Arithmetic Type
                 JSONObject value = f.sigma().pop();
 
-                Function<Sign, Sign> negate = (sign) -> switch(sign) {
-                    case POSITIVE   -> NEGATIVE;
-                    case ZERO       -> ZERO;
-                    case NEGATIVE   -> POSITIVE;
-                };
-
                 JSONArray signs = value.getJSONArray("sign");
                 for(int i = 0; i < signs.length(); i++) {
-                    signs.put(i, negate.apply((Sign) signs.get(i)));
+                    signs.put(i, Sign.negate((Sign) signs.get(i)));
                 }
 
                 f.sigma().push(value);
@@ -432,93 +338,14 @@ public class SignStepper implements AbstractStepper {
 
                 // Value1 opr Value2
                 BiFunction<Sign, Sign, Set<Boolean>> fun = (s1, s2) -> switch(instruction.getString("condition")) {
-                    case "eq"       -> {
-                        if((s1 == NEGATIVE && s2 == NEGATIVE) || (s1 == POSITIVE && s2 == POSITIVE)) yield Set.of(true, false);
-                        else if(s1 == ZERO && s2 == ZERO) yield Set.of(true);
-                        else yield Set.of(false);
-                    }
-                    case "ne"       -> {
-                        if(s1 == s2) yield Set.of(false);
-                        else yield Set.of(true, false);
-                    }
-                    case "le"       -> {
-                        yield switch(s1) {
-                            case NEGATIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(true, false);
-                                case ZERO       -> Set.of(true);
-                                case POSITIVE   -> Set.of(true);
-                            };
-                            case ZERO       -> switch(s2) {
-                                case NEGATIVE   -> Set.of(false);
-                                case ZERO       -> Set.of(false);
-                                case POSITIVE   -> Set.of(true);
-                            };
-                            case POSITIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(false);
-                                case ZERO       -> Set.of(false);
-                                case POSITIVE   -> Set.of(true, false);
-                            };
-                        };
-                    }
-                    case "lt"       -> {
-                        yield switch(s1) {
-                            case NEGATIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(true, false);
-                                case ZERO       -> Set.of(true);
-                                case POSITIVE   -> Set.of(true);
-                            };
-                            case ZERO       -> switch(s2) {
-                                case NEGATIVE   -> Set.of(false);
-                                case ZERO       -> Set.of(true);
-                                case POSITIVE   -> Set.of(true);
-                            };
-                            case POSITIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(false);
-                                case ZERO       -> Set.of(false);
-                                case POSITIVE   -> Set.of(true, false);
-                            };
-                        };
-                    }
-                    case "ge"       -> {
-                        yield switch(s1) {
-                            case NEGATIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(true, false);
-                                case ZERO       -> Set.of(false);
-                                case POSITIVE   -> Set.of(false);
-                            };
-                            case ZERO       -> switch(s2) {
-                                case NEGATIVE   -> Set.of(true);
-                                case ZERO       -> Set.of(true);
-                                case POSITIVE   -> Set.of(false);
-                            };
-                            case POSITIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(true);
-                                case ZERO       -> Set.of(true);
-                                case POSITIVE   -> Set.of(true, false);
-                            };
-                        };
-                    }
-                    case "gt"       -> {
-                        yield switch(s1) {
-                            case NEGATIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(true, false);
-                                case ZERO       -> Set.of(false);
-                                case POSITIVE   -> Set.of(false);
-                            };
-                            case ZERO       -> switch(s2) {
-                                case NEGATIVE   -> Set.of(false);
-                                case ZERO       -> Set.of(false);
-                                case POSITIVE   -> Set.of(false);
-                            };
-                            case POSITIVE   -> switch(s2) {
-                                case NEGATIVE   -> Set.of(true);
-                                case ZERO       -> Set.of(true);
-                                case POSITIVE   -> Set.of(true, false);
-                            };
-                        };
-                    }
+                    case "eq"   -> Sign.eq(s1, s2);
+                    case "ne"   -> Sign.ne(s1, s2);
+                    case "le"   -> Sign.le(s1, s2);
+                    case "lt"   -> Sign.lt(s1, s2);
+                    case "ge"   -> Sign.ge(s1, s2);
+                    case "gt"   -> Sign.gt(s1, s2);
                     // For object equality we assume both cases can be true/false
-                    default         -> Set.of(true, false);
+                    default     -> Set.of(true, false);
                 };
 
                 Set<Boolean> bools = new HashSet<>();
@@ -550,59 +377,22 @@ public class SignStepper implements AbstractStepper {
 
                 JSONObject value = f.sigma().pop();
 
-                Function<Sign, Boolean> fun = (s) -> switch(condition) {
-                    case "eq" -> {
-                        yield switch(s) {
-                            case NEGATIVE   -> false;
-                            case ZERO       -> true;
-                            case POSITIVE   -> false;
-                        };
-                    }
-                    case "ne" -> {
-                        yield switch (s) {
-                            case NEGATIVE   -> true;
-                            case ZERO       -> false;
-                            case POSITIVE   -> true;
-                        };
-                    }
-                    case "le" -> {
-                        yield switch (s) {
-                            case NEGATIVE   -> true;
-                            case ZERO       -> true;
-                            case POSITIVE   -> false;
-                        };
-                    }
-                    case "lt" -> {
-                        yield switch (s) {
-                            case NEGATIVE   -> true;
-                            case ZERO       -> false;
-                            case POSITIVE   -> false;
-                        };
-                    }
-                    case "ge" -> {
-                        yield switch (s) {
-                            case NEGATIVE   -> false;
-                            case ZERO       -> true;
-                            case POSITIVE   -> true;
-                        };
-                    }
-                    case "gt" -> {
-                        yield switch (s) {
-                            case NEGATIVE   -> false;
-                            case ZERO       -> false;
-                            case POSITIVE   -> true;
-                        };
-                    }
+                Function<Sign, Set<Boolean>> fun = (s) -> switch(condition) {
+                    case "eq" -> Sign.eq(s, ZERO);
+                    case "ne" -> Sign.ne(s, ZERO);
+                    case "le" -> Sign.le(s, ZERO);
+                    case "lt" -> Sign.lt(s, ZERO);
+                    case "ge" -> Sign.ge(s, ZERO);
+                    case "gt" -> Sign.gt(s, ZERO);
                     default -> throw new IllegalStateException("Unexpected condition: " + condition);
                 };
 
                 List<Boolean> ifz_results = new ArrayList<>();
                 if(value.has("sign")) {
-                    Set<Boolean> local = new HashSet<>();
                     for(Object sign : value.getJSONArray("sign")) {
-                        local.add(fun.apply((Sign) sign));
+                        ifz_results.addAll(fun.apply((Sign) sign));
+                        if(ifz_results.size() > 1) break;
                     }
-                    ifz_results.addAll(local);
                 } else {
                     // For object equality we assume both cases can be true/false
                     ifz_results = List.of(true, false);
@@ -835,6 +625,7 @@ public class SignStepper implements AbstractStepper {
             }
             case "arraylength" -> {
                 JSONObject arrayref = f.sigma().pop();
+                if(isNull(arrayref)) throw new NullPointerException("Cannot throw because \"arrayref\" is null");
 
                 JSONObject array = mu.get(System.identityHashCode(arrayref));
                 int arraylength = array.getJSONArray("value").length();
@@ -930,7 +721,7 @@ public class SignStepper implements AbstractStepper {
                         // Print the cause, if any
                         Optional<JSONObject> causeref = getField(o, "cause", new JSONObject(Map.of("kind", "class", "name", "java/lang/Throwable")), mu);
                         if(causeref.isPresent()) {
-                            JSONObject cause = mu.get(System.identityHashCode(causeref));
+                            JSONObject cause = mu.get(System.identityHashCode(causeref.get()));
                             if(!isNull(cause)) {
                                 System.err.println("Caused by: " + cause.getString("name").replace("/", "."));
                             }
@@ -943,9 +734,9 @@ public class SignStepper implements AbstractStepper {
 
                 JSONObject objectref = f.sigma().peek();
 
-                if(!isNull(objectref) && !isInstanceOf(classes, objectref, type)) {
-                    throw new ClassCastException(objectref + " cannot be cast to " + type);
-                }
+                if(isNull(objectref)) throw new NullPointerException("Could not check cast because \"objectref\" was null");
+
+                if(!isInstanceOf(classes, objectref, type)) throw new ClassCastException(objectref + " cannot be cast to " + type);
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
                 results.add(state);
@@ -955,7 +746,9 @@ public class SignStepper implements AbstractStepper {
 
                 JSONObject objectref = f.sigma().pop();
 
-                boolean result = !isNull(objectref) && isInstanceOf(classes, objectref, type);
+                if(isNull(objectref)) throw new NullPointerException("Could not check cast because \"objectref\" was null");
+
+                boolean result = isInstanceOf(classes, objectref, type);
 
                 f.sigma().push(new JSONObject(Map.of("type", "int", "value", result ? 1 : 0)));
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));

@@ -904,6 +904,8 @@ public class ConcreteInterpreter {
             }
             case "arraylength" -> {
                 JSONObject arrayref = f.sigma().pop();
+                if(isNull(arrayref)) throw new NullPointerException("Cannot throw because \"arrayref\" is null");
+
                 JSONObject array = mu.get(System.identityHashCode(arrayref));
                 int arraylength = array.getJSONArray("value").length();
 
@@ -995,7 +997,7 @@ public class ConcreteInterpreter {
                         // Print the cause, if any
                         Optional<JSONObject> causeref = getField(o, "cause", new JSONObject(Map.of("kind", "class", "name", "java/lang/Throwable")), mu);
                         if(causeref.isPresent()) {
-                            JSONObject cause = mu.get(System.identityHashCode(causeref));
+                            JSONObject cause = mu.get(System.identityHashCode(causeref.get()));
                             if(!isNull(cause)) {
                                 System.err.println("Caused by: " + cause.getString("name").replace("/", "."));
                             }
@@ -1008,9 +1010,9 @@ public class ConcreteInterpreter {
 
                 JSONObject objectref = f.sigma().peek();
 
-                if(!isNull(objectref) && !isInstanceOf(classes, objectref, type)) {
-                    throw new ClassCastException(objectref + " cannot be cast to " + type);
-                }
+                if(isNull(objectref)) throw new NullPointerException("Could not check cast because \"objectref\" was null");
+
+                if(!isInstanceOf(classes, objectref, type)) throw new ClassCastException(objectref + " cannot be cast to " + type);
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
             }
@@ -1019,7 +1021,9 @@ public class ConcreteInterpreter {
 
                 JSONObject objectref = f.sigma().pop();
 
-                boolean result = !isNull(objectref) && isInstanceOf(classes, objectref, type);
+                if(isNull(objectref)) throw new NullPointerException("Could not check cast because \"objectref\" was null");
+
+                boolean result = isInstanceOf(classes, objectref, type);
 
                 f.sigma().push(new JSONObject(Map.of("type", "int", "value", result ? 1 : 0)));
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
