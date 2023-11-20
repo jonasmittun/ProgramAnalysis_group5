@@ -370,6 +370,7 @@ public class SignStepper implements AbstractStepper {
                 }
 
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), if_results.get(0) ? target : f.iota().e2() + 1)));
+                results.add(state);
             }
             case "ifz" -> {
                 String condition = instruction.getString("condition");
