@@ -90,7 +90,7 @@ public class NullStepper implements AbstractStepper {
                         }
                         case "string" -> {
                             // Create array reference for string value
-                            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "byte"));
+                            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "byte", "abstract", NOTNULL));
 
                             // Create array to hold string value as a byte[]
                             byte[] bytes = value.getString("value").getBytes(StandardCharsets.UTF_8);
@@ -109,7 +109,7 @@ public class NullStepper implements AbstractStepper {
                             object.getJSONArray("fields").getJSONObject(0).put("value", arrayref);
 
                             // Create String object reference
-                            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
+                            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String", "abstract", NOTNULL));
                             mu.put(System.identityHashCode(objectref), object);
 
                             // Push object reference
