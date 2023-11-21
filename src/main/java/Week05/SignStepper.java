@@ -11,6 +11,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static Week04.ConcreteInterpreter.*;
+import static Week04.ConcreteInterpreter.initialize;
 import static Week04.Main.cloneJSONObject;
 import static Week05.Sign.*;
 import static Week05.SignInterpreter.clone_state;
@@ -593,7 +594,7 @@ public class SignStepper implements AbstractStepper {
                 if(access.contains("interface")) throw new InstantiationError(classname + " is an interface.");
 
                 JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", classname));
-                JSONObject value = cloneJSONObject(classes.get(classname));
+                JSONObject value = initialize(classes, classname, mu);
 
                 mu.put(System.identityHashCode(objectref), value);
 

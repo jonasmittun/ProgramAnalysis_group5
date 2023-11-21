@@ -535,7 +535,7 @@ public class HybridStepper implements AbstractStepper {
                 if(access.contains("interface")) throw new InstantiationError(classname + " is an interface.");
 
                 JSONObject objectref = toAbstract(new JSONObject(Map.of("kind", "class", "name", classname)));
-                JSONObject value = cloneJSONObject(classes.get(classname));
+                JSONObject value = initialize(classes, classname, mu);
 
                 mu.put(System.identityHashCode(objectref), value);
 
