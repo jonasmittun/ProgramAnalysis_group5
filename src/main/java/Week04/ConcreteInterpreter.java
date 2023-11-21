@@ -481,6 +481,14 @@ public class ConcreteInterpreter {
                             case "double"   -> result.put("value", value1.getDouble("value") / value2.getDouble("value"));
                         }
                     }
+                    case "rem" -> {
+                        switch(type) {
+                            case "int"      -> result.put("value", value1.getInt("value") % value2.getInt("value"));
+                            case "long"     -> result.put("value", value1.getLong("value") % value2.getLong("value"));
+                            case "float"    -> result.put("value", value1.getFloat("value") % value2.getFloat("value"));
+                            case "double"   -> result.put("value", value1.getDouble("value") % value2.getDouble("value"));
+                        }
+                    }
                 }
                 f.sigma().push(result);
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));

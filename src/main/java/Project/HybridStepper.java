@@ -181,6 +181,7 @@ public class HybridStepper implements AbstractStepper {
                     case "sub" -> Sign.sub(s1, s2);
                     case "mul" -> Sign.mul(s1, s2);
                     case "div" -> Sign.div(s1, s2);
+                    case "rem" -> Sign.rem(s1, s2);
                     default -> throw new IllegalStateException("Unexpected value: " + instruction.getString("operant"));
                 };
 

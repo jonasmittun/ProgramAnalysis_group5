@@ -87,6 +87,23 @@ public enum Sign {
         };
     }
 
+    /** Remainder: s1 % s2 */
+    public static Set<Sign> rem(Sign s1, Sign s2) {
+        return switch(s2) {
+            case NEGATIVE   -> switch(s1) {
+                case NEGATIVE   -> Set.of(NEGATIVE, ZERO);
+                case ZERO       -> Set.of(ZERO);
+                case POSITIVE   -> Set.of(NEGATIVE, ZERO);
+            };
+            case ZERO       -> throw new ArithmeticException("Illegal divide by zero");
+            case POSITIVE   -> switch(s1) {
+                case NEGATIVE   -> Set.of(ZERO, POSITIVE);
+                case ZERO       -> Set.of(ZERO);
+                case POSITIVE   -> Set.of(ZERO, POSITIVE);
+            };
+        };
+    }
+
     /** Negation: -sign */
     public static Sign negate(Sign sign) {
         return switch(sign) {
