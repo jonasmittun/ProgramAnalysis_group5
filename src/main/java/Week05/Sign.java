@@ -15,11 +15,7 @@ public enum Sign {
                 case ZERO       -> Set.of(NEGATIVE);
                 case POSITIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
             };
-            case ZERO -> switch(s2) {
-                case NEGATIVE   -> Set.of(NEGATIVE);
-                case ZERO       -> Set.of(ZERO);
-                case POSITIVE   -> Set.of(POSITIVE);
-            };
+            case ZERO           -> Set.of(s2);
             case POSITIVE -> switch(s2) {
                 case NEGATIVE   -> Set.of(NEGATIVE, ZERO, POSITIVE);
                 case ZERO       -> Set.of(POSITIVE);
