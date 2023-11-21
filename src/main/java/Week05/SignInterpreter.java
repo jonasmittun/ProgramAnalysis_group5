@@ -8,6 +8,7 @@ import org.json.JSONObject;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static Week04.ConcreteInterpreter.isNull;
 import static Week04.Main.cloneJSONObject;
 import static Week05.Sign.*;
 
@@ -123,22 +124,24 @@ public class SignInterpreter implements Interpreter {
             mu_new.put(System.identityHashCode(e_new), v_new);
             mu_mapper.put(System.identityHashCode(e_old), e_new);
 
-            switch(e_old.getString("kind")) {
-                case "array" -> {
-                    // Clone inner values if they are reference types
-                    JSONArray array_old = v_old.getJSONArray("value");
-                    JSONArray array_new = v_new.getJSONArray("value");
-                    for(int i = 0; i < array_old.length(); i++) {
-                        JSONObject inner_old = array_old.getJSONObject(i);
-                        JSONObject inner_new = array_new.getJSONObject(i);
+            if(!isNull(v_old)) {
+                switch(e_old.getString("kind")) {
+                    case "array" -> {
+                        // Clone inner values if they are reference types
+                        JSONArray array_old = v_old.getJSONArray("value");
+                        JSONArray array_new = v_new.getJSONArray("value");
+                        for(int i = 0; i < array_old.length(); i++) {
+                            JSONObject inner_old = array_old.getJSONObject(i);
+                            JSONObject inner_new = array_new.getJSONObject(i);
 
-                        if(inner_old.has("kind")) {
-                            clone_helper(inner_old, inner_new, mu_old, mu_new, mu_mapper);
+                            if(inner_old.has("kind")) {
+                                clone_helper(inner_old, inner_new, mu_old, mu_new, mu_mapper);
+                            }
                         }
                     }
+                    case "class" -> clone_class(v_old, v_new, mu_old, mu_new, mu_mapper);
+                    default -> throw new RuntimeException("Unsupported reference type: " + e_old.get("kind"));
                 }
-                case "class" -> clone_class(v_old, v_new, mu_old, mu_new, mu_mapper);
-                default -> throw new RuntimeException("Unsupported reference type: " + e_old.get("kind"));
             }
         }
     }
@@ -148,8 +151,6 @@ public class SignInterpreter implements Interpreter {
      * @param class_new The copy of class_old
      */
     private static void clone_class(JSONObject class_old, JSONObject class_new, Map<Integer, JSONObject> mu_old, Map<Integer, JSONObject> mu_new, Map<Integer, JSONObject> mu_mapper) {
-        if(ConcreteInterpreter.isNull(class_old)) return;
-
         // Clone fields
         JSONArray fields_old = class_old.getJSONArray("fields");
         JSONArray fields_new = class_new.getJSONArray("fields");
