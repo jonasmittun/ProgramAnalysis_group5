@@ -148,6 +148,8 @@ public class SignInterpreter implements Interpreter {
      * @param class_new The copy of class_old
      */
     private static void clone_class(JSONObject class_old, JSONObject class_new, Map<Integer, JSONObject> mu_old, Map<Integer, JSONObject> mu_new, Map<Integer, JSONObject> mu_mapper) {
+        if(ConcreteInterpreter.isNull(class_old)) return;
+
         // Clone fields
         JSONArray fields_old = class_old.getJSONArray("fields");
         JSONArray fields_new = class_new.getJSONArray("fields");
