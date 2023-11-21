@@ -757,20 +757,21 @@ public class SignStepper implements AbstractStepper {
                 results.add(state);
             }
             case "return" -> {
-                if(instruction.isNull("type")) break;
+                if(instruction.isNull("type")) results.add(state);
+                else {
+                    String type = instruction.getString("type"); // LocalType
+                    JSONObject value = f.sigma().pop();
 
-                String type = instruction.getString("type"); // LocalType
-                JSONObject value = f.sigma().pop();
+                    JSONObject result = type.equals("ref") ? value : cloneJSONObject(value);
 
-                JSONObject result = type.equals("ref") ? value : cloneJSONObject(value);
+                    if(!psi.isEmpty()) {
+                        Frame f2 = psi.peek();
+                        f2.sigma().push(result);
 
-                if(!psi.isEmpty()) {
-                    Frame f2 = psi.peek();
-                    f2.sigma().push(result);
-
-                    results.add(state);
-                } else {
-                    System.out.println(String.format("%-12s", "return") + Main.toFormattedString(result));
+                        results.add(state);
+                    } else {
+                        System.out.println(String.format("%-12s", "return") + Main.toFormattedString(result));
+                    }
                 }
             }
             case "nop" -> {
