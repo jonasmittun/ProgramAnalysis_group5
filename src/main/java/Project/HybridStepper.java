@@ -700,8 +700,9 @@ public class HybridStepper implements AbstractStepper {
                 results.add(state);
             }
             case "return" -> {
-                if(instruction.isNull("type")) results.add(state);
-                else {
+                if(instruction.isNull("type")) {
+                    if(!state.psi().isEmpty()) results.add(state);
+                } else {
                     String type = instruction.getString("type"); // LocalType
                     JSONObject value = f.sigma().pop();
 
