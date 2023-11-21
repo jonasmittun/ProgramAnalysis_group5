@@ -161,14 +161,12 @@ public class CustomNewNullTests extends TestSuperClass{
     class dependsOnAmalgamation {
         @Test
         void dependsOnAmalgamation1() {
-            // TODO
-            // test("dependsOnAmalgamation1", new JSONObject[]{}, NullPointerException.class, null);
+            test("dependsOnAmalgamation1", createNullArray(1), null, NullPointerException.class, null);
         }
 
         @Test
         void dependsOnAmalgamation2() {
-            // TODO
-            // test("dependsOnAmalgamation2", new JSONObject[]{}, NullPointerException.class, null);
+            test("dependsOnAmalgamation2", createNullArray(1), null, NullPointerException.class, null);
         }
     }
 }
