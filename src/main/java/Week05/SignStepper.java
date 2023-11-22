@@ -5,7 +5,6 @@ import Week04.Main;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -188,120 +187,40 @@ public class SignStepper implements AbstractStepper {
 
                 results.add(state);
             }
-            /*
             case "bitopr" -> {
-                String type = instruction.getString("type"); // "int" | "long"
-                JSONObject value = m.sigma().pop();
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
-                JSONObject result = new JSONObject();
-                result.put("type", type);
-
-                switch(instruction.getString("operant")) {
-                    case "shl"  -> {
-                        switch(type) {
-                            case "int"  -> result.put("value", value.getInt("value") << 1);
-                            case "long" -> result.put("value", value.getLong("value") << 1);
-                        }
-                    }
-                    case "shr"  -> {
-                        switch(type) {
-                            case "int"  -> result.put("value", value.getInt("value") >> 1);
-                            case "long" -> result.put("value", value.getLong("value") >> 1);
-                        }
-                    }
-                    case "ushr" -> {
-                        switch(type) {
-                            case "int"  -> result.put("value", value.getInt("value") >>> 1);
-                            case "long" -> result.put("value", value.getLong("value") >>> 1);
-                        }
-                    }
-                    case "and"  -> {
-                        switch(type) {
-                            case "int"  -> {
-                                int n = value.getInt("value");
-                                result.put("value", ((n+1) & n) == 0 && (n!=0));
-                            }
-                            case "long" -> {
-                                long n = value.getLong("value");
-                                result.put("value", ((n+1) & n) == 0 && (n!=0));
-                            }
-                        }
-                    }
-                    case "or"   -> {
-                        switch(type) {
-                            case "int" -> {
-                                int n = value.getInt("value");
-                                result.put("value", (n & ~(n & -n)) > 0);
-                            }
-                            case "long" -> {
-                                long n = value.getInt("value");
-                                result.put("value", (n & ~(n & -n)) > 0);
-                            }
-                        }
-                    }
-                    case "xor"  -> {
-                        switch(type) {
-                            case "int" -> {
-                                int n = value.getInt("value");
-                                result.put("value", (n & ~(n & -n)) == 0);
-                            }
-                            case "long" -> {
-                                long n = value.getInt("value");
-                                result.put("value", (n & ~(n & -n)) == 0);
-                            }
-                        }
-                    }
-                }
-
-                m.sigma().push(result);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
-            }*/
+                results.add(state);
+            }
             case "cast" -> {
                 psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
 
                 results.add(state);
-            }/*
+            }
             case "comparelongs" -> {
-                JSONObject value2 = m.sigma().pop();
-                JSONObject value1 = m.sigma().pop();
+                f.sigma().pop();
+                f.sigma().pop();
 
-                JSONObject result = new JSONObject();
-                result.put("type", "int");
-                result.put("value", (Long.compare(value1.getLong("value"), value2.getLong("value"))));
+                // Dummy result
+                JSONObject dummy = toAbstract(new JSONObject(Map.of("type", "int", "value", 0, "sign", Set.of(ZERO))));
+                f.sigma().push(dummy);
 
-                m.sigma().push(result);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+
+                results.add(state);
             }
             case "comparefloating" -> {
-                JSONObject value2 = m.sigma().pop();
-                JSONObject value1 = m.sigma().pop();
+                f.sigma().pop();
+                f.sigma().pop();
 
-                JSONObject result = new JSONObject();
-                result.put("type", "int");
-                switch(instruction.getString("type")) {
-                    case "float" -> {
-                        try {
-                            float v1 = value1.getFloat("value");
-                            float v2 = value2.getFloat("value");
-                            result.put("value", (Float.compare(v1, v2)));
-                        } catch(JSONException e) {
-                            result.put("value", instruction.getInt("onnan"));
-                        }
-                    }
-                    case "double" -> {
-                        try {
-                            double v1 = value1.getDouble("value");
-                            double v2 = value2.getDouble("value");
-                            result.put("value", (Double.compare(v1, v2)));
-                        } catch(JSONException e) {
-                            result.put("value", instruction.getInt("onnan"));
-                        }
-                    }
-                }
+                // Dummy result
+                JSONObject dummy = toAbstract(new JSONObject(Map.of("type", "int", "value", 0, "sign", Set.of(ZERO))));
+                f.sigma().push(dummy);
 
-                m.sigma().push(result);
-                psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
-            }*/
+                psi.push(new Frame(f.lambda(), f.sigma(), new Pair<>(f.iota().e1(), f.iota().e2() + 1)));
+
+                results.add(state);
+            }
             case "if" -> {
                 String condition = instruction.getString("condition");
                 int target = instruction.getInt("target");
