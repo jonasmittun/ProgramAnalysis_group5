@@ -19,10 +19,7 @@ public class Main {
 
     /** Returns a clone of the JSONObject */
     public static JSONObject cloneJSONObject(JSONObject o) {
-        JSONObject clone = new JSONObject();
-        for(String key : o.keySet()) clone.put(key, o.get(key));
-
-        return clone;
+        return new JSONObject(o.toString());
     }
 
     /** Converts a JSONObject into a formatted value string. */
