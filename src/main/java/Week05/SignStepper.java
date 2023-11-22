@@ -461,12 +461,13 @@ public class SignStepper implements AbstractStepper {
                 for(int i = args.length() - 1; i >= 0; i--) {
                     JSONObject arg = f.sigma().pop();
 
+                    /*
                     Object type_expected = args.get(i);
                     Object type_actual = arg.has("kind") ? arg : arg.getString("type");
 
                     if(!SimpleType.equals(type_expected, type_actual)) {
                         throw new IllegalArgumentException("Type mismatch: Expected " + type_expected + " but was " + type_actual);
-                    }
+                    }*/
 
                     lambda[i] = arg;
                 }

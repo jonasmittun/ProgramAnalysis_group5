@@ -377,7 +377,13 @@ public class NullStepper implements AbstractStepper {
                     JSONObject arg = f.sigma().pop();
 
                     // TODO: Create "fake" arguments if necessary
-                    // Object type_expected = args.get(i);
+                    /*
+                    Object type_expected = args.get(i);
+                    Object type_actual = arg.has("kind") ? arg : arg.getString("type");
+
+                    if(!SimpleType.equals(type_expected, type_actual)) {
+                        throw new IllegalArgumentException("Type mismatch: Expected " + type_expected + " but was " + type_actual);
+                    }*/
 
                     lambda[i] = arg;
                 }
