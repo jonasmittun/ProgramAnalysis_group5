@@ -303,31 +303,43 @@ public class SignStepper implements AbstractStepper {
                 psi.push(new Method(m.lambda(), m.sigma(), new Pair<>(m.iota().e1(), m.iota().e2() + 1)));
             }*/
             case "if" -> {
+                String condition = instruction.getString("condition");
                 int target = instruction.getInt("target");
 
                 JSONObject value2 = f.sigma().pop();
                 JSONObject value1 = f.sigma().pop();
 
-                // Value1 opr Value2
-                BiFunction<Sign, Sign, Set<Boolean>> fun = (s1, s2) -> switch(instruction.getString("condition")) {
-                    case "eq"   -> Sign.eq(s1, s2);
-                    case "ne"   -> Sign.ne(s1, s2);
-                    case "le"   -> Sign.le(s1, s2);
-                    case "lt"   -> Sign.lt(s1, s2);
-                    case "ge"   -> Sign.ge(s1, s2);
-                    case "gt"   -> Sign.gt(s1, s2);
-                    // For object equality we assume both cases can be true/false
-                    default     -> Set.of(true, false);
-                };
+                Set<Boolean> bools = switch(condition) {
+                    case "is":
+                    case "isnot":
+                        yield Set.of(true, false);
+                    default:
+                        if(!value1.has("sign") || !value2.has("sign")) yield Set.of(true, false);
+                        else {
+                            // Value1 opr Value2
+                            BiFunction<Sign, Sign, Set<Boolean>> fun = (s1, s2) -> switch(condition) {
+                                case "eq"   -> Sign.eq(s1, s2);
+                                case "ne"   -> Sign.ne(s1, s2);
+                                case "le"   -> Sign.le(s1, s2);
+                                case "lt"   -> Sign.lt(s1, s2);
+                                case "ge"   -> Sign.ge(s1, s2);
+                                case "gt"   -> Sign.gt(s1, s2);
+                                // For object equality we assume both cases can be true/false
+                                default     -> Set.of(true, false);
+                            };
 
-                Set<Boolean> bools = new HashSet<>();
-                for(Object s1 : value1.getJSONArray("sign")) {
-                    for(Object s2 : value2.getJSONArray("sign")) {
-                        bools.addAll(fun.apply(Sign.toSign(s1), Sign.toSign(s2)));
-                        if(bools.size() > 1) break;
-                    }
-                    if(bools.size() > 1) break;
-                }
+                            Set<Boolean> local = new HashSet<>();
+                            for(Object s1 : value1.getJSONArray("sign")) {
+                                for(Object s2 : value2.getJSONArray("sign")) {
+                                    local.addAll(fun.apply(Sign.toSign(s1), Sign.toSign(s2)));
+                                    if(local.size() > 1) break;
+                                }
+                                if(local.size() > 1) break;
+                            }
+
+                            yield local;
+                        }
+                };
 
                 List<Boolean> if_results = bools.stream().toList();
                 if(bools.size() > 1) {
