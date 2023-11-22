@@ -26,6 +26,11 @@ public class SimpleType {
         return false;
     }
 
+    /** Returns true if the type is a &lt;SimpleReferenceType&gt;, and false otherwise. */
+    public static boolean isReference(Object type) {
+        return type instanceof JSONObject jo && jo.has("kind");
+    }
+
     /** Returns a new JSONObject of the specified type with the default value for that type.
      * @param SimpleType
      *  <pre>

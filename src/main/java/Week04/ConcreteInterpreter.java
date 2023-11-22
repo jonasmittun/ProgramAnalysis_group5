@@ -155,9 +155,12 @@ public class ConcreteInterpreter {
             JSONObject f = fields.getJSONObject(i);
             if(f.getString("name").equals(fieldname)) {
                 if(f.isNull("value")) {
-                    return Optional.of(SimpleType.createDefault(fieldtype, mu));
+                    JSONObject v = SimpleType.createDefault(fieldtype, mu);
+                    f.put("value", v);
+                    return Optional.of(v);
                 } else {
-                    return Optional.of(cloneJSONObject(f.getJSONObject("value")));
+                    JSONObject v = f.getJSONObject("value");
+                    return Optional.of(SimpleType.isReference(fieldtype) ? v : cloneJSONObject(v));
                 }
             }
         }
