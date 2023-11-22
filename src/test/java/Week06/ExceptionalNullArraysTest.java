@@ -51,7 +51,7 @@ public class ExceptionalNullArraysTest extends TestSuperclass {
             JSONObject[] lambda = createNullArray(1);
             lambda[0] = arrayref;
 
-            test("alwaysThrows5", lambda, mu, NullPointerException.class, null);
+            test("alwaysThrows2", lambda, mu, NullPointerException.class, null);
         }
     }
 
