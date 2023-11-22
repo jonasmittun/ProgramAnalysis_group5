@@ -73,7 +73,7 @@ public class CustomNewNullTests extends TestSuperClass{
     class neverThrows {
         @Test
         void neverThrows1() {
-            test("neverThrows1", createNullArray(1), null, null, null);
+            test("neverThrows1", createNullArray(2), null, null, null);
         }
 
         @Test
