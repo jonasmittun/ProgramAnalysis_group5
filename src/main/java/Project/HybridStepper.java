@@ -89,33 +89,7 @@ public class HybridStepper implements AbstractStepper {
 
                     switch(type) {
                         case "class" -> o = ANull.toAbstract(value);
-                        case "string" -> {
-                            // Create array reference for string value
-                            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "byte", "abstract", NOTNULL));
-
-                            // Create array to hold string value as a byte[]
-                            byte[] bytes = value.getString("value").getBytes(StandardCharsets.UTF_8);
-                            JSONArray arrayvalue = new JSONArray(bytes.length);
-                            for(int i = 0; i < bytes.length; i++) {
-                                arrayvalue.put(i, new JSONObject(Map.of("type", "byte", "value", bytes[i])));
-                            }
-
-                            // Create the actual array
-                            JSONObject array = new JSONObject(Map.of("type", "byte", "value", arrayvalue));
-                            mu.put(System.identityHashCode(arrayref), array);
-
-                            // Create a new String object
-                            JSONObject object = cloneJSONObject(classes.get("java/lang/String"));
-                            // Update "value" field in this String object to the array reference
-                            object.getJSONArray("fields").getJSONObject(0).put("value", arrayref);
-
-                            // Create String object reference
-                            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String", "abstract", NOTNULL));
-                            mu.put(System.identityHashCode(objectref), object);
-
-                            // Push object reference
-                            o = objectref;
-                        }
+                        case "string" -> o = initializeString(classes, value.getString("value"), mu);
                         case "integer", "long", "float", "double" -> o = SignInterpreter.toAbstract(cloneJSONObject(value));
                         default -> throw new UnsupportedOperationException("Cannot push value with unsupported type \"" + type + "\"");
                     }

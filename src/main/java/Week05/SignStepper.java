@@ -84,39 +84,9 @@ public class SignStepper implements AbstractStepper {
                     String type = value.getString("type");
 
                     switch(type) {
-                        case "class" -> {
-                            o = value;
-                        }
-                        case "string" -> {
-                            // Create array reference for string value
-                            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "byte"));
-
-                            // Create array to hold string value as a byte[]
-                            byte[] bytes = value.getString("value").getBytes(StandardCharsets.UTF_8);
-                            JSONArray arrayvalue = new JSONArray(bytes.length);
-                            for(int i = 0; i < bytes.length; i++) {
-                                arrayvalue.put(i, new JSONObject(Map.of("type", "byte", "value", bytes[i], "sign", Set.of(toSign(bytes[i])))));
-                            }
-
-                            // Create the actual array
-                            JSONObject array = new JSONObject(Map.of("type", "byte", "value", arrayvalue));
-                            mu.put(System.identityHashCode(arrayref), array);
-
-                            // Create a new String object
-                            JSONObject object = cloneJSONObject(classes.get("java/lang/String"));
-                            // Update "value" field in this String object to the array reference
-                            object.getJSONArray("fields").getJSONObject(0).put("value", arrayref);
-
-                            // Create String object reference
-                            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
-                            mu.put(System.identityHashCode(objectref), object);
-
-                            // Push object reference
-                            o = objectref;
-                        }
-                        default -> {
-                            o = cloneJSONObject(value);
-                        }
+                        case "class"    -> o = value;
+                        case "string"   -> o = initializeString(classes, value.getString("value"), mu);
+                        default         -> o = cloneJSONObject(value);
                     }
                 }
 

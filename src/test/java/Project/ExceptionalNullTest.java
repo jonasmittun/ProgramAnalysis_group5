@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static Week04.ConcreteInterpreter.createNullArray;
+import static Week04.ConcreteInterpreter.initializeString;
 import static Week04.Main.cloneJSONObject;
 
 public class ExceptionalNullTest extends TestSuperClass {
@@ -113,15 +114,10 @@ public class ExceptionalNullTest extends TestSuperClass {
 
         @Test
         void neverThrows5() {
-            JSONObject s = cloneJSONObject(classes.get("java/lang/String"));
-            JSONObject sref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
-
-            JSONObject notYourProblem = cloneJSONObject(classes.get("java/lang/String"));
-            JSONObject notYourProblemref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
-
             Map<Integer, JSONObject> mu = new HashMap<>();
-            mu.put(System.identityHashCode(sref), s);
-            mu.put(System.identityHashCode(notYourProblemref), notYourProblem);
+
+            JSONObject sref = initializeString(classes, "Test", mu);
+            JSONObject notYourProblemref = initializeString(classes, "NotYourProblem", mu);
 
             JSONObject[] lambda = createNullArray(2);
             lambda[0] = sref;

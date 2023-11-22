@@ -110,6 +110,35 @@ public class ConcreteInterpreter {
         return cls;
     }
 
+    /** Initializes a String object with value */
+    public static JSONObject initializeString(Map<String, JSONObject> classes, String value, Map<Integer, JSONObject> mu) {
+        // Create array reference for string value
+        JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "byte"));
+
+        // Create array to hold string value as a byte[]
+        byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
+        JSONArray arrayvalue = new JSONArray(bytes.length);
+        for(int i = 0; i < bytes.length; i++) {
+            arrayvalue.put(i, new JSONObject(Map.of("type", "byte", "value", bytes[i])));
+        }
+
+        // Create the actual array
+        JSONObject array = new JSONObject(Map.of("type", "byte", "value", arrayvalue));
+        mu.put(System.identityHashCode(arrayref), array);
+
+        // Create a new String object
+        JSONObject object = cloneJSONObject(classes.get("java/lang/String"));
+        // Update "value" field in this String object to the array reference
+        object.getJSONArray("fields").getJSONObject(0).put("value", arrayref);
+
+        // Create String object reference
+        JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
+        mu.put(System.identityHashCode(objectref), object);
+
+        // Return object reference
+        return objectref;
+    }
+
     /** Tries to get field from the object
      * <pre>If the field is <code>null</code>, then the default value will be returned.</pre>
      * @param object    The object which "may" contain the field.
@@ -373,39 +402,9 @@ public class ConcreteInterpreter {
                     String type = value.getString("type");
 
                     switch(type) {
-                        case "class" -> {
-                            f.sigma().push(value);
-                        }
-                        case "string" -> {
-                            // Create array reference for string value
-                            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", "byte"));
-
-                            // Create array to hold string value as a byte[]
-                            byte[] bytes = value.getString("value").getBytes(StandardCharsets.UTF_8);
-                            JSONArray arrayvalue = new JSONArray(bytes.length);
-                            for(int i = 0; i < bytes.length; i++) {
-                                arrayvalue.put(i, new JSONObject(Map.of("type", "byte", "value", bytes[i])));
-                            }
-
-                            // Create the actual array
-                            JSONObject array = new JSONObject(Map.of("type", "byte", "value", arrayvalue));
-                            mu.put(System.identityHashCode(arrayref), array);
-
-                            // Create a new String object
-                            JSONObject object = cloneJSONObject(classes.get("java/lang/String"));
-                            // Update "value" field in this String object to the array reference
-                            object.getJSONArray("fields").getJSONObject(0).put("value", arrayref);
-
-                            // Create String object reference
-                            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/String"));
-                            mu.put(System.identityHashCode(objectref), object);
-
-                            // Push object reference
-                            f.sigma().push(objectref);
-                        }
-                        default -> {
-                            f.sigma().push(cloneJSONObject(value));
-                        }
+                        case "class"    -> f.sigma().push(value);
+                        case "string"   -> f.sigma().push(initializeString(classes, value.getString("value"), mu));
+                        default         -> f.sigma().push(cloneJSONObject(value));
                     }
                 }
 
