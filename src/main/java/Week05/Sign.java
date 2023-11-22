@@ -215,6 +215,13 @@ public enum Sign {
         };
     }
 
+    /** Converts an Object to a Sign value if possible */
+    public static Sign toSign(Object o) {
+        if(o instanceof Sign s) return s;
+        else if(o instanceof String s) return Sign.valueOf(s);
+        else throw new IllegalArgumentException("Could not convert " + o + " to Sign");
+    }
+
     @Override
     public String toString() {
         return switch(this) {

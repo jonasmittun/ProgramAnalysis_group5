@@ -122,7 +122,7 @@ public class SignStepper implements AbstractStepper {
                 Sign amount = Sign.toSign(instruction.getInt("amount"));
 
                 for(Object sign : value.getJSONArray("sign")) {
-                    Set<Sign> signs = Sign.add((Sign) sign, amount);
+                    Set<Sign> signs = Sign.add(Sign.toSign(sign), amount);
 
                     Triple<Frame, Deque<Frame>, Map<Integer, JSONObject>> t = clone_state(f, psi, mu);
 
@@ -156,7 +156,7 @@ public class SignStepper implements AbstractStepper {
 
                 for(Object s1 : value1.getJSONArray("sign")) {
                     for(Object s2 : value2.getJSONArray("sign")) {
-                        Set<Sign> signs = fun.apply((Sign) s1, (Sign) s2);
+                        Set<Sign> signs = fun.apply(Sign.toSign(s1), Sign.toSign(s2));
 
                         JSONObject result = new JSONObject(Map.of("sign", signs));
 
@@ -180,7 +180,7 @@ public class SignStepper implements AbstractStepper {
 
                 JSONArray signs = value.getJSONArray("sign");
                 for(int i = 0; i < signs.length(); i++) {
-                    signs.put(i, Sign.negate((Sign) signs.get(i)));
+                    signs.put(i, Sign.negate(Sign.toSign(signs.get(i))));
                 }
 
                 f.sigma().push(value);
@@ -323,7 +323,7 @@ public class SignStepper implements AbstractStepper {
                 Set<Boolean> bools = new HashSet<>();
                 for(Object s1 : value1.getJSONArray("sign")) {
                     for(Object s2 : value2.getJSONArray("sign")) {
-                        bools.addAll(fun.apply((Sign) s1, (Sign) s2));
+                        bools.addAll(fun.apply(Sign.toSign(s1), Sign.toSign(s2)));
                         if(bools.size() > 1) break;
                     }
                     if(bools.size() > 1) break;
@@ -363,7 +363,7 @@ public class SignStepper implements AbstractStepper {
                 List<Boolean> ifz_results = new ArrayList<>();
                 if(value.has("sign")) {
                     for(Object sign : value.getJSONArray("sign")) {
-                        ifz_results.addAll(fun.apply((Sign) sign));
+                        ifz_results.addAll(fun.apply(Sign.toSign(sign)));
                         if(ifz_results.size() > 1) break;
                     }
                 } else {

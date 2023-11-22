@@ -41,7 +41,7 @@ public class Main {
 
         for(Object s1 : v1.getJSONArray("sign")) {
             for(Object s2 : v2.getJSONArray("sign")) {
-                JSONObject result = new JSONObject(Map.of("sign", f.apply((Sign) s1, (Sign) s2)));
+                JSONObject result = new JSONObject(Map.of("sign", f.apply(Sign.toSign(s1), Sign.toSign(s2))));
                 System.out.println(s1 + " + " + s2 + " = " + result);
             }
         }
