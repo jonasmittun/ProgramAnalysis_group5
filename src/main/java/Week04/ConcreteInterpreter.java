@@ -182,7 +182,7 @@ public class ConcreteInterpreter {
         for(int i = 0; i < fields.length(); i++) {
             JSONObject f = fields.getJSONObject(i);
             if(f.getString("name").equals(fieldname)) {
-                if(SimpleType.equals(f.get("type"), fieldtype)) {
+                if(SimpleType.equals(SimpleType.fromType(f.getJSONObject("type")), fieldtype)) {
 
                     // TODO: Check if value-type is the same as the field
                     if(value.has("kind")) {
@@ -196,7 +196,9 @@ public class ConcreteInterpreter {
                             case "long"                     -> f.put("value", value.getLong("value"));
                             case "float"                    -> f.put("value", value.getFloat("value"));
                             case "double"                   -> f.put("value", value.getDouble("value"));
-                            case "short", "byte", "char"    -> f.put("value", value.get("value"));
+                            case "short"                    -> f.put("value", (short) value.get("value"));
+                            case "byte"                     -> f.put("value", (byte) value.get("value"));
+                            case "char"                     -> f.put("value", (char) value.get("value"));
                             default -> throw new IllegalArgumentException("Unsupported type " + f.get("type") + " in \"put\"");
                         }
 

@@ -59,6 +59,18 @@ public class SimpleType {
         } else throw new IllegalArgumentException("Invalid SimpleType: " + SimpleType);
     }
 
+    /** Converts a JSONObject { &lt;Type&gt;, "annotations": manyOf &lt;Annotation&gt; } to a SimpleType. */
+    public static Object fromType(JSONObject o) {
+        if(o.has("base")) return o.getString("base");
+        else if(o.has("kind")) {
+            return switch(o.getString("kind")) {
+                case "class"    -> new JSONObject(Map.of("kind", "class", "name", o.getString("name")));
+                case "array"    -> new JSONObject(Map.of("kind", "array", "type", fromType(o.getJSONObject("type"))));
+                default         -> throw new IllegalArgumentException("Unsupported ReferenceType: " + o); // TODO: <TypeVariable>
+            };
+        } else throw new IllegalArgumentException("Unsupported Type: " + o);
+    }
+
     /** Converts the SimpleType object into a formatted string.
      * @param o     The &lt;SimpleType&gt; object.
      * @param full  When o is an array reference type, it determines if the formatter should recursively determine the subtypes - giving the full type name.
