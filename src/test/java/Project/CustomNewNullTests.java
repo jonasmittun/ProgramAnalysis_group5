@@ -1,5 +1,6 @@
 package Project;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -9,8 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static Week04.ConcreteInterpreter.createNullArray;
-import static Week04.ConcreteInterpreter.initializeString;
+import static Week04.ConcreteInterpreter.*;
 import static Week04.Main.cloneJSONObject;
 
 public class CustomNewNullTests extends TestSuperClass{
@@ -63,9 +63,28 @@ public class CustomNewNullTests extends TestSuperClass{
 
         @Test
         void alwaysThrows5() {
-            test("alwaysThrows5", new JSONObject[]{new JSONObject(Map.of("type", "Object[]", "value", new Object[1]))}, null, NullPointerException.class, null);
-        }
+            Map<Integer, JSONObject> mu = new HashMap<>();
 
+            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
+            JSONObject object = initialize(classes, "java/lang/Object", mu);
+
+            mu.put(System.identityHashCode(objectref), object);
+
+            JSONArray arrayvalue = new JSONArray(1);
+            arrayvalue.put(0, objectref);
+
+            JSONObject type = cloneJSONObject(objectref);
+            JSONObject array = new JSONObject(Map.of("type", type, "value", arrayvalue));
+
+            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", type));
+
+            mu.put(System.identityHashCode(arrayref), array);
+
+            JSONObject[] lambda = createNullArray(1);
+            lambda[0] = arrayref;
+
+            test("alwaysThrows5", lambda, mu, NullPointerException.class, null);
+        }
     }
 
     @Nested
