@@ -1,11 +1,18 @@
 package Week06;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static Week04.ConcreteInterpreter.createNullArray;
+import static Week04.ConcreteInterpreter.initialize;
+import static Week04.Main.cloneJSONObject;
 
 public class ExceptionalNullArraysTest extends TestSuperclass {
 
@@ -22,13 +29,30 @@ public class ExceptionalNullArraysTest extends TestSuperclass {
             test("alwaysThrows1", createNullArray(1), null, NullPointerException.class, null);
         }
 
-        /*
-        // TODO
         @Test
         void alwaysThrows2() {
-            test("alwaysThrows2", new JSONObject[]{new JSONObject(Map.of("type", "Object[]", "value", new Object[]{}))}, NullPointerException.class, null);
+            Map<Integer, JSONObject> mu = new HashMap<>();
+
+            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
+            JSONObject object = initialize(classes, "java/lang/Object", mu);
+
+            mu.put(System.identityHashCode(objectref), object);
+
+            JSONArray arrayvalue = new JSONArray(1);
+            arrayvalue.put(0, objectref);
+
+            JSONObject type = cloneJSONObject(objectref);
+            JSONObject array = new JSONObject(Map.of("type", type, "value", arrayvalue));
+
+            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", type));
+
+            mu.put(System.identityHashCode(arrayref), array);
+
+            JSONObject[] lambda = createNullArray(1);
+            lambda[0] = arrayref;
+
+            test("alwaysThrows5", lambda, mu, NullPointerException.class, null);
         }
-        */
     }
 
     @Nested
@@ -36,14 +60,12 @@ public class ExceptionalNullArraysTest extends TestSuperclass {
     class dependsOnAmalgamation {
         @Test
         void dependsOnAmalgamation1() {
-            // TODO
-            // test("dependsOnAmalgamation1", new JSONObject[]{}, NullPointerException.class, null);
+            test("dependsOnAmalgamation1", createNullArray(1), null, NullPointerException.class, null);
         }
 
         @Test
         void dependsOnAmalgamation2() {
-            // TODO
-            // test("dependsOnAmalgamation2", new JSONObject[]{}, NullPointerException.class, null);
+            test("dependsOnAmalgamation2", createNullArray(1), null, NullPointerException.class, null);
         }
     }
 }
