@@ -1,17 +1,11 @@
 package Project;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static Week04.ConcreteInterpreter.*;
-import static Week04.Main.cloneJSONObject;
 
 public class CustomNewNullTests extends TestSuperClass{
 
@@ -30,30 +24,12 @@ public class CustomNewNullTests extends TestSuperClass{
 
         @Test
         void alwaysThrows2() {
-            JSONObject object = cloneJSONObject(classes.get("java/lang/Object"));
-            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
-
-            Map<Integer, JSONObject> mu = new HashMap<>();
-            mu.put(System.identityHashCode(objectref), object);
-
-            JSONObject[] lambda = createNullArray(2);
-            lambda[0] = objectref;
-
-            test("alwaysThrows2", lambda, mu, NullPointerException.class, null);
+            test("alwaysThrows2", createNullArray(2), null, NullPointerException.class, null);
         }
 
         @Test
         void alwaysThrows3() {
-            JSONObject object = cloneJSONObject(classes.get("java/lang/Object"));
-            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
-
-            Map<Integer, JSONObject> mu = new HashMap<>();
-            mu.put(System.identityHashCode(objectref), object);
-
-            JSONObject[] lambda = createNullArray(2);
-            lambda[0] = objectref;
-
-            test("alwaysThrows3", lambda, mu, NullPointerException.class, null);
+            test("alwaysThrows3", createNullArray(2), null, NullPointerException.class, null);
         }
 
         @Test
@@ -63,27 +39,7 @@ public class CustomNewNullTests extends TestSuperClass{
 
         @Test
         void alwaysThrows5() {
-            Map<Integer, JSONObject> mu = new HashMap<>();
-
-            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
-            JSONObject object = initialize(classes, "java/lang/Object", mu);
-
-            mu.put(System.identityHashCode(objectref), object);
-
-            JSONArray arrayvalue = new JSONArray(1);
-            arrayvalue.put(0, objectref);
-
-            JSONObject type = cloneJSONObject(objectref);
-            JSONObject array = new JSONObject(Map.of("type", type, "value", arrayvalue));
-
-            JSONObject arrayref = new JSONObject(Map.of("kind", "array", "type", type));
-
-            mu.put(System.identityHashCode(arrayref), array);
-
-            JSONObject[] lambda = createNullArray(1);
-            lambda[0] = arrayref;
-
-            test("alwaysThrows5", lambda, mu, NullPointerException.class, null);
+            test("alwaysThrows5", createNullArray(1), null, NullPointerException.class, null);
         }
     }
 
@@ -97,78 +53,38 @@ public class CustomNewNullTests extends TestSuperClass{
 
         @Test
         void neverThrows2() {
-            JSONObject object = cloneJSONObject(classes.get("java/lang/Object"));
-            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
-
-            Map<Integer, JSONObject> mu = new HashMap<>();
-            mu.put(System.identityHashCode(objectref), object);
-
-            JSONObject[] lambda = createNullArray(2);
-            lambda[0] = objectref;
-
-            test("neverThrows2", lambda, mu, null, null);
+            test("neverThrows2", createNullArray(2), null, null, null);
         }
 
         @Test
         void neverThrows3() {
-            JSONObject integer1 = cloneJSONObject(classes.get("java/lang/Integer"));
-            JSONObject integer1ref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Integer"));
-
-            JSONObject integer2 = cloneJSONObject(classes.get("java/lang/Integer"));
-            JSONObject integer2ref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Integer"));
-
-            Map<Integer, JSONObject> mu = new HashMap<>();
-            mu.put(System.identityHashCode(integer1ref), integer1);
-            mu.put(System.identityHashCode(integer2ref), integer2);
-
-            JSONObject[] lambda = createNullArray(2);
-            lambda[0] = integer1ref;
-            lambda[1] = integer2ref;
-
-            test("neverThrows3", lambda, mu, null, null);
+            test("neverThrows3", createNullArray(2), null, null, null);
         }
 
         @Test
         void neverThrows4() {
-            JSONObject object = cloneJSONObject(classes.get("eu/bogoe/dtu/exceptional/Null"));
-            JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "eu/bogoe/dtu/exceptional/Null"));
-
-            Map<Integer, JSONObject> mu = new HashMap<>();
-            mu.put(System.identityHashCode(objectref), object);
-
-            JSONObject[] lambda = createNullArray(1);
-            lambda[0] = objectref;
-
-            test("neverThrows4", lambda, mu, null, null);
+            test("neverThrows4", createNullArray(1), null, null, null);
         }
 
         @Test
         void neverThrows5() {
-            Map<Integer, JSONObject> mu = new HashMap<>();
+            test("neverThrows5", createNullArray(2), null, null, null);
+        }
 
-            JSONObject sref = initializeString(classes, "Test", mu);
-            JSONObject notYourProblemref = initializeString(classes, "NotYourProblem", mu);
+        @Test
+        void neverThrows6() {
+            test("neverThrows6", createNullArray(2), null, null, null);
+        }
 
-            JSONObject[] lambda = createNullArray(2);
-            lambda[0] = sref;
-            lambda[1] = notYourProblemref;
-
-            test("neverThrows5", lambda, mu, null, null);
+        @Test
+        void neverThrows7() {
+            test("neverThrows7", createNullArray(2), null, null, null);
         }
     }
 
     @Test
     void interestingCase() {
-        JSONObject object = cloneJSONObject(classes.get("java/lang/Object"));
-        JSONObject objectref = new JSONObject(Map.of("kind", "class", "name", "java/lang/Object"));
-
-        Map<Integer, JSONObject> mu = new HashMap<>();
-        mu.put(System.identityHashCode(objectref), object);
-
-        JSONObject[] lambda = createNullArray(2);
-        lambda[0] = objectref;
-
-        test("interestingCase", lambda, mu, null, null);
+        test("interestingCase", createNullArray(1), null, null, null);
     }
 
     @Nested
@@ -176,12 +92,12 @@ public class CustomNewNullTests extends TestSuperClass{
     class dependsOnAmalgamation {
         @Test
         void dependsOnAmalgamation1() {
-            test("dependsOnAmalgamation1", createNullArray(1), null, NullPointerException.class, null);
+            test("dependsOnAmalgamation1", createNullArray(1), null, null, null);
         }
 
         @Test
         void dependsOnAmalgamation2() {
-            test("dependsOnAmalgamation2", createNullArray(1), null, NullPointerException.class, null);
+            test("dependsOnAmalgamation2", createNullArray(1), null, null, null);
         }
     }
 }
