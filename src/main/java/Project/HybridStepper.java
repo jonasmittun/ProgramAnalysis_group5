@@ -256,8 +256,6 @@ public class HybridStepper implements AbstractStepper {
                         default     -> Set.of(true, false);
                     };
 
-                    System.out.println("Value1: " + value1 + "\nValue2: " + value2);
-
                     for(Object s1 : value1.getJSONArray("sign")) {
                         for(Object s2 : value2.getJSONArray("sign")) {
                             bools.addAll(fun.apply(Sign.toSign(s1), Sign.toSign(s2)));
