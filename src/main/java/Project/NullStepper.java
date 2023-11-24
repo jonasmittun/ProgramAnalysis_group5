@@ -196,10 +196,9 @@ public class NullStepper implements AbstractStepper {
 
                 JSONObject value = f.sigma().pop();
 
-                List<Boolean> ifz_results = new ArrayList<>();
+                List<Boolean> ifz_results;
                 if(value.has("kind")) {
-                    JSONObject v = mu.get(System.identityHashCode(value));
-                    ANull a = (ANull) value.get("abstract");
+                    ANull a = ANull.toANull(value.get("abstract"));
                     ifz_results = switch(condition) {
                         case "is"       -> switch(a) {
                             case NULL       -> List.of(true);

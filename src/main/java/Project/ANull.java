@@ -46,6 +46,13 @@ public enum ANull {
         };
     }
 
+    /** Converts an Object to a Null value if possible */
+    public static ANull toANull(Object o) {
+        if(o instanceof ANull s) return s;
+        else if(o instanceof String s) return ANull.valueOf(s);
+        else throw new IllegalArgumentException("Could not convert " + o + " to ANull");
+    }
+
     @Override
     public String toString() {
         return switch(this) {
